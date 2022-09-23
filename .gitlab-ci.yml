@@ -1,0 +1,44 @@
+image: python:3.10
+
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+  CODE: "app tests"
+
+cache:
+  paths:
+    - .cache/pip
+    - .venv/
+
+before_script:
+  - python -V
+  - python -m venv .venv
+  - source .venv/bin/activate
+  - python -m pip install --upgrade pip
+  - python -m pip install poetry
+  - poetry install
+
+stages:
+  - lint
+  - test
+
+lint:
+  stage: lint
+  script:
+    - flake8 --jobs 4 --statistics --show-source $CODE
+    - pylint --jobs 4 $CODE
+    - mypy $CODE
+    - black --line-length 79 --target-version py39 --skip-string-normalization --check $CODE
+    - pytest --dead-fixtures --dup-fixtures
+
+test:
+  stage: test
+  variables:
+    POSTGRES_DB: data
+    POSTGRES_USER: pguser
+    POSTGRES_PASSWORD: pgpswd
+    POSTGRES_HOST: postgres
+    POSTGRES_PORT: 5432
+  services:
+    - name: postgres:14.5
+  script:
+    - pytest --verbosity=2 --showlocals --log-level=DEBUG --cov
