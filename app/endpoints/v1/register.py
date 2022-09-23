@@ -16,7 +16,7 @@ class RegisterRequest(BaseModel):
 
 @api_router.post(
     '',
-    status_code=status.HTTP_201_OK,
+    status_code=status.HTTP_201_CREATED,
 )
 async def register(
     data: RegisterRequest,
