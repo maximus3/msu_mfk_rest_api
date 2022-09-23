@@ -81,7 +81,7 @@ jobs:
       run: sudo chmod 600 ~/.ssh/deploy_key
     
     - name: Test connection and copy repo if not exists
-      run: ssh -i ~/.ssh/deploy_key -p {{ secrets.SSH_PORT }} -o StrictHostKeyChecking=no ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_ADRESS }} "[ -e ${{ github.event.repository.name }} ] || git clone git@github.com:$GITHUB_REPO.git; exit"
+      run: ssh -i ~/.ssh/deploy_key -p ${{ secrets.SSH_PORT }} -o StrictHostKeyChecking=no ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_ADRESS }} "[ -e ${{ github.event.repository.name }} ] || git clone git@github.com:$GITHUB_REPO.git; exit"
 
 
     - name: SSH WORKS - replace files
