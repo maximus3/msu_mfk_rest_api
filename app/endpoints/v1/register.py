@@ -20,5 +20,5 @@ class RegisterRequest(BaseModel):
 )
 async def register(
     data: RegisterRequest,
-):
+) -> RegisterRequest:
     return data
