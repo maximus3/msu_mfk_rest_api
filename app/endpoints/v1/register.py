@@ -1,12 +1,5 @@
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, status
 from pydantic import BaseModel
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from app.database.connection import SessionManager
-from app.database.models import User
-from app.schemas import PingMessage, PingResponse
-from app.utils.health_check import health_check_db
-from app.utils.user import get_current_user
 
 
 api_router = APIRouter(
