@@ -82,11 +82,11 @@ up: ##@Application Up App
 
 .PHONY: migrate
 migrate:  ##@Database Do all migrations in database
-	alembic upgrade $(args)
+	$(POETRY_RUN) alembic upgrade $(args)
 
 .PHONY: revision
 revision:  ##@Database Create new revision file automatically with prefix (ex. 2022_01_01_14cs34f_message.py)
-	alembic revision --autogenerate
+	$(POETRY_RUN) alembic revision --autogenerate
 
 .PHONY: db
 db: ##@Database Docker up db
@@ -153,6 +153,10 @@ docker-clean: ##@Application Docker prune -f
 
 .PHONY: docker
 docker: docker-clean docker-build docker-up-d docker-clean ##@Application Docker prune, up, run and prune
+
+.PHONY: open-app
+open-app: ##@Application Open app in docker
+	docker exec -it app /bin/bash
 
 %::
 	echo $(MESSAGE)
