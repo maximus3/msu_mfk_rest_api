@@ -4,6 +4,7 @@ from datetime import timedelta
 
 import pytest
 from fastapi import HTTPException
+from jose import jwt
 
 from app.config import get_settings
 from app.utils import user
@@ -36,23 +37,28 @@ class TestAuthenticateUserHandler:
 
 
 class TestCreateAccessTokenHandler:
-    async def test_create_access_token_with_expires_delta(
-        self, datetime_utcnow_mock, token_with_exp
-    ):
+    async def test_create_access_token_with_expires_delta(self):
         access_token_expires = timedelta(minutes=1)
-        assert (
-            user.create_access_token(
-                data={'sub': 'test'}, expires_delta=access_token_expires
-            )
-            == token_with_exp
+        token = user.create_access_token(
+            data={'sub': 'test'}, expires_delta=access_token_expires
         )
+        payload = jwt.decode(
+            token,
+            get_settings().SECRET_KEY,
+            algorithms=[get_settings().ALGORITHM],
+        )
+        username: str = payload.get('sub')
+        assert username == 'test'
 
-    async def test_create_access_token(
-        self, datetime_utcnow_mock, token_without_exp
-    ):
-        assert (
-            user.create_access_token(data={'sub': 'test'}) == token_without_exp
+    async def test_create_access_token(self):
+        token = user.create_access_token(data={'sub': 'test'})
+        payload = jwt.decode(
+            token,
+            get_settings().SECRET_KEY,
+            algorithms=[get_settings().ALGORITHM],
         )
+        username: str = payload.get('sub')
+        assert username == 'test'
 
 
 class TestVerifyPasswordHandler:
