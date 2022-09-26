@@ -43,10 +43,8 @@ class DefaultSettings(BaseSettings):
 
     PWD_CONTEXT = CryptContext(schemes=['bcrypt'], deprecated='auto')
 
-    AUTH_URL = f'/api/v1/user/authentication'
-    OAUTH2_SCHEME = OAuth2PasswordBearer(
-        tokenUrl=AUTH_URL
-    )
+    AUTH_URL = '/api/v1/user/authentication'
+    OAUTH2_SCHEME = OAuth2PasswordBearer(tokenUrl=AUTH_URL)
 
     @property
     def database_settings(self) -> dict[str, str | int]:
