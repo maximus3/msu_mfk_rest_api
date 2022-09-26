@@ -160,7 +160,7 @@ open-app: ##@Application Open app in docker
 
 .PHONY: docker-migrate
 docker-migrate: ##@Application Migrate db in docker
-	docker exec -it app make migrate $(args)
+	docker exec app make migrate $(args)
 
 %::
 	echo $(MESSAGE)

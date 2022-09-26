@@ -91,5 +91,5 @@ jobs:
         git pull;
         echo \"${{ secrets.ENV }}\" > .env;
         make docker;
-        make docker-migrate;
+        make docker-migrate head;
         exit"
