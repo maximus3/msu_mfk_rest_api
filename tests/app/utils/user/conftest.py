@@ -11,6 +11,9 @@ def datetime_utcnow_mock(mocker):
     mock = mocker.patch('app.utils.user.service.datetime')
     mock.utcnow.return_value = datetime(2020, 1, 1, 0, 0, 0)
 
+    mock_datetime = mocker.patch('datetime.datetime')
+    mock_datetime.utcnow.return_value = datetime(2020, 1, 1, 0, 0, 0)
+
 
 @pytest.fixture
 def token_with_exp():
