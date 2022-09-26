@@ -18,7 +18,7 @@ jobs:
           POSTGRES_DB: data
           POSTGRES_USER: pguser
           POSTGRES_PASSWORD: pgpswd
-          POSTGRES_HOST: postgres
+          POSTGRES_HOST: localhost
           POSTGRES_PORT: 5432
 
     steps:
