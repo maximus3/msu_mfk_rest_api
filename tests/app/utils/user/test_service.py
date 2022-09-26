@@ -37,28 +37,25 @@ class TestAuthenticateUserHandler:
 
 
 class TestCreateAccessTokenHandler:
+    @staticmethod
+    def get_username(token: str) -> str:
+        payload = jwt.decode(
+            token,
+            get_settings().SECRET_KEY,
+            algorithms=[get_settings().ALGORITHM],
+        )
+        return payload.get('sub')
+
     async def test_create_access_token_with_expires_delta(self):
         access_token_expires = timedelta(minutes=1)
         token = user.create_access_token(
             data={'sub': 'test'}, expires_delta=access_token_expires
         )
-        payload = jwt.decode(
-            token,
-            get_settings().SECRET_KEY,
-            algorithms=[get_settings().ALGORITHM],
-        )
-        username: str = payload.get('sub')
-        assert username == 'test'
+        assert self.get_username(token) == 'test'
 
     async def test_create_access_token(self):
         token = user.create_access_token(data={'sub': 'test'})
-        payload = jwt.decode(
-            token,
-            get_settings().SECRET_KEY,
-            algorithms=[get_settings().ALGORITHM],
-        )
-        username: str = payload.get('sub')
-        assert username == 'test'
+        assert self.get_username(token) == 'test'
 
 
 class TestVerifyPasswordHandler:
