@@ -42,8 +42,10 @@ class DefaultSettings(BaseSettings):
     )
 
     PWD_CONTEXT = CryptContext(schemes=['bcrypt'], deprecated='auto')
+
+    AUTH_URL = f'/api/v1/user/authentication'
     OAUTH2_SCHEME = OAuth2PasswordBearer(
-        tokenUrl=f'{APP_HOST}:{APP_PORT}{PATH_PREFIX}/user/authentication'
+        tokenUrl=AUTH_URL
     )
 
     @property
