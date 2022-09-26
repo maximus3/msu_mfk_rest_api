@@ -1,5 +1,8 @@
-from fastapi import APIRouter, status
+from fastapi import APIRouter, Depends, status
 from pydantic import BaseModel
+
+from app.database.models import User
+from app.utils.user import get_current_user
 
 
 api_router = APIRouter(
@@ -20,5 +23,6 @@ class RegisterRequest(BaseModel):
 )
 async def register(
     data: RegisterRequest,
+    _: User = Depends(get_current_user),
 ) -> RegisterRequest:
     return data
