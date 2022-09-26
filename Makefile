@@ -158,5 +158,9 @@ docker: docker-clean docker-build docker-up-d docker-clean ##@Application Docker
 open-app: ##@Application Open app in docker
 	docker exec -it app /bin/bash
 
+.PHONY: docker-migrate
+docker-migrate: ##@Application Migrate db in docker
+	docker exec -it app make migrate $(args)
+
 %::
 	echo $(MESSAGE)
