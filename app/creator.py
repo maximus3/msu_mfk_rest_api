@@ -1,6 +1,3 @@
-import logging
-
-from aiomisc.log import basic_config
 from fastapi import FastAPI
 from fastapi_pagination import add_pagination
 
@@ -41,12 +38,5 @@ def get_app() -> FastAPI:
     bind_routes(application, settings)
     add_pagination(application)
     application.state.settings = settings
-
-    basic_config(
-        format=settings.LOGGING_FORMAT,
-        level=logging.DEBUG if settings.DEBUG else logging.INFO,
-        filename='app.log',
-        buffered=True,
-    )
 
     return application

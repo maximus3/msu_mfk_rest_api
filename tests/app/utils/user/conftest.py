@@ -17,7 +17,7 @@ def token_with_exp():
     return (
         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.'
         'eyJzdWIiOiJ0ZXN0IiwiZXhwIjoxNTc3ODM2ODYwfQ.'
-        'dVy1nn6AS6u4UY4qx45DLnxeGpdBoJlQNP9BGsz0xXM'
+        'Ot5qkejyUwvLUObM3OT0z7X2VKhMBQzveKVZBn3RqKk'
     )
 
 
@@ -26,5 +26,5 @@ def token_without_exp():
     return (
         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.'
         'eyJzdWIiOiJ0ZXN0IiwiZXhwIjoxNTc3OTIzMjAwfQ.'
-        'WUbpwI4pkMz46SiWdSUH4NLmN0UhCkq3MbNVB1XgJyI'
+        'mj_K5rvnT6ljv4tMhctvRv7j82brv8cIZBCpTzAUVOQ'
     )
