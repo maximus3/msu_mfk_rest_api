@@ -21,6 +21,6 @@ async def get(
     __: User = Depends(get_current_user),
     last: int = 100,
 ) -> PlainTextResponse:
-    with open('logfile.log', 'r') as f:
+    with open('logfile.log', 'r', encoding='windows-1251') as f:
         lines = f.readlines()
     return PlainTextResponse(''.join(lines[-last:]))
