@@ -1,5 +1,3 @@
-from typing import Any
-
 from fastapi import APIRouter, Depends, status
 from fastapi.requests import Request
 from fastapi.responses import PlainTextResponse

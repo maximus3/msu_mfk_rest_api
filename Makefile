@@ -162,14 +162,10 @@ open-app: ##@Application Open app in docker
 docker-migrate: ##@Application Migrate db in docker
 	docker exec app make migrate $(args)
 
-.PHONY: add
-add: ##@Git Add all files to git
-	git add .
-	git status
-
 .PHONY: commit
-commit: ##@Git Commit with message
+commit: ##@Git Commit with message all files
 	make check
+	git add .
 	git status
 	$(eval MESSAGE := $(shell read -p "Commit message: " MESSAGE; echo $$MESSAGE))
 	@git commit -m "$(MESSAGE)"
