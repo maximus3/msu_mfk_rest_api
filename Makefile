@@ -165,6 +165,7 @@ docker-migrate: ##@Application Migrate db in docker
 .PHONY: add
 add: ##@Git Add all files to git
 	git add .
+	git status
 
 .PHONY: commit
 commit: ##@Git Commit with message
