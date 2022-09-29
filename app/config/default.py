@@ -32,7 +32,7 @@ class DefaultSettings(BaseSettings):
         '%(levelname)-8s [%(asctime)s] %(name)s: %(message)s'
     )
 
-    BASE_DIR = Path(__file__).resolve().parent.parent
+    BASE_DIR: Path = Path(__file__).resolve().parent.parent
 
     # to get a string like this run: "openssl rand -hex 32"
     SECRET_KEY: str = Field('', env='SECRET_KEY')

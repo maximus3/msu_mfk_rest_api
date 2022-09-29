@@ -27,7 +27,7 @@ def get_app() -> FastAPI:
     ]
 
     application = FastAPI(
-        title='Scouts API',
+        title='MFK MSU API',
         description=description,
         docs_url='/swagger',
         openapi_url='/openapi',
