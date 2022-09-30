@@ -21,8 +21,9 @@ from tests.factory_lib import (
     CourseFactory,
     DepartmentFactory,
     StudentCourseFactory,
+    StudentDepartmentFactory,
     StudentFactory,
-    UserFactory, StudentDepartmentFactory,
+    UserFactory,
 )
 from tests.utils import make_alembic_config
 
