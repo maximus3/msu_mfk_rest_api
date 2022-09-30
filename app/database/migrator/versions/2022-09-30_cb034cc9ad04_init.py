@@ -1,8 +1,8 @@
-"""temp init migration
+"""init migration
 
-Revision ID: d6f84a4d08f7
+Revision ID: cb034cc9ad04
 Revises:
-Create Date: 2022-09-30 13:45:01.892152
+Create Date: 2022-09-30 13:50:11.407951
 
 """
 import sqlalchemy as sa
@@ -11,7 +11,7 @@ from sqlalchemy.dialects import postgresql
 
 
 # revision identifiers, used by Alembic.
-revision = 'd6f84a4d08f7'
+revision = 'cb034cc9ad04'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -45,7 +45,33 @@ def upgrade() -> None:
         sa.Column('lk_link', sa.String(), nullable=True),
         sa.PrimaryKeyConstraint('id', name=op.f('pk__course')),
         sa.UniqueConstraint('id', name=op.f('uq__course__id')),
+        sa.UniqueConstraint('name', name=op.f('uq__course__name')),
         sa.UniqueConstraint('short_name', name=op.f('uq__course__short_name')),
+    )
+    op.create_table(
+        'department',
+        sa.Column(
+            'id',
+            postgresql.UUID(as_uuid=True),
+            server_default=sa.text('gen_random_uuid()'),
+            nullable=False,
+        ),
+        sa.Column(
+            'dt_created',
+            sa.TIMESTAMP(timezone=True),
+            server_default=sa.text('CURRENT_TIMESTAMP'),
+            nullable=False,
+        ),
+        sa.Column(
+            'dt_updated',
+            sa.TIMESTAMP(timezone=True),
+            server_default=sa.text('CURRENT_TIMESTAMP'),
+            nullable=False,
+        ),
+        sa.Column('name', sa.String(), nullable=True),
+        sa.PrimaryKeyConstraint('id', name=op.f('pk__department')),
+        sa.UniqueConstraint('id', name=op.f('uq__department__id')),
+        sa.UniqueConstraint('name', name=op.f('uq__department__name')),
     )
     op.create_table(
         'student',
@@ -194,6 +220,50 @@ def upgrade() -> None:
         unique=False,
     )
     op.create_table(
+        'student_department',
+        sa.Column(
+            'id',
+            postgresql.UUID(as_uuid=True),
+            server_default=sa.text('gen_random_uuid()'),
+            nullable=False,
+        ),
+        sa.Column(
+            'dt_created',
+            sa.TIMESTAMP(timezone=True),
+            server_default=sa.text('CURRENT_TIMESTAMP'),
+            nullable=False,
+        ),
+        sa.Column(
+            'dt_updated',
+            sa.TIMESTAMP(timezone=True),
+            server_default=sa.text('CURRENT_TIMESTAMP'),
+            nullable=False,
+        ),
+        sa.Column('student_id', postgresql.UUID(as_uuid=True), nullable=False),
+        sa.Column(
+            'department_id', postgresql.UUID(as_uuid=True), nullable=False
+        ),
+        sa.ForeignKeyConstraint(
+            ['department_id'],
+            ['department.id'],
+            name=op.f('fk__student_department__department_id__department'),
+            ondelete='CASCADE',
+        ),
+        sa.ForeignKeyConstraint(
+            ['student_id'],
+            ['student.id'],
+            name=op.f('fk__student_department__student_id__student'),
+            ondelete='CASCADE',
+        ),
+        sa.PrimaryKeyConstraint(
+            'id',
+            'student_id',
+            'department_id',
+            name=op.f('pk__student_department'),
+        ),
+        sa.UniqueConstraint('id', name=op.f('uq__student_department__id')),
+    )
+    op.create_table(
         'student_contest',
         sa.Column(
             'id',
@@ -270,6 +340,7 @@ def downgrade() -> None:
         op.f('ix__student_contest__contest_id'), table_name='student_contest'
     )
     op.drop_table('student_contest')
+    op.drop_table('student_department')
     op.drop_index(
         op.f('ix__student_course__student_id'), table_name='student_course'
     )
@@ -283,4 +354,5 @@ def downgrade() -> None:
     op.drop_index(op.f('ix__user__password'), table_name='user')
     op.drop_table('user')
     op.drop_table('student')
+    op.drop_table('department')
     op.drop_table('course')

@@ -12,6 +12,19 @@ class Student(BaseModel):
     token = sa.Column(sa.String)
 
 
+class StudentDepartment(BaseModel):
+    __tablename__ = 'student_department'
+
+    student_id = sa.Column(
+        sa.ForeignKey('student.id', ondelete='CASCADE'),
+        primary_key=True,
+    )
+    department_id = sa.Column(
+        sa.ForeignKey('department.id', ondelete='CASCADE'),
+        primary_key=True,
+    )
+
+
 class StudentCourse(BaseModel):
     __tablename__ = 'student_course'
 

@@ -1,7 +1,8 @@
 from .base import BaseModel
 from .contest import Contest
 from .course import Course
-from .student import Student, StudentContest, StudentCourse
+from .department import Department
+from .student import Student, StudentContest, StudentCourse, StudentDepartment
 from .user import User
 
 
@@ -13,4 +14,6 @@ __all__ = [
     'Student',
     'StudentCourse',
     'StudentContest',
+    'StudentDepartment',
+    'Department',
 ]
