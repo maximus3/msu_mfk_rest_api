@@ -115,5 +115,6 @@ db/*
 
 deploy/*
 !deploy/generate.sh
+!deploy/connect.sh
 !deploy/README.md
 

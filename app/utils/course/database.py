@@ -14,7 +14,7 @@ async def is_student_registered_on_course(
 ) -> bool:
     query = (
         select(StudentCourse)
-        .where(StudentCourse.mfk_user_id == student_id)
+        .where(StudentCourse.student_id == student_id)
         .where(StudentCourse.course_id == course_id)
     )
     return await session.scalar(query) is not None
@@ -24,7 +24,7 @@ async def add_student_to_course(
     session: AsyncSession, student_id: int, course_id: int
 ) -> None:
     student_course = StudentCourse(
-        mfk_user_id=student_id,
+        student_id=student_id,
         course_id=course_id,
     )
     session.add(student_course)

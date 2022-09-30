@@ -17,7 +17,12 @@ from app.config import get_settings
 from app.creator import get_app
 from app.database.connection import SessionManager
 from app.utils import user
-from tests.factory_lib import UserFactory
+from tests.factory_lib import (
+    CourseFactory,
+    DepartmentFactory,
+    StudentFactory,
+    UserFactory,
+)
 from tests.utils import make_alembic_config
 
 
@@ -79,13 +84,13 @@ def migrated_postgres(alembic_config: Config):
 
 @pytest.fixture
 def create_async_session(  # type: ignore
-    postgres, migrated_postgres, manager: SessionManager = SessionManager()
+    migrated_postgres, manager: SessionManager = SessionManager()
 ) -> tp.Callable:  # type: ignore
     """
     Returns a class object with which you can
     create a new session to connect to the database.
     """
-    manager.refresh()
+    manager.refresh()  # Very important! Use this in `client` function.
     yield manager.create_async_session
 
 
@@ -140,3 +145,60 @@ def user_token(created_user):
 @pytest.fixture
 def user_headers(user_token):
     return {'Authorization': f'Bearer {user_token}'}
+
+
+@pytest.fixture
+async def potential_course():  # type: ignore
+    yield CourseFactory.build()
+
+
+@pytest.fixture
+async def not_created_course(potential_course):  # type: ignore
+    yield potential_course
+
+
+@pytest.fixture
+async def created_course(not_created_course, session):  # type: ignore
+    session.add(not_created_course)
+    await session.commit()
+    await session.refresh(not_created_course)
+
+    yield not_created_course
+
+
+@pytest.fixture
+async def potential_department():  # type: ignore
+    yield DepartmentFactory.build()
+
+
+@pytest.fixture
+async def not_created_department(potential_department):  # type: ignore
+    yield potential_department
+
+
+@pytest.fixture
+async def created_department(not_created_department, session):  # type: ignore
+    session.add(not_created_department)
+    await session.commit()
+    await session.refresh(not_created_department)
+
+    yield not_created_department
+
+
+@pytest.fixture
+async def potential_student():  # type: ignore
+    yield StudentFactory.build()
+
+
+@pytest.fixture
+async def not_created_student(potential_student):  # type: ignore
+    yield potential_student
+
+
+@pytest.fixture
+async def created_student(not_created_student, session):  # type: ignore
+    session.add(not_created_student)
+    await session.commit()
+    await session.refresh(not_created_student)
+
+    yield not_created_student

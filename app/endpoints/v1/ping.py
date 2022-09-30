@@ -41,7 +41,7 @@ async def ping_database(
 ) -> PingResponse:
     if await health_check_db(session):
         return PingResponse(message=PingMessage.OK)
-    raise HTTPException(
+    raise HTTPException(  # pragma: no cover
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         detail=PingMessage.DB_ERROR,
     )

@@ -177,7 +177,7 @@ commit: ##@Git Commit with message all files
 push: ##@Git Push to origin
 	@git push
 
-.PHONY: git
+.PHONY: check-git
 git: check commit ##@Git Check and commit
 
 %::

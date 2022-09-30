@@ -10,7 +10,7 @@ from app.utils.user import get_current_user
 
 api_router = APIRouter(
     prefix='/register',
-    tags=['Register new msu mfk user'],
+    tags=['Register new student on course'],
 )
 
 

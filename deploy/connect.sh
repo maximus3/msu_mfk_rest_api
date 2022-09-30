@@ -1,0 +1,1 @@
+ssh -p $(cat deploy/port.txt) $(cat deploy/username.txt)@$(cat deploy/host.txt)
