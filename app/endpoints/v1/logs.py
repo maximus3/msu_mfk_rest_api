@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from fastapi import APIRouter, Depends, status
 from fastapi.requests import Request
 from fastapi.responses import PlainTextResponse
@@ -21,6 +23,8 @@ async def get(
     __: User = Depends(get_current_user),
     last: int = 100,
 ) -> PlainTextResponse:
+    if not Path('logfile.log').exists():
+        return PlainTextResponse('No logs yet')
     with open('logfile.log', 'r', encoding='windows-1251') as f:
         lines = f.readlines()
     return PlainTextResponse(''.join(lines[-last:]))
