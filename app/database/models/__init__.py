@@ -1,7 +1,7 @@
 from .base import BaseModel
 from .contest import Contest
 from .course import Course
-from .mfk_user import MFKUser, MFKUserContest, MFKUserCourse
+from .student import Student, StudentContest, StudentCourse
 from .user import User
 
 
@@ -10,7 +10,7 @@ __all__ = [
     'User',
     'Course',
     'Contest',
-    'MFKUser',
-    'MFKUserCourse',
-    'MFKUserContest',
+    'Student',
+    'StudentCourse',
+    'StudentContest',
 ]

@@ -88,6 +88,10 @@ migrate:  ##@Database Do all migrations in database
 revision:  ##@Database Create new revision file automatically with prefix (ex. 2022_01_01_14cs34f_message.py)
 	$(POETRY_RUN) alembic revision --autogenerate
 
+.PHONY: downgrade
+downgrade:  ##@Database Downgrade migration on one revision
+	alembic downgrade -1
+
 .PHONY: db
 db: ##@Database Docker up db
 	docker-compose up -d postgres
@@ -174,7 +178,7 @@ push: ##@Git Push to origin
 	@git push
 
 .PHONY: git
-git: check commit push ##@Git Check, commit and push
+git: check commit ##@Git Check and commit
 
 %::
 	echo $(MESSAGE)

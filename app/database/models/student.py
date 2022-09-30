@@ -3,31 +3,32 @@ import sqlalchemy as sa
 from .base import BaseModel
 
 
-class MFKUser(BaseModel):
-    __tablename__ = 'mfk_user'
+class Student(BaseModel):
+    __tablename__ = 'student'
 
     fio = sa.Column(sa.String)
     department = sa.Column(sa.String)
     contest_login = sa.Column(sa.String)
+    token = sa.Column(sa.String)
 
 
-class MFKUserCourse(BaseModel):
-    __tablename__ = 'mfk_user_course'
+class StudentCourse(BaseModel):
+    __tablename__ = 'student_course'
 
     course_id = sa.Column(
         sa.ForeignKey('course.id', ondelete='CASCADE'),
         nullable=False,
         index=True,
     )
-    mfk_user_id = sa.Column(
-        sa.ForeignKey('mfk_user.id', ondelete='CASCADE'),
+    student_id = sa.Column(
+        sa.ForeignKey('student.id', ondelete='CASCADE'),
         nullable=False,
         index=True,
     )
 
 
-class MFKUserContest(BaseModel):
-    __tablename__ = 'mfk_user_contest'
+class StudentContest(BaseModel):
+    __tablename__ = 'student_contest'
 
     course_id = sa.Column(
         sa.ForeignKey('course.id', ondelete='CASCADE'),
@@ -39,8 +40,8 @@ class MFKUserContest(BaseModel):
         nullable=False,
         index=True,
     )
-    mfk_user_id = sa.Column(
-        sa.ForeignKey('mfk_user.id', ondelete='CASCADE'),
+    student_id = sa.Column(
+        sa.ForeignKey('student.id', ondelete='CASCADE'),
         nullable=False,
         index=True,
     )

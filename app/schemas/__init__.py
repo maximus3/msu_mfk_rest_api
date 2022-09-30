@@ -1,7 +1,8 @@
 from .application_health.ping import PingMessage, PingResponse
 from .auth.token import Token, TokenData
 from .auth.user import User as UserSchema
-from .register.register import RegisterRequest
+from .register.register import RegisterRequest, RegisterResponse
+from .status.database import DatabaseStatus
 
 
 __all__ = [
@@ -11,4 +12,6 @@ __all__ = [
     'UserSchema',
     'TokenData',
     'RegisterRequest',
+    'DatabaseStatus',
+    'RegisterResponse',
 ]

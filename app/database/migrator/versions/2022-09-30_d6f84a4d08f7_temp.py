@@ -1,8 +1,8 @@
-"""add models
+"""temp init migration
 
-Revision ID: 56c25bc38eec
-Revises: 8bb82a9d9164
-Create Date: 2022-09-26 20:23:16.484233
+Revision ID: d6f84a4d08f7
+Revises:
+Create Date: 2022-09-30 13:45:01.892152
 
 """
 import sqlalchemy as sa
@@ -11,8 +11,8 @@ from sqlalchemy.dialects import postgresql
 
 
 # revision identifiers, used by Alembic.
-revision = '56c25bc38eec'
-down_revision = '8bb82a9d9164'
+revision = 'd6f84a4d08f7'
+down_revision = None
 branch_labels = None
 depends_on = None
 
@@ -48,7 +48,7 @@ def upgrade() -> None:
         sa.UniqueConstraint('short_name', name=op.f('uq__course__short_name')),
     )
     op.create_table(
-        'mfk_user',
+        'student',
         sa.Column(
             'id',
             postgresql.UUID(as_uuid=True),
@@ -70,8 +70,40 @@ def upgrade() -> None:
         sa.Column('fio', sa.String(), nullable=True),
         sa.Column('department', sa.String(), nullable=True),
         sa.Column('contest_login', sa.String(), nullable=True),
-        sa.PrimaryKeyConstraint('id', name=op.f('pk__mfk_user')),
-        sa.UniqueConstraint('id', name=op.f('uq__mfk_user__id')),
+        sa.Column('token', sa.String(), nullable=True),
+        sa.PrimaryKeyConstraint('id', name=op.f('pk__student')),
+        sa.UniqueConstraint('id', name=op.f('uq__student__id')),
+    )
+    op.create_table(
+        'user',
+        sa.Column(
+            'id',
+            postgresql.UUID(as_uuid=True),
+            server_default=sa.text('gen_random_uuid()'),
+            nullable=False,
+        ),
+        sa.Column(
+            'dt_created',
+            sa.TIMESTAMP(timezone=True),
+            server_default=sa.text('CURRENT_TIMESTAMP'),
+            nullable=False,
+        ),
+        sa.Column(
+            'dt_updated',
+            sa.TIMESTAMP(timezone=True),
+            server_default=sa.text('CURRENT_TIMESTAMP'),
+            nullable=False,
+        ),
+        sa.Column('username', sa.String(), nullable=False),
+        sa.Column('password', sa.String(), nullable=False),
+        sa.PrimaryKeyConstraint('id', name=op.f('pk__user')),
+        sa.UniqueConstraint('id', name=op.f('uq__user__id')),
+    )
+    op.create_index(
+        op.f('ix__user__password'), 'user', ['password'], unique=False
+    )
+    op.create_index(
+        op.f('ix__user__username'), 'user', ['username'], unique=True
     )
     op.create_table(
         'contest',
@@ -113,7 +145,7 @@ def upgrade() -> None:
         op.f('ix__contest__course_id'), 'contest', ['course_id'], unique=False
     )
     op.create_table(
-        'mfk_user_course',
+        'student_course',
         sa.Column(
             'id',
             postgresql.UUID(as_uuid=True),
@@ -133,38 +165,36 @@ def upgrade() -> None:
             nullable=False,
         ),
         sa.Column('course_id', postgresql.UUID(as_uuid=True), nullable=False),
-        sa.Column(
-            'mfk_user_id', postgresql.UUID(as_uuid=True), nullable=False
-        ),
+        sa.Column('student_id', postgresql.UUID(as_uuid=True), nullable=False),
         sa.ForeignKeyConstraint(
             ['course_id'],
             ['course.id'],
-            name=op.f('fk__mfk_user_course__course_id__course'),
+            name=op.f('fk__student_course__course_id__course'),
             ondelete='CASCADE',
         ),
         sa.ForeignKeyConstraint(
-            ['mfk_user_id'],
-            ['mfk_user.id'],
-            name=op.f('fk__mfk_user_course__mfk_user_id__mfk_user'),
+            ['student_id'],
+            ['student.id'],
+            name=op.f('fk__student_course__student_id__student'),
             ondelete='CASCADE',
         ),
-        sa.PrimaryKeyConstraint('id', name=op.f('pk__mfk_user_course')),
-        sa.UniqueConstraint('id', name=op.f('uq__mfk_user_course__id')),
+        sa.PrimaryKeyConstraint('id', name=op.f('pk__student_course')),
+        sa.UniqueConstraint('id', name=op.f('uq__student_course__id')),
     )
     op.create_index(
-        op.f('ix__mfk_user_course__course_id'),
-        'mfk_user_course',
+        op.f('ix__student_course__course_id'),
+        'student_course',
         ['course_id'],
         unique=False,
     )
     op.create_index(
-        op.f('ix__mfk_user_course__mfk_user_id'),
-        'mfk_user_course',
-        ['mfk_user_id'],
+        op.f('ix__student_course__student_id'),
+        'student_course',
+        ['student_id'],
         unique=False,
     )
     op.create_table(
-        'mfk_user_contest',
+        'student_contest',
         sa.Column(
             'id',
             postgresql.UUID(as_uuid=True),
@@ -185,74 +215,72 @@ def upgrade() -> None:
         ),
         sa.Column('course_id', postgresql.UUID(as_uuid=True), nullable=False),
         sa.Column('contest_id', postgresql.UUID(as_uuid=True), nullable=False),
-        sa.Column(
-            'mfk_user_id', postgresql.UUID(as_uuid=True), nullable=False
-        ),
+        sa.Column('student_id', postgresql.UUID(as_uuid=True), nullable=False),
         sa.Column('tasks_done', sa.Integer(), nullable=True),
         sa.Column('is_ok', sa.Boolean(), nullable=True),
         sa.ForeignKeyConstraint(
             ['contest_id'],
             ['contest.id'],
-            name=op.f('fk__mfk_user_contest__contest_id__contest'),
+            name=op.f('fk__student_contest__contest_id__contest'),
             ondelete='CASCADE',
         ),
         sa.ForeignKeyConstraint(
             ['course_id'],
             ['course.id'],
-            name=op.f('fk__mfk_user_contest__course_id__course'),
+            name=op.f('fk__student_contest__course_id__course'),
             ondelete='CASCADE',
         ),
         sa.ForeignKeyConstraint(
-            ['mfk_user_id'],
-            ['mfk_user.id'],
-            name=op.f('fk__mfk_user_contest__mfk_user_id__mfk_user'),
+            ['student_id'],
+            ['student.id'],
+            name=op.f('fk__student_contest__student_id__student'),
             ondelete='CASCADE',
         ),
-        sa.PrimaryKeyConstraint('id', name=op.f('pk__mfk_user_contest')),
-        sa.UniqueConstraint('id', name=op.f('uq__mfk_user_contest__id')),
+        sa.PrimaryKeyConstraint('id', name=op.f('pk__student_contest')),
+        sa.UniqueConstraint('id', name=op.f('uq__student_contest__id')),
     )
     op.create_index(
-        op.f('ix__mfk_user_contest__contest_id'),
-        'mfk_user_contest',
+        op.f('ix__student_contest__contest_id'),
+        'student_contest',
         ['contest_id'],
         unique=False,
     )
     op.create_index(
-        op.f('ix__mfk_user_contest__course_id'),
-        'mfk_user_contest',
+        op.f('ix__student_contest__course_id'),
+        'student_contest',
         ['course_id'],
         unique=False,
     )
     op.create_index(
-        op.f('ix__mfk_user_contest__mfk_user_id'),
-        'mfk_user_contest',
-        ['mfk_user_id'],
+        op.f('ix__student_contest__student_id'),
+        'student_contest',
+        ['student_id'],
         unique=False,
     )
-    op.create_unique_constraint(op.f('uq__user__id'), 'user', ['id'])
 
 
 def downgrade() -> None:
-    op.drop_constraint(op.f('uq__user__id'), 'user', type_='unique')
     op.drop_index(
-        op.f('ix__mfk_user_contest__mfk_user_id'),
-        table_name='mfk_user_contest',
+        op.f('ix__student_contest__student_id'), table_name='student_contest'
     )
     op.drop_index(
-        op.f('ix__mfk_user_contest__course_id'), table_name='mfk_user_contest'
+        op.f('ix__student_contest__course_id'), table_name='student_contest'
     )
     op.drop_index(
-        op.f('ix__mfk_user_contest__contest_id'), table_name='mfk_user_contest'
+        op.f('ix__student_contest__contest_id'), table_name='student_contest'
     )
-    op.drop_table('mfk_user_contest')
+    op.drop_table('student_contest')
     op.drop_index(
-        op.f('ix__mfk_user_course__mfk_user_id'), table_name='mfk_user_course'
+        op.f('ix__student_course__student_id'), table_name='student_course'
     )
     op.drop_index(
-        op.f('ix__mfk_user_course__course_id'), table_name='mfk_user_course'
+        op.f('ix__student_course__course_id'), table_name='student_course'
     )
-    op.drop_table('mfk_user_course')
+    op.drop_table('student_course')
     op.drop_index(op.f('ix__contest__course_id'), table_name='contest')
     op.drop_table('contest')
-    op.drop_table('mfk_user')
+    op.drop_index(op.f('ix__user__username'), table_name='user')
+    op.drop_index(op.f('ix__user__password'), table_name='user')
+    op.drop_table('user')
+    op.drop_table('student')
     op.drop_table('course')

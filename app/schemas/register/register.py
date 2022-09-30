@@ -7,3 +7,7 @@ class RegisterRequest(BaseModel):
     login: str
     course: str
     token: str
+
+
+class RegisterResponse(BaseModel):
+    login: str
