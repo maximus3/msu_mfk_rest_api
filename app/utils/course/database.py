@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -10,7 +12,7 @@ async def get_course(session: AsyncSession, name: str) -> Course | None:
 
 
 async def is_student_registered_on_course(
-    session: AsyncSession, student_id: int, course_id: int
+    session: AsyncSession, student_id: UUID, course_id: UUID
 ) -> bool:
     query = (
         select(StudentCourse)
@@ -21,11 +23,10 @@ async def is_student_registered_on_course(
 
 
 async def add_student_to_course(
-    session: AsyncSession, student_id: int, course_id: int
+    session: AsyncSession, student_id: UUID, course_id: UUID
 ) -> None:
     student_course = StudentCourse(
         student_id=student_id,
         course_id=course_id,
     )
     session.add(student_course)
-    await session.refresh(student_course)

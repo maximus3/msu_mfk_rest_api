@@ -16,11 +16,13 @@ class StudentDepartment(BaseModel):
 
     student_id = sa.Column(
         sa.ForeignKey('student.id', ondelete='CASCADE'),
-        primary_key=True,
+        nullable=False,
+        index=True,
     )
     department_id = sa.Column(
         sa.ForeignKey('department.id', ondelete='CASCADE'),
-        primary_key=True,
+        nullable=False,
+        index=True,
     )
 
 

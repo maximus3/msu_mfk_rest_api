@@ -20,6 +20,7 @@ from app.utils import user
 from tests.factory_lib import (
     CourseFactory,
     DepartmentFactory,
+    StudentCourseFactory,
     StudentFactory,
     UserFactory,
 )
@@ -202,3 +203,17 @@ async def created_student(not_created_student, session):  # type: ignore
     await session.refresh(not_created_student)
 
     yield not_created_student
+
+
+@pytest.fixture
+async def student_course(  # type: ignore
+    created_student, created_course, session
+):
+    relation = StudentCourseFactory.build(
+        student_id=created_student.id, course_id=created_course.id
+    )
+    session.add(relation)
+    await session.commit()
+    await session.refresh(relation)
+
+    yield relation

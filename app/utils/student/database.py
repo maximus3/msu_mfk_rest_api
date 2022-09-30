@@ -17,12 +17,13 @@ async def create_student(
 ) -> Student:
     student = Student(
         fio=data.fio,
-        contest_login=data.login,
+        contest_login=data.contest_login,
         token=data.token,
     )
     session.add(student)
+    await session.flush()
+    await session.refresh(student)
     session.add(
         StudentDepartment(student_id=student.id, department_id=department.id)
     )
-    await session.refresh(student)
     return student

@@ -25,7 +25,7 @@ async def register(
 ) -> RegisterResponse:
     result_status, message = await register_student_on_course(session, data)
     if result_status == DatabaseStatus.OK:
-        return RegisterResponse(login=data.login)
+        return RegisterResponse(login=data.contest_login)
     if result_status == DatabaseStatus.ALREADY_EXISTS:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,

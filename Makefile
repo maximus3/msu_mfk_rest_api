@@ -112,6 +112,22 @@ test-failed: ##@Testing Runs pytest from last-failed
 test-cov: ##@Testing Runs pytest with coverage report
 	$(TEST) --cov --cov-report html
 
+.PHONY: test-mp
+test-mp: ##@Testing Runs pytest with multiprocessing
+	$(TEST) --cov -n auto
+
+.PHONY: test-fast-mp
+test-fast-mp: ##@Testing Runs pytest with exitfirst with multiprocessing
+	$(TEST) --exitfirst -n auto
+
+.PHONY: test-failed-mp
+test-failed-mp: ##@Testing Runs pytest from last-failed with multiprocessing
+	$(TEST) --last-failed -n auto
+
+.PHONY: test-cov-mp
+test-cov-mp: ##@Testing Runs pytest with coverage report with multiprocessing
+	$(TEST) --cov --cov-report html -n auto
+
 .PHONY: format
 format: ###@Code Formats all files
 	$(POETRY_RUN) autoflake --recursive --in-place --remove-all-unused-imports $(CODE)
@@ -129,7 +145,7 @@ lint: ###@Code Lint code
 	$(POETRY_RUN) safety check --full-report || echo "Safety check failed"
 
 .PHONY: check
-check: format lint test ###@Code Format and lint code then run tests
+check: format lint test-mp ###@Code Format and lint code then run tests
 
 .PHONY: docker-up
 docker-up: ##@Application Docker up

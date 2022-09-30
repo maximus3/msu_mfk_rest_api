@@ -57,7 +57,7 @@ jobs:
         make env
         printf "APP_HOST=localhost\n" >> .env
         make db
-        sudo make test
+        sudo make test-mp
 
   deploy:
 

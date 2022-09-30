@@ -17,7 +17,7 @@ async def register_student_on_course(
     if department is None:
         return DatabaseStatus.NOT_FOUND, 'Department not found'
 
-    student = await get_student(session, data.login)
+    student = await get_student(session, data.contest_login)
     if student is None:
         student = await create_student(session, data, department)
 
