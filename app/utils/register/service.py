@@ -6,20 +6,21 @@ from app.utils.course import (
     get_course,
     is_student_registered_on_course,
 )
+from app.utils.department import get_department
 from app.utils.student import create_student, get_student
 
 
 async def register_student_on_course(
     session: AsyncSession, data: RegisterRequest
 ) -> tuple[DatabaseStatus, str]:
+    department = await get_department(session, data.department)
+    if department is None:
+        return DatabaseStatus.NOT_FOUND, 'Department not found'
+
     student = await get_student(session, data.login)
     if student is None:
-        status, message = await create_student(session, data)
-        if status != DatabaseStatus.OK:
-            return status, message
-    student = await get_student(session, data.login)
-    if student is None:
-        return DatabaseStatus.ERROR, 'Student created, but not found'
+        student = await create_student(session, data, department)
+
     course = await get_course(session, data.course)
     if course is None:
         return DatabaseStatus.NOT_FOUND, 'Course not found'

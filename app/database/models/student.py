@@ -7,7 +7,6 @@ class Student(BaseModel):
     __tablename__ = 'student'
 
     fio = sa.Column(sa.String)
-    department = sa.Column(sa.String)
     contest_login = sa.Column(sa.String)
     token = sa.Column(sa.String)
 

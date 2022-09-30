@@ -1,8 +1,8 @@
 """init migration
 
-Revision ID: cb034cc9ad04
+Revision ID: 6d7d8a45ef2a
 Revises:
-Create Date: 2022-09-30 13:50:11.407951
+Create Date: 2022-09-30 13:59:20.612461
 
 """
 import sqlalchemy as sa
@@ -11,7 +11,7 @@ from sqlalchemy.dialects import postgresql
 
 
 # revision identifiers, used by Alembic.
-revision = 'cb034cc9ad04'
+revision = '6d7d8a45ef2a'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -94,7 +94,6 @@ def upgrade() -> None:
             nullable=False,
         ),
         sa.Column('fio', sa.String(), nullable=True),
-        sa.Column('department', sa.String(), nullable=True),
         sa.Column('contest_login', sa.String(), nullable=True),
         sa.Column('token', sa.String(), nullable=True),
         sa.PrimaryKeyConstraint('id', name=op.f('pk__student')),

@@ -1,8 +1,8 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.database.models import Student
-from app.schemas import DatabaseStatus, RegisterRequest
+from app.database.models import Department, Student, StudentDepartment
+from app.schemas import RegisterRequest
 
 
 async def get_student(
@@ -13,13 +13,16 @@ async def get_student(
 
 
 async def create_student(
-    session: AsyncSession, data: RegisterRequest
-) -> tuple[DatabaseStatus, str]:
+    session: AsyncSession, data: RegisterRequest, department: Department
+) -> Student:
     student = Student(
         fio=data.fio,
-        department=data.department,
         contest_login=data.login,
+        token=data.token,
     )
     session.add(student)
+    session.add(
+        StudentDepartment(student_id=student.id, department_id=department.id)
+    )
     await session.refresh(student)
-    return DatabaseStatus.OK, 'OK'
+    return student
