@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, status
-from pydantic import BaseModel
 
 from app.database.models import User
+from app.schemas import RegisterRequest
 from app.utils.user import get_current_user
 
 
@@ -9,14 +9,6 @@ api_router = APIRouter(
     prefix='/register',
     tags=['Register new msu mfk user'],
 )
-
-
-class RegisterRequest(BaseModel):
-    fio: str
-    department: str
-    login: str
-    course: str
-    token: str
 
 
 @api_router.post(

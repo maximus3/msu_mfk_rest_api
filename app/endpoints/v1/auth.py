@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.config import get_settings
 from app.database.connection import SessionManager
 from app.database.models import User
-from app.schemas.auth import Token, UserSchema
+from app.schemas import Token, UserSchema
 from app.utils.user import (
     authenticate_user,
     create_access_token,

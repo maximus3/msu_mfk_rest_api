@@ -164,15 +164,17 @@ docker-migrate: ##@Application Migrate db in docker
 
 .PHONY: commit
 commit: ##@Git Commit with message all files
-	make check
-	git add .
-	git status
+	@git add .
+	@git status
 	$(eval MESSAGE := $(shell read -p "Commit message: " MESSAGE; echo $$MESSAGE))
 	@git commit -m "$(MESSAGE)"
 
 .PHONY: push
 push: ##@Git Push to origin
-	git push
+	@git push
+
+.PHONY: git
+git: check commit push ##@Git Check, commit and push
 
 %::
 	echo $(MESSAGE)
