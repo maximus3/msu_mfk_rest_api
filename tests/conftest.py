@@ -22,7 +22,7 @@ from tests.factory_lib import (
     DepartmentFactory,
     StudentCourseFactory,
     StudentFactory,
-    UserFactory,
+    UserFactory, StudentDepartmentFactory,
 )
 from tests.utils import make_alembic_config
 
@@ -211,6 +211,20 @@ async def student_course(  # type: ignore
 ):
     relation = StudentCourseFactory.build(
         student_id=created_student.id, course_id=created_course.id
+    )
+    session.add(relation)
+    await session.commit()
+    await session.refresh(relation)
+
+    yield relation
+
+
+@pytest.fixture
+async def student_department(  # type: ignore
+    created_student, created_department, session
+):
+    relation = StudentDepartmentFactory.build(
+        student_id=created_student.id, department_id=created_department.id
     )
     session.add(relation)
     await session.commit()
