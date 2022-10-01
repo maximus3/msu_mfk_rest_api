@@ -13,9 +13,12 @@ class Contest(BaseModel):
         nullable=False,
         index=True,
     )
+    yandex_contest_id = sa.Column(
+        sa.Integer, nullable=False, index=True, unique=True
+    )
     deadline = sa.Column(sa.DateTime)
     lecture = sa.Column(sa.Integer)
-    link = sa.Column(sa.String)
+    link = sa.Column(sa.String, unique=True)
     tasks_count = sa.Column(sa.Integer)
     tasks_need = sa.Column(sa.Integer)
     is_necessary = sa.Column(sa.Boolean)
