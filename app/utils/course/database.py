@@ -11,6 +11,11 @@ async def get_course(session: AsyncSession, name: str) -> Course | None:
     return await session.scalar(query)
 
 
+async def get_all_courses(session: AsyncSession) -> list[Course]:
+    query = select(Course)
+    return (await session.execute(query)).scalars().all()
+
+
 async def is_student_registered_on_course(
     session: AsyncSession, student_id: UUID, course_id: UUID
 ) -> bool:

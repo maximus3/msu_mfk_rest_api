@@ -169,6 +169,17 @@ async def created_course(not_created_course, session):  # type: ignore
 
 
 @pytest.fixture
+async def created_two_courses(session):  # type: ignore
+    courses = CourseFactory.create_batch(2)
+    session.add_all(courses)
+    await session.commit()
+    await session.refresh(courses[0])
+    await session.refresh(courses[1])
+
+    yield courses
+
+
+@pytest.fixture
 async def potential_department():  # type: ignore
     yield DepartmentFactory.build()
 

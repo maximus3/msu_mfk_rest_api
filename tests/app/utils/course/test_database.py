@@ -28,6 +28,27 @@ class TestGetCourseHandler:
         assert course_model == created_course
 
 
+class TestGetAllCoursesHandler:
+    async def test_get_all_courses_no_courses(self, session):
+        assert await course.get_all_courses(session=session) == []
+
+    async def test_get_all_courses_ok(self, session, created_course):
+        courses = await course.get_all_courses(session=session)
+        assert courses
+        assert len(courses) == 1
+        assert courses[0] == created_course
+
+    async def test_get_all_courses_ok_multiple(
+        self, session, created_two_courses
+    ):
+        courses = await course.get_all_courses(session=session)
+        assert courses
+        assert len(courses) == 2
+        assert sorted(courses, key=lambda x: x.name) == sorted(
+            created_two_courses, key=lambda x: x.name
+        )
+
+
 class TestIsStudentRegisteredOnCourseHandler:
     async def test_is_student_registered_on_course_no_course(
         self, session, created_user
