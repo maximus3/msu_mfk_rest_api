@@ -25,6 +25,12 @@ async def get(
 ) -> PlainTextResponse:
     if not Path('logfile.log').exists():
         return PlainTextResponse('No logs yet')
-    with open('logfile.log', 'r', encoding='windows-1251') as f:
-        lines = f.readlines()
+    encodings = ['utf-8', 'cp1252', 'iso-8859-1']
+    for encoding in encodings:
+        try:
+            with open('logfile.log', 'r', encoding=encoding) as f:
+                lines = f.readlines()
+                break
+        except UnicodeDecodeError:
+            continue
     return PlainTextResponse(''.join(lines[-last:]))
