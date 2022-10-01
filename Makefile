@@ -80,6 +80,11 @@ install-prod: ##@Code Install dependencies for production
 up: ##@Application Up App
 	$(POETRY_RUN) python -m app
 
+
+.PHONY: up-scheduler
+up-scheduler: ##@Application Up Scheduler
+	$(POETRY_RUN) python -m app.scheduler
+
 .PHONY: migrate
 migrate:  ##@Database Do all migrations in database
 	$(POETRY_RUN) alembic upgrade $(args)

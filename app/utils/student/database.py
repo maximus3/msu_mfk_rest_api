@@ -1,7 +1,14 @@
+from uuid import UUID
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.database.models import Department, Student, StudentDepartment
+from app.database.models import (
+    Department,
+    Student,
+    StudentCourse,
+    StudentDepartment,
+)
 from app.schemas import RegisterRequest
 
 
@@ -10,6 +17,17 @@ async def get_student(
 ) -> Student | None:
     query = select(Student).where(Student.contest_login == contest_login)
     return await session.scalar(query)
+
+
+async def get_students_by_course(
+    session: AsyncSession, course_id: UUID
+) -> list[Student]:
+    query = (
+        select(Student)
+        .join(StudentCourse)
+        .where(StudentCourse.course_id == course_id)
+    )
+    return (await session.execute(query)).scalars().all()
 
 
 async def create_student(
