@@ -46,6 +46,12 @@ class DefaultSettings(BaseSettings):
     AUTH_URL = '/api/v1/user/authentication'
     OAUTH2_SCHEME = OAuth2PasswordBearer(tokenUrl=AUTH_URL)
 
+    YANDEX_CONTEST_API_URL: str = Field(
+        'https://api.contest.yandex.net/api/public/v2/',
+        env='YANDEX_CONTEST_API_URL',
+    )
+    YANDEX_API_KEY: str = Field('', env='YANDEX_API_KEY')
+
     @property
     def database_settings(self) -> dict[str, str | int]:
         """

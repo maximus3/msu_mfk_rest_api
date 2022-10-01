@@ -1,3 +1,5 @@
+# pylint: disable=too-many-nested-blocks
+
 import logging
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -25,10 +27,22 @@ async def check_students_for_contest_registration(
             if not await is_student_registered_on_contest(
                 session, student.id, contest.id
             ):
-                await add_student_to_contest(
-                    session, contest, student.id, contest.id, course.id
-                )
                 was_add = True
+                add_ok, message = await add_student_to_contest(
+                    session,
+                    contest,
+                    student,
+                    course.id,
+                )
+                if not add_ok:
+                    logger.error(
+                        'Student "%s" not registered on contest "%s". '
+                        'Reason: %s',
+                        student.contest_login,
+                        contest.yandex_contest_id,
+                        message,
+                    )
+                    continue
                 await session.commit()
                 logging.info(
                     'Student "%s" added to contest "%s"',
