@@ -12,7 +12,7 @@ class TestGetHandler:
     @staticmethod
     def get_url() -> str:
         settings = get_settings()
-        return f'{settings.PATH_PREFIX}{prefix}/logs'
+        return f'{settings.PATH_PREFIX}{prefix}/logs/app'
 
     async def test_get(self, client, user_headers):
         response = await client.get(url=self.get_url(), headers=user_headers)

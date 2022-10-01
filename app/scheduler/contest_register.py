@@ -33,10 +33,12 @@ async def check_students_for_contest_registration(
                 logging.info(
                     'Student "%s" added to contest "%s"',
                     student.contest_login,
-                    contest.link,
+                    contest.yandex_contest_id,
                 )
         if not was_add:
-            logger.info('No students added to contest "%s"', contest.link)
+            logger.info(
+                'No students added to contest "%s"', contest.yandex_contest_id
+            )
 
 
 async def job(
