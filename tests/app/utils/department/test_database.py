@@ -23,3 +23,21 @@ class TestGetDepartmentHandler:
         )
         assert department_model
         assert department_model == created_department
+
+
+class TestGetAllDepartmentsHandler:
+    async def test_get_all_departments_no_departments(self, session):
+        assert await department.get_all_departments(session=session) == []
+
+    async def test_get_all_departments_ok(self, session, created_department):
+        departments = await department.get_all_departments(session=session)
+        assert departments
+        assert departments == [created_department]
+
+    async def test_get_all_departments_multiple(
+        self, session, created_two_departments
+    ):
+        departments = await department.get_all_departments(session=session)
+        assert sorted(departments, key=lambda x: x.name) == sorted(
+            created_two_departments, key=lambda x: x.name
+        )

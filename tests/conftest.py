@@ -306,3 +306,13 @@ async def mock_make_request_to_yandex_contest(  # type: ignore
         request.param if hasattr(request, 'param') else 200
     )
     yield mock
+
+
+@pytest.fixture
+async def created_two_departments(session):
+    models = DepartmentFactory.create_batch(2)
+    session.add_all(models)
+    await session.commit()
+    await asyncio.gather(*[session.refresh(model) for model in models])
+
+    yield models
