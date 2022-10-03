@@ -17,6 +17,7 @@ api_router = APIRouter(
 
 @api_router.get(
     '/app',
+    response_model=PlainTextResponse,
     status_code=status.HTTP_200_OK,
 )
 async def get(

@@ -16,6 +16,7 @@ api_router = APIRouter(
 
 @api_router.post(
     '',
+    response_model=RegisterResponse,
     status_code=status.HTTP_201_CREATED,
 )
 async def register(

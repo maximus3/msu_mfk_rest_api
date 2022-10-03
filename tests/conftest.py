@@ -296,9 +296,13 @@ async def student_contest(  # type: ignore
 
 
 @pytest.fixture
-async def mock_make_request_to_yandex_contest(mocker, request):  # type: ignore
+async def mock_make_request_to_yandex_contest(  # type: ignore
+    mocker, request=None
+):
     mock = mocker.patch(
         'app.utils.contest.service.make_request_to_yandex_contest'
     )
-    mock.return_value.status_code = request.param
+    mock.return_value.status_code = (
+        request.param if hasattr(request, 'param') else 200
+    )
     yield mock

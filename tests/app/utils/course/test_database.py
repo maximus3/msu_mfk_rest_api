@@ -1,5 +1,4 @@
 # pylint: disable=unused-argument
-from uuid import uuid4
 
 import pytest
 from sqlalchemy import select
@@ -51,24 +50,24 @@ class TestGetAllCoursesHandler:
 
 class TestIsStudentRegisteredOnCourseHandler:
     async def test_is_student_registered_on_course_no_course(
-        self, session, created_user
+        self, session, created_user, potential_course
     ):
         assert (
             await course.is_student_registered_on_course(
                 session=session,
                 student_id=created_user.id,
-                course_id=uuid4(),
+                course_id=potential_course.id,
             )
             is False
         )
 
     async def test_is_student_registered_on_course_no_student(
-        self, session, created_course
+        self, session, created_course, potential_student
     ):
         assert (
             await course.is_student_registered_on_course(
                 session=session,
-                student_id=uuid4(),
+                student_id=potential_student.id,
                 course_id=created_course.id,
             )
             is False

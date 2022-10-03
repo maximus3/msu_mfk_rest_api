@@ -16,6 +16,7 @@ api_router = APIRouter(
 
 @api_router.get(
     '',
+    response_model=CourseResponse,
     status_code=status.HTTP_200_OK,
 )
 async def get(
