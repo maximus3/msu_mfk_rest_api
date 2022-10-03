@@ -84,7 +84,7 @@ jobs:
       run: echo "${{ secrets.SSH_KNOWN_HOSTS }}" | tr -d '\r' > ~/.ssh/known_hosts
 
     - name: Test connection and copy repo if not exists
-      run: ssh -i ~/.ssh/deploy_key -p ${{ secrets.SSH_PORT }} -o StrictHostKeyChecking=no ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_ADRESS }} "[ -e ${{ github.event.repository.name }} ] || git clone git@github.com:$GITHUB_REPO.git; exit"
+      run: ssh -i ~/.ssh/deploy_key -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_ADRESS }} "[ -e ${{ github.event.repository.name }} ] || git clone git@github.com:$GITHUB_REPO.git; exit"
 
     - name: SSH WORKS - replace files
       run: |
