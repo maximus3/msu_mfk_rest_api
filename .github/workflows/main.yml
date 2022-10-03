@@ -68,7 +68,7 @@ jobs:
     
     - name: Get github URL
       run: |
-        s "GITHUB_URL=$(git remote get-url origin)" >> $GITHUB_ENV
+        echo "GITHUB_URL=$(git remote get-url origin)" >> $GITHUB_ENV
         echo "GITHUB_REPO=${{ github.repository }}" >> $GITHUB_ENV
     
     - name: Make dir .ssh
