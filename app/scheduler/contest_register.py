@@ -15,7 +15,6 @@ from app.utils.student import get_students_by_course
 
 async def check_registration(
     session: AsyncSession,
-    course: Course,
     contest: Contest,
     student: Student,
     logger: logging.Logger | None = None,
@@ -27,7 +26,6 @@ async def check_registration(
         session,
         contest,
         student,
-        course.id,
     )
     if not add_ok:
         logger.error(
@@ -56,7 +54,7 @@ async def check_students_for_contest_registration(
         was_add = False
         for student in students:
             was_add = was_add or await check_registration(
-                session, course, contest, student, logger
+                session, contest, student, logger
             )
         if not was_add:
             logger.info(

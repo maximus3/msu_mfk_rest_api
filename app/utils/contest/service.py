@@ -1,5 +1,4 @@
 import logging
-from uuid import UUID
 
 from httpx import AsyncClient, Response
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -33,7 +32,6 @@ async def add_student_to_contest(
     session: AsyncSession,
     contest: Contest,
     student: Student,
-    course_id: UUID,
 ) -> tuple[bool, str | None]:
     """
     Add student to Yandex contest.
@@ -57,7 +55,7 @@ async def add_student_to_contest(
             return False, message
         case 403:
             message = (
-                f'Yandex API key does not have access to the contest '
+                'Yandex API key does not have access to the contest '
                 f'"{contest.yandex_contest_id}"'
             )
             return False, message
@@ -78,7 +76,7 @@ async def add_student_to_contest(
             return False, message
 
     await add_student_contest_relation(
-        session, student.id, contest.id, course_id
+        session, student.id, contest.id, contest.course_id
     )
     logger.info(
         'Student "%s" successfully added to contest "%s" in database',

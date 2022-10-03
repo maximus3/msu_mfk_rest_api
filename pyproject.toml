@@ -48,15 +48,13 @@ build-backend = "poetry.core.masonry.api"
 
 # PYTEST
 
-[tool.pytest]
-addopts = ["--cov=app", "--cov-fail-under=90", "--ignore=pgdata", "--ignore=pgadmin"]
-python_files = "test_*.py"
-python_classes = ["*Test", "Test*"]
-python_functions = "test_*"
-testpaths = "tests/"
-
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+addopts = "--cov=app --cov-fail-under=90"
+testpaths = "tests/"
+python_files = "test_*.py"
+python_classes = ["Test*"]
+python_functions = "test_*"
 
 [tool.coverage.report]
 exclude_lines = [

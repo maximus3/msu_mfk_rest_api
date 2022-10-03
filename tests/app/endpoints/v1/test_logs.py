@@ -1,3 +1,5 @@
+# pylint: disable=unused-argument
+
 import pytest
 from fastapi import status
 
@@ -14,7 +16,22 @@ class TestGetHandler:
         settings = get_settings()
         return f'{settings.PATH_PREFIX}{prefix}/logs/app'
 
-    async def test_get(self, client, user_headers):
+    async def test_get_no_exists(
+        self, client, user_headers, mock_logging_file
+    ):
         response = await client.get(url=self.get_url(), headers=user_headers)
         assert response.status_code == status.HTTP_200_OK, response.json()
-        assert response.text
+        assert response.text == 'No logs yet'
+
+    async def test_get(self, client, user_headers, mock_logging_file_exists):
+        response = await client.get(url=self.get_url(), headers=user_headers)
+        assert response.status_code == status.HTTP_200_OK, response.json()
+        assert response.text == 'test'
+
+    async def test_get_cp1252(self, client, user_headers, mock_logging_file):
+        with open(mock_logging_file, 'w', encoding='cp1252') as f:
+            f.write('test')
+
+        response = await client.get(url=self.get_url(), headers=user_headers)
+        assert response.status_code == status.HTTP_200_OK, response.json()
+        assert response.text == 'test'

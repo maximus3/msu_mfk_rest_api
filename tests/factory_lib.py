@@ -58,6 +58,7 @@ class ContestFactory(Factory):
     tasks_count = fuzzy.FuzzyInteger(1, 10)
     tasks_need = fuzzy.FuzzyInteger(1, 10)
     is_necessary = fuzzy.FuzzyChoice([True, False])
+    yandex_contest_id = fuzzy.FuzzyInteger(30000, 40000)
 
 
 class StudentCourseFactory(Factory):

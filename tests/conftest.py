@@ -1,6 +1,8 @@
 # pylint: disable=redefined-outer-name
 # pylint: disable=unused-argument
+# pylint: disable=too-many-lines
 
+import asyncio
 import typing as tp
 from asyncio import new_event_loop, set_event_loop
 from os import environ
@@ -18,8 +20,10 @@ from app.creator import get_app
 from app.database.connection import SessionManager
 from app.utils import user
 from tests.factory_lib import (
+    ContestFactory,
     CourseFactory,
     DepartmentFactory,
+    StudentContestFactory,
     StudentCourseFactory,
     StudentDepartmentFactory,
     StudentFactory,
@@ -170,13 +174,12 @@ async def created_course(not_created_course, session):  # type: ignore
 
 @pytest.fixture
 async def created_two_courses(session):  # type: ignore
-    courses = CourseFactory.create_batch(2)
-    session.add_all(courses)
+    models = CourseFactory.create_batch(2)
+    session.add_all(models)
     await session.commit()
-    await session.refresh(courses[0])
-    await session.refresh(courses[1])
+    await asyncio.gather(*[session.refresh(model) for model in models])
 
-    yield courses
+    yield models
 
 
 @pytest.fixture
@@ -243,3 +246,59 @@ async def student_department(  # type: ignore
     await session.refresh(relation)
 
     yield relation
+
+
+@pytest.fixture
+async def potential_contest(created_course):  # type: ignore
+    yield ContestFactory.build(course_id=created_course.id)
+
+
+@pytest.fixture
+async def not_created_contest(potential_contest):  # type: ignore
+    yield potential_contest
+
+
+@pytest.fixture
+async def created_contest(not_created_contest, session):  # type: ignore
+    session.add(not_created_contest)
+    await session.commit()
+    await session.refresh(not_created_contest)
+
+    yield not_created_contest
+
+
+@pytest.fixture
+async def created_two_contests(session, created_course):  # type: ignore
+    models = ContestFactory.create_batch(2)
+    for i in range(2):
+        models[i].course_id = created_course.id
+    session.add_all(models)
+    await session.commit()
+    await asyncio.gather(*[session.refresh(model) for model in models])
+
+    yield models
+
+
+@pytest.fixture
+async def student_contest(  # type: ignore
+    created_student, created_contest, session
+):
+    relation = StudentContestFactory.build(
+        student_id=created_student.id,
+        contest_id=created_contest.id,
+        course_id=created_contest.course_id,
+    )
+    session.add(relation)
+    await session.commit()
+    await session.refresh(relation)
+
+    yield relation
+
+
+@pytest.fixture
+async def mock_make_request_to_yandex_contest(mocker, request):  # type: ignore
+    mock = mocker.patch(
+        'app.utils.contest.service.make_request_to_yandex_contest'
+    )
+    mock.return_value.status_code = request.param
+    yield mock

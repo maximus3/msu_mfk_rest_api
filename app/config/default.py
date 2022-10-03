@@ -31,6 +31,7 @@ class DefaultSettings(BaseSettings):
         '%(filename)s %(funcName)s [LINE:%(lineno)d]# '
         '%(levelname)-8s [%(asctime)s] %(name)s: %(message)s'
     )
+    LOGGING_APP_FILE = 'logfile.log'
 
     BASE_DIR: Path = Path(__file__).resolve().parent.parent
 

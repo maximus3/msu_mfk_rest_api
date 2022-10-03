@@ -1,3 +1,5 @@
+# pylint: disable=unused-argument
+
 import pytest
 from sqlalchemy import select
 
@@ -24,6 +26,35 @@ class TestGetStudentHandler:
         )
         assert student_model
         assert student_model == created_student
+
+
+class TestGetStudentsByCourseHandler:
+    async def test_get_students_by_course_no_students(
+        self, session, created_course
+    ):
+        assert (
+            await student.get_students_by_course(
+                session=session, course_id=created_course.id
+            )
+            == []
+        )
+
+    async def test_get_students_by_course_no_relation(
+        self, session, created_course, created_student
+    ):
+        assert (
+            await student.get_students_by_course(
+                session=session, course_id=created_course.id
+            )
+            == []
+        )
+
+    async def test_get_students_by_course_ok(
+        self, session, created_course, created_student, student_course
+    ):
+        assert await student.get_students_by_course(
+            session=session, course_id=created_course.id
+        ) == [created_student]
 
 
 class TestCreateStudentHandler:
