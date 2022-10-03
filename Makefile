@@ -210,5 +210,11 @@ push: ##@Git Push to origin
 .PHONY: check-git
 git: check commit ##@Git Check and commit
 
+.PHONY: update
+update: ##@Application Update docker app
+	@git pull
+	@make docker
+	@make docker-migrate head
+
 %::
 	echo $(MESSAGE)
