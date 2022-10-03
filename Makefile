@@ -175,7 +175,7 @@ docker-up-build: ##@Application Docker up detach with build
 
 .PHONY: docker-down
 docker-down: ##@Application Docker down
-	docker-compose down
+	docker-compose down $(args)
 
 .PHONY: docker-clean
 docker-clean: ##@Application Docker prune -f
@@ -213,6 +213,7 @@ git: check commit ##@Git Check and commit
 .PHONY: update
 update: ##@Application Update docker app
 	@git pull
+	@make docker-down nginx
 	@make docker
 	@make docker-migrate head
 
