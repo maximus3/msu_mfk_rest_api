@@ -179,6 +179,10 @@ docker-clean: ##@Application Docker prune -f
 .PHONY: docker
 docker: docker-clean docker-build docker-up-d docker-clean ##@Application Docker prune, up, run and prune
 
+.PHONY: open
+open: ##@Application Open container in docker
+	docker exec -it $(args) /bin/bash
+
 .PHONY: open-app
 open-app: ##@Application Open app in docker
 	docker exec -it app /bin/bash
