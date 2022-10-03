@@ -61,6 +61,12 @@ async def add_student_to_contest(
                     student.contest_login,
                     contest.yandex_contest_id,
                 )
+            case 200:
+                logger.warning(
+                    'Student "%s" already registered on contest "%s" (code 200)',
+                    student.contest_login,
+                    contest.yandex_contest_id,
+                )
             case _:
                 message = f'Unknown error. Status code: {response.status_code}'
                 return False, message

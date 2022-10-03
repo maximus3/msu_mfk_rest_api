@@ -18,8 +18,9 @@ async def check_registration(
     course: Course,
     contest: Contest,
     student: Student,
-    logger: logging.Logger,
+    logger: logging.Logger | None = None,
 ) -> bool:
+    logger = logger or logging.getLogger(__name__)
     if await is_student_registered_on_contest(session, student.id, contest.id):
         return False
     add_ok, message = await add_student_to_contest(

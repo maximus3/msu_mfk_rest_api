@@ -26,6 +26,7 @@ if __name__ == '__main__':
         level=logging.DEBUG if settings.DEBUG else logging.INFO,
         filename='scheduler.log',
         buffered=True,
+        log_format='color',
     )
     logger = logging.getLogger(__name__)
     scheduler = get_scheduler()

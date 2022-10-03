@@ -76,6 +76,11 @@ install-prod: ##@Code Install dependencies for production
 	$(VENV_BIN)/poetry install --without dev --no-interaction --no-ansi
 
 
+.PHONY: poetry-add
+poetry-add: ##@Code Add new dependency
+	$(VENV_BIN)/poetry add $(args)
+
+
 .PHONY: up
 up: ##@Application Up App
 	$(POETRY_RUN) python -m app
