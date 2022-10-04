@@ -21,6 +21,7 @@ bcrypt = "^4.0.0"
 python-multipart = "^0.0.5"
 APScheduler = "^3.9.1"
 httpx = "^0.23.0"
+aiogram = "^2.22.2"
 
 [tool.poetry.group.dev.dependencies]
 black = "^22.1.0"

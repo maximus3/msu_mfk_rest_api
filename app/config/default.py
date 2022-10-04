@@ -16,6 +16,7 @@ class DefaultSettings(BaseSettings):
     """
 
     ENV: str = Field('local', env='ENV')
+    PROJECT_NAME: str = Field('MFK MSU API', env='PROJECT_NAME')
     PATH_PREFIX: str = Field('/api', env='PATH_PREFIX')
     APP_HOST: str = Field('http://127.0.0.1', env='APP_HOST')
     APP_PORT: int = Field(8090, env='APP_PORT')
@@ -54,6 +55,7 @@ class DefaultSettings(BaseSettings):
     YANDEX_API_KEY: str = Field('', env='YANDEX_API_KEY')
 
     TG_HELPER_BOT_TOKEN: str = Field('', env='TG_HELPER_BOT_TOKEN')
+    TG_ERROR_CHAT_ID: str = Field('', env='TG_ERROR_CHAT_ID')
     TG_DB_DUMP_CHAT_ID: str = Field('', env='TG_DB_DUMP_CHAT_ID')
 
     @property

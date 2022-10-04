@@ -1,8 +1,11 @@
+import logging
 import typing as tp
 from datetime import datetime
+from pathlib import Path
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.bot_helper import send_db_dump
 from app.config import DefaultSettings, get_settings
 from app.database.connection import SessionManager
 
@@ -60,22 +63,35 @@ async def dump_table(
 
 async def job(filename: str | None = None) -> None:
     settings = get_settings()
+    logger = logging.getLogger(__name__)
 
-    filename = filename or f'db_dump_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.sql'
+    filename = (
+        filename
+        or f'db_dump_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.sql'
+    )
 
-    with open(
-        filename,
-        'w',
-        encoding='utf-8',
-    ) as f:
-        for table_name in TABLE_NAMES:
-            if table_name == 'user':
-                table_name = '"user"'
-            await dump_table(f, table_name, settings)
+    logging.info('Starting db dump to %s', filename)
+    try:
+        with open(
+            filename,
+            'w',
+            encoding='utf-8',
+        ) as f:
+            for table_name in TABLE_NAMES:
+                if table_name == 'user':
+                    table_name = '"user"'
+                await dump_table(f, table_name, settings)
+        await send_db_dump(filename)
+    except Exception as e:
+        logger.exception('Error while dumping db: %s', e)
+        raise e
+    finally:
+        Path(filename).unlink()
 
 
 job_info = {
     'func': job,
-    'trigger': 'interval',
-    'minutes': 10,
+    'trigger': 'cron',
+    'hour': 3,
+    'name': 'db_dump',
 }

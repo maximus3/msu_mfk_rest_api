@@ -80,4 +80,5 @@ job_info = {
     'func': job,
     'trigger': 'interval',
     'minutes': 10,
+    'name': 'contest_register',
 }

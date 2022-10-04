@@ -26,15 +26,16 @@ def get_app() -> FastAPI:
         },
     ]
 
+    settings = get_settings()
     application = FastAPI(
-        title='MFK MSU API',
+        title=settings.PROJECT_NAME,
         description=description,
         docs_url='/swagger',
         openapi_url='/openapi',
         version='0.1.0',
         openapi_tags=tags_metadata,
     )
-    settings = get_settings()
+
     bind_routes(application, settings)
     add_pagination(application)
     application.state.settings = settings
