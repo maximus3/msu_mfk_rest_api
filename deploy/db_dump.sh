@@ -7,3 +7,4 @@ ssh -p $(cat deploy/port.txt) $(cat deploy/username.txt)@$(cat deploy/host.txt) 
   exit;"
 scp -P $(cat deploy/port.txt) $(cat deploy/username.txt)@$(cat deploy/host.txt):$FILENAME db/$FILENAME
 ssh -p $(cat deploy/port.txt) $(cat deploy/username.txt)@$(cat deploy/host.txt) "rm $FILENAME; exit;"
+echo "Done"

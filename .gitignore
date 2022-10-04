@@ -109,6 +109,7 @@ venv.bak/
 
 # database
 *.db
+*.sql
 pgadmin/*
 pgdata/*
 db/*
@@ -116,6 +117,7 @@ db/*
 deploy/*
 !deploy/generate.sh
 !deploy/connect.sh
-!deploy/dump_db.sh
+!deploy/db_dump.sh
+!deploy/db_restore.sh
 !deploy/README.md
 
