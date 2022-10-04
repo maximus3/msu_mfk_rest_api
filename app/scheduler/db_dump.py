@@ -58,10 +58,10 @@ async def dump_table(
         f.write(f'{insert_prefix} ({", ".join(row_data)});\n')
 
 
-async def job() -> None:
+async def job(filename: str | None = None) -> None:
     settings = get_settings()
 
-    filename = f'db_dump_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.sql'
+    filename = filename or f'db_dump_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.sql'
 
     with open(
         filename,
