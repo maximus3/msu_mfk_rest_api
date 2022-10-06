@@ -20,6 +20,7 @@ class DefaultSettings(BaseSettings):
     PATH_PREFIX: str = Field('/api', env='PATH_PREFIX')
     APP_HOST: str = Field('http://127.0.0.1', env='APP_HOST')
     APP_PORT: int = Field(8090, env='APP_PORT')
+    NGINX_EXTERNAL_PORT: int = Field(80, env='NGINX_EXTERNAL_PORT')
     DEBUG: bool = Field(True, env='DEBUG')
 
     POSTGRES_DB: str = Field('data', env='POSTGRES_DB')
