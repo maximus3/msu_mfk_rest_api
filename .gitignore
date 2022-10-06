@@ -115,9 +115,6 @@ pgdata/*
 db/*
 
 deploy/*
-!deploy/generate.sh
-!deploy/connect.sh
-!deploy/db_dump.sh
-!deploy/db_restore.sh
+!deploy/*.sh
 !deploy/README.md
 

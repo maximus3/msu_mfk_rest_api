@@ -16,7 +16,7 @@ async def get_contests(
     course_id: UUID,
 ) -> list[Contest]:
     query = select(Contest).where(Contest.course_id == course_id)
-    return (await session.execute(query)).scalars().all()
+    return (await session.execute(query)).scalars().fetchall()
 
 
 async def is_student_registered_on_contest(
@@ -37,10 +37,24 @@ async def add_student_contest_relation(
     student_id: UUID,
     contest_id: UUID,
     course_id: UUID,
-) -> None:
+) -> StudentContest:
     student_contest = StudentContest(
         student_id=student_id,
         contest_id=contest_id,
         course_id=course_id,
     )
     session.add(student_contest)
+    return student_contest
+
+
+async def get_student_contest_relation(
+    session: AsyncSession,
+    student_id: UUID,
+    contest_id: UUID,
+) -> StudentContest | None:
+    query = (
+        select(StudentContest)
+        .where(StudentContest.student_id == student_id)
+        .where(StudentContest.contest_id == contest_id)
+    )
+    return (await session.execute(query)).scalars().first()

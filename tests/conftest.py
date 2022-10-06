@@ -183,6 +183,80 @@ async def created_two_courses(session):  # type: ignore
 
 
 @pytest.fixture
+async def created_four_contests_for_two_courses(session, created_two_courses):
+    models_1 = ContestFactory.create_batch(
+        2, course_id=created_two_courses[0].id
+    )
+    models_2 = ContestFactory.create_batch(
+        2, course_id=created_two_courses[1].id
+    )
+    session.add_all(models_1)
+    session.add_all(models_2)
+    await session.commit()
+    await asyncio.gather(*[session.refresh(model) for model in models_1])
+    await asyncio.gather(*[session.refresh(model) for model in models_2])
+
+    yield models_1, models_2
+
+
+@pytest.fixture
+async def created_four_students_for_two_courses(session, created_two_courses):
+    models_1 = StudentFactory.create_batch(2)
+    models_2 = StudentFactory.create_batch(2)
+    session.add_all(models_1)
+    session.add_all(models_2)
+    await session.commit()
+    await asyncio.gather(*[session.refresh(model) for model in models_1])
+    await asyncio.gather(*[session.refresh(model) for model in models_2])
+
+    models_relations = []
+    for i in range(2):
+        models_relations.append(
+            StudentCourseFactory.build(
+                student_id=models_1[i].id, course_id=created_two_courses[0].id
+            )
+        )
+        models_relations.append(
+            StudentCourseFactory.build(
+                student_id=models_2[i].id, course_id=created_two_courses[1].id
+            )
+        )
+    session.add_all(models_relations)
+    await session.commit()
+
+    yield models_1, models_2
+
+
+@pytest.fixture
+async def created_relations_one_student_on_one_contest(
+    session,
+    created_two_courses,
+    created_four_contests_for_two_courses,
+    created_four_students_for_two_courses,
+):
+    models = []
+    models.append(
+        StudentContestFactory.create(
+            course_id=created_two_courses[0].id,
+            contest_id=created_four_contests_for_two_courses[0][0].id,
+            student_id=created_four_students_for_two_courses[0][0].id,
+        )
+    )
+    models.append(
+        StudentContestFactory.create(
+            course_id=created_two_courses[1].id,
+            contest_id=created_four_contests_for_two_courses[1][0].id,
+            student_id=created_four_students_for_two_courses[1][0].id,
+        )
+    )
+    session.add_all(models)
+    await session.commit()
+    await asyncio.gather(*[session.refresh(model) for model in models])
+
+    yield models
+
+
+@pytest.fixture
 async def potential_department():  # type: ignore
     yield DepartmentFactory.build()
 
@@ -314,5 +388,23 @@ async def created_two_departments(session):
     session.add_all(models)
     await session.commit()
     await asyncio.gather(*[session.refresh(model) for model in models])
+
+    yield models
+
+
+@pytest.fixture
+async def created_two_students_with_course(session, created_course):
+    models = StudentFactory.create_batch(2)
+    session.add_all(models)
+    await session.commit()
+    await asyncio.gather(*[session.refresh(model) for model in models])
+
+    relation_models = StudentCourseFactory.create_batch(2)
+    for i in range(2):
+        relation_models[i].student_id = models[i].id
+        relation_models[i].course_id = created_course.id
+    session.add_all(relation_models)
+
+    await session.commit()
 
     yield models

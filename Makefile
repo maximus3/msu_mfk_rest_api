@@ -108,6 +108,7 @@ db: ##@Database Docker up db
 
 .PHONY: test
 test: ##@Testing Runs pytest with coverage
+	$(POETRY_RUN) pytest tests/app/endpoints/v1/test_ping.py::TestHealthCheckHandler::test_ping_database
 	$(TEST) --cov
 
 .PHONY: test-fast
@@ -124,6 +125,7 @@ test-cov: ##@Testing Runs pytest with coverage report
 
 .PHONY: test-mp
 test-mp: ##@Testing Runs pytest with multiprocessing
+	$(POETRY_RUN) pytest tests/app/endpoints/v1/test_ping.py::TestHealthCheckHandler::test_ping_database
 	$(TEST) --cov -n auto
 
 .PHONY: test-fast-mp

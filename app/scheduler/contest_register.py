@@ -1,27 +1,22 @@
 import logging
+import traceback
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database.connection import SessionManager
 from app.database.models import Contest, Course, Student
-from app.utils.contest import (
-    add_student_to_contest,
-    get_contests,
-    is_student_registered_on_contest,
-)
+from app.utils.contest import add_student_to_contest, get_contests
 from app.utils.course import get_all_courses
-from app.utils.student import get_students_by_course
+from app.utils.student import get_students_by_course_with_no_contest
 
 
-async def check_registration(
+async def register_student(
     session: AsyncSession,
     contest: Contest,
     student: Student,
     logger: logging.Logger | None = None,
 ) -> bool:
     logger = logger or logging.getLogger(__name__)
-    if await is_student_registered_on_contest(session, student.id, contest.id):
-        return False
     add_ok, message = await add_student_to_contest(
         session,
         contest,
@@ -36,7 +31,7 @@ async def check_registration(
         )
         return False
     await session.commit()
-    logging.info(
+    logger.info(
         'Student "%s" added to contest "%s"',
         student.contest_login,
         contest.yandex_contest_id,
@@ -45,21 +40,37 @@ async def check_registration(
 
 
 async def check_students_for_contest_registration(
-    session: AsyncSession, course: Course, logger: logging.Logger
+    session: AsyncSession, course: Course, logger: logging.Logger | None = None
 ) -> None:
+    logger = logger or logging.getLogger(__name__)
     contests = await get_contests(session, course.id)
-    students = await get_students_by_course(session, course.id)
+    logger.info('Course "%s" has %s contests', course.name, len(contests))
     for contest in contests:
+        no_registered_students = await get_students_by_course_with_no_contest(
+            session, course.id, contest.id
+        )
         logger.info('Contest: %s', contest)
-        was_add = False
-        for student in students:
-            was_add = was_add or await check_registration(
-                session, contest, student, logger
-            )
-        if not was_add:
-            logger.info(
-                'No students added to contest "%s"', contest.yandex_contest_id
-            )
+        logger.info(
+            'Contest "%s" has %s no registered students',
+            contest.yandex_contest_id,
+            len(no_registered_students),
+        )
+        count = 0
+        for student in no_registered_students:
+            try:
+                count += await register_student(
+                    session, contest, student, logger
+                )
+            except Exception as e:  # pylint: disable=broad-except
+                logger.exception(
+                    'Error while register student "%s": %s', student, e
+                )
+                logger.error('%s', traceback.format_exc())
+        logger.info(
+            'Successfully added %s students to contest "%s"',
+            count,
+            contest.yandex_contest_id,
+        )
 
 
 async def job(

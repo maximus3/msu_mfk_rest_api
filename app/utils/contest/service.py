@@ -1,10 +1,11 @@
 import logging
 
-from httpx import AsyncClient, Response
+from httpx import Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.config import get_settings
 from app.database.models import Contest, Student
+from app.schemas import ContestProblem, ContestSubmission
+from app.utils.yandex_request import make_request_to_yandex_contest_api
 
 from .database import add_student_contest_relation
 
@@ -12,20 +13,11 @@ from .database import add_student_contest_relation
 async def make_request_to_yandex_contest(
     contest: Contest, student: Student
 ) -> Response:
-    settings = get_settings()
-    async with AsyncClient() as client:
-        client.headers.update(
-            {
-                'Authorization': f'OAuth {settings.YANDEX_API_KEY}',
-                'Content-Type': 'application/json',
-            }
-        )
-        response = await client.post(
-            f'{settings.YANDEX_CONTEST_API_URL}contests/'
-            f'{contest.yandex_contest_id}/participants?'
-            f'login={student.contest_login}',
-        )
-    return response
+    return await make_request_to_yandex_contest_api(
+        f'contests/{contest.yandex_contest_id}/participants'
+        f'?login={student.contest_login}',
+        method='POST',
+    )
 
 
 async def add_student_to_contest(
@@ -84,3 +76,63 @@ async def add_student_to_contest(
         contest.yandex_contest_id,
     )
     return True, None
+
+
+async def get_problems(
+    yandex_contest_id: int,
+) -> list[ContestProblem]:
+    response = await make_request_to_yandex_contest_api(
+        f'contests/{yandex_contest_id}/problems'
+    )
+    return sorted(
+        [ContestProblem(**problem) for problem in response.json()['problems']],
+        key=lambda problem: problem.alias,
+    )
+
+
+async def get_participants_login_to_id(
+    yandex_contest_id: int,
+) -> dict[str, int]:
+    response = await make_request_to_yandex_contest_api(
+        f'contests/{yandex_contest_id}/participants'
+    )
+    return {
+        participant['login']: participant['id']
+        for participant in response.json()
+    }
+
+
+async def add_results(
+    data: list[ContestSubmission],
+    result_list: list[ContestSubmission],
+) -> None:
+    result_list.extend(
+        filter(lambda submission: submission.verdict == 'OK', data)
+    )
+
+
+async def get_ok_submissions(
+    yandex_contest_id: int,
+) -> list[ContestSubmission]:
+    url = f'contests/{yandex_contest_id}/submissions?page={{}}&pageSize={{}}'
+    page = 1
+    page_size = 100
+    result_list: list[ContestSubmission] = []
+
+    response = await make_request_to_yandex_contest_api(
+        url.format(page, page_size)
+    )
+    data = response.json()
+    count = data['count']
+    count_done = 0
+    while count_done < count:
+        await add_results(data['submissions'], result_list)
+        count_done += len(data['submissions'])
+        if count_done == count:
+            break
+        page += 1
+        response = await make_request_to_yandex_contest_api(
+            url.format(page, page_size)
+        )
+        data = response.json()
+    return list(set(result_list))

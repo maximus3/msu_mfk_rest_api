@@ -1,6 +1,9 @@
 from .application_health.ping import PingMessage, PingResponse
 from .auth.token import Token, TokenData
 from .auth.user import User as UserSchema
+from .contest.problem import ContestProblem
+from .contest.results import ContestResults
+from .contest.submission import ContestSubmission
 from .course.course import CourseBase, CourseResponse
 from .department.department import DepartmentBase, DepartmentResponse
 from .register.register import RegisterRequest, RegisterResponse
@@ -20,4 +23,7 @@ __all__ = [
     'CourseBase',
     'DepartmentResponse',
     'DepartmentBase',
+    'ContestProblem',
+    'ContestSubmission',
+    'ContestResults',
 ]
