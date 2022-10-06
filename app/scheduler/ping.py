@@ -65,6 +65,6 @@ async def job() -> None:
 job_info = {
     'func': job,
     'trigger': 'interval',
-    'seconds': 10,
+    'minutes': 1,
     'name': 'ping_app',
 }
