@@ -1,7 +1,7 @@
-# Template
+# REST API Service for Yandex Contest
 
 ## Description:
-...
+Service for manage courses using Yandex.Contest
 
 ## Commands
 
