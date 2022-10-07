@@ -113,8 +113,11 @@ venv.bak/
 pgadmin/*
 pgdata/*
 db/*
+!db/README.md
 
 deploy/*
 !deploy/*.sh
 !deploy/README.md
 
+logs/*
+!logs/README.md
