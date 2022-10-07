@@ -7,6 +7,13 @@ from app.database.models import Contest, StudentContest
 
 
 async def get_all_contests(session: AsyncSession) -> list[Contest]:
+    """
+    Get all contests in database.
+
+    :param session: Database session
+
+    :return: List of contests
+    """
     query = select(Contest)
     return (await session.execute(query)).scalars().all()
 
@@ -15,6 +22,14 @@ async def get_contests(
     session: AsyncSession,
     course_id: UUID,
 ) -> list[Contest]:
+    """
+    Get all contests by course id.
+
+    :param session: Database session
+    :param course_id: Course id
+
+    :return: List of contests
+    """
     query = select(Contest).where(Contest.course_id == course_id)
     return (await session.execute(query)).scalars().fetchall()
 
@@ -24,6 +39,15 @@ async def is_student_registered_on_contest(
     student_id: UUID,
     contest_id: UUID,
 ) -> bool:
+    """
+    Check if student is registered on contest.
+
+    :param session: Database session
+    :param student_id: Student id
+    :param contest_id: Contest id
+
+    :return: True if student is registered on contest, False otherwise
+    """
     query = (
         select(StudentContest)
         .where(StudentContest.student_id == student_id)
@@ -38,6 +62,16 @@ async def add_student_contest_relation(
     contest_id: UUID,
     course_id: UUID,
 ) -> StudentContest:
+    """
+    Add student contest relation.
+
+    :param session: Database session
+    :param student_id: Student id
+    :param contest_id: Contest id
+    :param course_id: Course id
+
+    :return: Student contest relation
+    """
     student_contest = StudentContest(
         student_id=student_id,
         contest_id=contest_id,
@@ -52,6 +86,15 @@ async def get_student_contest_relation(
     student_id: UUID,
     contest_id: UUID,
 ) -> StudentContest | None:
+    """
+    Get student contest relation if exists.
+
+    :param session: Database session
+    :param student_id: Student id
+    :param contest_id: Contest id
+
+    :return: Student contest relation if exists, None otherwise
+    """
     query = (
         select(StudentContest)
         .where(StudentContest.student_id == student_id)

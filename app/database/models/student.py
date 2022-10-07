@@ -4,6 +4,9 @@ from .base import BaseModel
 
 
 class Student(BaseModel):
+    """
+    Student model in database.
+    """
     __tablename__ = 'student'
 
     fio = sa.Column(sa.String)
@@ -12,6 +15,11 @@ class Student(BaseModel):
 
 
 class StudentDepartment(BaseModel):
+    """
+    Relation between Student and Department.
+
+    Many-to-one relation.
+    """
     __tablename__ = 'student_department'
 
     student_id = sa.Column(
@@ -27,6 +35,11 @@ class StudentDepartment(BaseModel):
 
 
 class StudentCourse(BaseModel):
+    """
+    Relation between Student and Course.
+
+    Many-to-many relation.
+    """
     __tablename__ = 'student_course'
 
     course_id = sa.Column(
@@ -42,6 +55,11 @@ class StudentCourse(BaseModel):
 
 
 class StudentContest(BaseModel):
+    """
+    Relation between Student and Contest.
+
+    Many-to-many relation.
+    """
     __tablename__ = 'student_contest'
 
     course_id = sa.Column(
