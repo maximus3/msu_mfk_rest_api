@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from app.bot_helper.bot import bot
+from app.bot_helper import bot
 from app.config import get_settings
 
 
@@ -21,16 +21,16 @@ async def send_ping_status(result: dict[str, dict[str, str]]) -> None:
             message += f'{emoji}{endpoint}: {status}\n'
     global MESSAGE_ID  # pylint: disable=global-statement
     if MESSAGE_ID is None or not all_ok:
-        MESSAGE_ID = await bot.send_message(
+        MESSAGE_ID = await bot.bot.send_message(
             chat_id=get_settings().TG_ERROR_CHAT_ID,
             text=message,
         )
-        await bot.pin_chat_message(
+        await bot.bot.pin_chat_message(
             chat_id=get_settings().TG_ERROR_CHAT_ID,
             message_id=MESSAGE_ID.message_id,
         )
     else:
-        await bot.edit_message_text(
+        await bot.bot.edit_message_text(
             chat_id=get_settings().TG_ERROR_CHAT_ID,
             message_id=MESSAGE_ID.message_id,
             text=message,

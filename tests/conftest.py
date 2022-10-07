@@ -3,9 +3,11 @@
 # pylint: disable=too-many-lines
 
 import asyncio
+import tempfile
 import typing as tp
 from asyncio import new_event_loop, set_event_loop
 from os import environ
+from pathlib import Path
 from types import SimpleNamespace
 from uuid import uuid4
 
@@ -373,13 +375,20 @@ async def student_contest(  # type: ignore
 async def mock_make_request_to_yandex_contest(  # type: ignore
     mocker, request=None
 ):
-    mock = mocker.patch(
-        'app.utils.contest.service.make_request_to_yandex_contest'
-    )
-    mock.return_value.status_code = (
-        request.param if hasattr(request, 'param') else 200
-    )
-    yield mock
+    objects_to_mock = [
+        mocker.patch(
+            'app.utils.yandex_request.service'
+            '.make_request_to_yandex_contest_api'
+        ),
+        mocker.patch(
+            'app.utils.contest.service.make_request_to_yandex_contest_api',
+        ),
+    ]
+    for obj in objects_to_mock:
+        obj.return_value.status_code = (
+            request.param if hasattr(request, 'param') else 200
+        )
+    yield objects_to_mock[0]
 
 
 @pytest.fixture
@@ -408,3 +417,23 @@ async def created_two_students_with_course(session, created_course):
     await session.commit()
 
     yield models
+
+
+@pytest.fixture
+def tmp_file():
+    tmp_filename = tempfile.mktemp()
+    with open(tmp_filename, 'w', encoding='utf-8') as f:
+        f.write('test')
+    yield tmp_filename
+    Path(tmp_filename).unlink()
+
+
+@pytest.fixture
+def tmp_files():
+    tmp_filenames = [tempfile.mktemp() for _ in range(2)]
+    for filename in tmp_filenames:
+        with open(filename, 'w', encoding='utf-8') as f:
+            f.write('test')
+    yield tmp_filenames
+    for filename in tmp_filenames:
+        Path(filename).unlink()

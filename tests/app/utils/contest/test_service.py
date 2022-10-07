@@ -224,3 +224,19 @@ class TestAddStudentToContest:
             )
             is None
         )
+
+
+class TestGetProblems:
+    pass
+
+
+class TestGetParticipantsLoginToId:
+    pass
+
+
+class Test_AddResults:
+    pass
+
+
+class TestGetOkSubmissions:
+    pass

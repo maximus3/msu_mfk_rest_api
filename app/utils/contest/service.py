@@ -1,6 +1,5 @@
 import logging
 
-from httpx import Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database.models import Contest, Student
@@ -8,16 +7,6 @@ from app.schemas import ContestProblem, ContestSubmission
 from app.utils.yandex_request import make_request_to_yandex_contest_api
 
 from .database import add_student_contest_relation
-
-
-async def make_request_to_yandex_contest(
-    contest: Contest, student: Student
-) -> Response:
-    return await make_request_to_yandex_contest_api(
-        f'contests/{contest.yandex_contest_id}/participants'
-        f'?login={student.contest_login}',
-        method='POST',
-    )
 
 
 async def add_student_to_contest(
@@ -30,7 +19,11 @@ async def add_student_to_contest(
     """
     logger = logging.getLogger(__name__)
 
-    response = await make_request_to_yandex_contest(contest, student)
+    response = await make_request_to_yandex_contest_api(
+        f'contests/{contest.yandex_contest_id}/participants'
+        f'?login={student.contest_login}',
+        method='POST',
+    )
 
     match response.status_code:
         case 404:
@@ -102,7 +95,7 @@ async def get_participants_login_to_id(
     }
 
 
-async def add_results(
+async def _add_results(
     data: list[ContestSubmission],
     result_list: list[ContestSubmission],
 ) -> None:
@@ -126,7 +119,7 @@ async def get_ok_submissions(
     count = data['count']
     count_done = 0
     while count_done < count:
-        await add_results(data['submissions'], result_list)
+        await _add_results(data['submissions'], result_list)
         count_done += len(data['submissions'])
         if count_done == count:
             break

@@ -135,3 +135,53 @@ class TestAddStudentContestRelationHandler:
             )
         ).scalar_one_or_none()
         assert student_contest
+
+
+class TestGetStudentContestRelationHandler:
+    async def test_get_student_contest_relation_no_relation(
+        self, session, created_contest, created_student
+    ):
+        assert (
+            await contest.get_student_contest_relation(
+                session=session,
+                contest_id=created_contest.id,
+                student_id=created_student.id,
+            )
+            is None
+        )
+
+    async def test_get_student_contest_relation_ok(
+        self, session, created_contest, created_student, student_contest
+    ):
+        assert (
+            await contest.get_student_contest_relation(
+                session=session,
+                contest_id=created_contest.id,
+                student_id=created_student.id,
+            )
+            == student_contest
+        )
+
+    async def test_get_student_contest_relation_no_contest(
+        self, session, created_student, potential_contest
+    ):
+        assert (
+            await contest.get_student_contest_relation(
+                session=session,
+                contest_id=potential_contest.id,
+                student_id=created_student.id,
+            )
+            is None
+        )
+
+    async def test_get_student_contest_relation_no_student(
+        self, session, created_contest, potential_student
+    ):
+        assert (
+            await contest.get_student_contest_relation(
+                session=session,
+                contest_id=created_contest.id,
+                student_id=potential_student.id,
+            )
+            is None
+        )
