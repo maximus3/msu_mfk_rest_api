@@ -1,4 +1,4 @@
-# pylint: disable=unused-argument
+# pylint: disable=unused-argument,line-too-long,too-many-arguments
 
 import pytest
 from sqlalchemy import select
@@ -55,6 +55,180 @@ class TestGetStudentsByCourseHandler:
         assert await student.get_students_by_course(
             session=session, course_id=created_course.id
         ) == [created_student]
+
+
+class TestGetStudentsByCourseWithNoContestHandler:
+    async def test_get_students_by_course_with_no_contest_no_students(
+        self, session, created_course, created_contest
+    ):
+        assert (
+            await student.get_students_by_course_with_no_contest(
+                session=session,
+                course_id=created_course.id,
+                contest_id=created_contest.id,
+            )
+            == []
+        )
+
+    async def test_get_students_by_course_with_no_contest_no_relation_course(
+        self, session, created_course, created_contest, created_student
+    ):
+        assert (
+            await student.get_students_by_course_with_no_contest(
+                session=session,
+                course_id=created_course.id,
+                contest_id=created_contest.id,
+            )
+            == []
+        )
+
+    async def test_get_students_by_course_with_no_contest_no_relation(
+        self,
+        session,
+        created_course,
+        created_contest,
+        created_student,
+        student_course,
+    ):
+        assert await student.get_students_by_course_with_no_contest(
+            session=session,
+            course_id=created_course.id,
+            contest_id=created_contest.id,
+        ) == [created_student]
+
+    async def test_get_students_by_course_with_no_contest_ok(
+        self,
+        session,
+        created_course,
+        created_contest,
+        created_student,
+        student_course,
+        student_contest,
+    ):
+        assert (
+            await student.get_students_by_course_with_no_contest(
+                session=session,
+                course_id=created_course.id,
+                contest_id=created_contest.id,
+            )
+            == []
+        )
+
+    async def test_get_students_by_course_with_no_contest_ok_many(
+        self,
+        session,
+        created_course,
+        created_contest,
+        created_two_students_with_course,
+    ):
+        assert sorted(
+            await student.get_students_by_course_with_no_contest(
+                session=session,
+                course_id=created_course.id,
+                contest_id=created_contest.id,
+            ),
+            key=lambda x: x.id,
+        ) == sorted(created_two_students_with_course, key=lambda x: x.id)
+
+    async def test_get_students_by_course_with_no_contest_ok_many_no_registered(
+        self,
+        session,
+        created_two_courses,
+        created_four_contests_for_two_courses,
+        created_four_students_for_two_courses,
+    ):
+        for course_num in range(2):
+            for contest_num in range(2):
+                assert sorted(
+                    await student.get_students_by_course_with_no_contest(
+                        session=session,
+                        course_id=created_two_courses[course_num].id,
+                        contest_id=created_four_contests_for_two_courses[
+                            course_num
+                        ][contest_num].id,
+                    ),
+                    key=lambda x: x.id,
+                ) == sorted(
+                    created_four_students_for_two_courses[course_num],
+                    key=lambda x: x.id,
+                )
+
+    async def test_get_students_by_course_with_no_contest_ok_many_some_registered(
+        self,
+        session,
+        created_two_courses,
+        created_four_contests_for_two_courses,
+        created_four_students_for_two_courses,
+        created_relations_one_student_on_one_contest,
+    ):
+        for course_num in range(2):
+            for contest_num in range(2):
+                assert sorted(
+                    await student.get_students_by_course_with_no_contest(
+                        session=session,
+                        course_id=created_two_courses[course_num].id,
+                        contest_id=created_four_contests_for_two_courses[
+                            course_num
+                        ][contest_num].id,
+                    ),
+                    key=lambda x: x.id,
+                ) == sorted(
+                    created_four_students_for_two_courses[course_num][
+                        (contest_num == 0) :
+                    ],
+                    key=lambda x: x.id,
+                )
+
+
+class TestGetStudentsByCourseWithDepartmentHandler:
+    async def test_get_students_by_course_with_department_no_students(
+        self, session, created_course, created_department
+    ):
+        assert (
+            await student.get_students_by_course_with_department(
+                session=session,
+                course_id=created_course.id,
+            )
+            == []
+        )
+
+    async def test_get_students_by_course_with_department_no_relations(
+        self, session, created_course, created_department, created_student
+    ):
+        assert (
+            await student.get_students_by_course_with_department(
+                session=session,
+                course_id=created_course.id,
+            )
+            == []
+        )
+
+    async def test_get_students_by_course_with_department_no_department_relation(
+        self,
+        session,
+        created_course,
+        created_department,
+        created_student,
+        student_course,
+    ):
+        assert await student.get_students_by_course_with_department(
+            session=session,
+            course_id=created_course.id,
+        ) == [(created_student, None)]
+
+    async def test_get_students_by_course_with_department_ok(
+        self,
+        session,
+        created_course,
+        created_department,
+        created_student,
+        student_course,
+        student_department,
+    ):
+        assert await student.get_students_by_course_with_department(
+            session=session,
+            course_id=created_course.id,
+        ) == [(created_student, created_department)]
 
 
 class TestCreateStudentHandler:

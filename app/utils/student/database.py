@@ -58,9 +58,9 @@ async def get_students_by_course_with_department(
     query = (
         select(Student, Department)
         .join(StudentCourse)
-        .join(StudentDepartment)
-        .join(Department)
         .where(StudentCourse.course_id == course_id)
+        .join(StudentDepartment, isouter=True)
+        .join(Department, isouter=True)
     )
     return (await session.execute(query)).fetchall()
 
