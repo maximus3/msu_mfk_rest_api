@@ -105,8 +105,8 @@ async def get_student_contest_relation(
 
 async def get_contests_with_relations(
     session: AsyncSession,
-    student_id: UUID,
     course_id: UUID,
+    student_id: UUID,
 ) -> list[tuple[Contest, StudentContest]]:
     """
     Get contests with relation.
