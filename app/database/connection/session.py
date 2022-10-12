@@ -35,7 +35,7 @@ class SessionManager:  # pragma: no cover
         settings = get_settings()
         self.engine = sa.create_engine(settings.database_uri_sync)
         self.async_engine = create_async_engine(
-            settings.database_uri, echo=True, future=True
+            settings.database_uri, echo=True, future=True, pool_pre_ping=True
         )
 
     @contextmanager

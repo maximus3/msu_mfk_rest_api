@@ -96,17 +96,21 @@ async def get_participants_login_to_id(
 
 
 async def _add_results(
-    data: list[ContestSubmission],
+    data: list[dict[str, str]],
     result_list: list[ContestSubmission],
 ) -> None:
     result_list.extend(
-        filter(lambda submission: submission.verdict == 'OK', data)
+        map(
+            lambda submission: ContestSubmission(**submission),
+            filter(lambda submission: submission['verdict'] == 'OK', data),
+        )
     )
 
 
 async def get_ok_submissions(
     yandex_contest_id: int,
 ) -> list[ContestSubmission]:
+    logger = logging.getLogger(__name__)
     url = f'contests/{yandex_contest_id}/submissions?page={{}}&pageSize={{}}'
     page = 1
     page_size = 100
@@ -118,6 +122,7 @@ async def get_ok_submissions(
     data = response.json()
     count = data['count']
     count_done = 0
+    logger.info('Contest %s has %s submissions', yandex_contest_id, count)
     while count_done < count:
         await _add_results(data['submissions'], result_list)
         count_done += len(data['submissions'])

@@ -7,6 +7,7 @@ class Student(BaseModel):
     """
     Student model in database.
     """
+
     __tablename__ = 'student'
 
     fio = sa.Column(sa.String)
@@ -20,6 +21,7 @@ class StudentDepartment(BaseModel):
 
     Many-to-one relation.
     """
+
     __tablename__ = 'student_department'
 
     student_id = sa.Column(
@@ -40,6 +42,7 @@ class StudentCourse(BaseModel):
 
     Many-to-many relation.
     """
+
     __tablename__ = 'student_course'
 
     course_id = sa.Column(
@@ -60,6 +63,7 @@ class StudentContest(BaseModel):
 
     Many-to-many relation.
     """
+
     __tablename__ = 'student_contest'
 
     course_id = sa.Column(

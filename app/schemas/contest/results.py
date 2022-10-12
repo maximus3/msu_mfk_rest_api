@@ -1,6 +1,8 @@
+from collections import defaultdict
+
 from pydantic import BaseModel
 
 
 class ContestResults(BaseModel):
     keys: list[str]
-    results: dict[str, dict[str, str | bool]]
+    results: defaultdict[str, dict[str, str | bool]]
