@@ -49,7 +49,7 @@ async def get_all_results(
                         tasks_done=student_contest.tasks_done,
                         is_ok=student_contest.is_ok,
                         updated_at=datetime.strftime(
-                            student_contest.updated_at,
+                            student_contest.dt_updated,
                             '%Y-%m-%d %H:%M:%S',
                         ),
                     )
