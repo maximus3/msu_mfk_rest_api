@@ -1,3 +1,4 @@
+exit 1
 FILENAME=$1
 echo "Restoring database from $FILENAME"
 scp -P $(cat deploy/port.txt) $FILENAME $(cat deploy/username.txt)@$(cat deploy/host.txt):$FILENAME
