@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.bot_helper.send import send_error_message, send_results
 from app.database.connection import SessionManager
 from app.database.models import Contest, Course, Department, Student
-from app.schemas import ContestResults, ContestSubmission
+from app.schemas import ContestResultsCSV, ContestSubmission
 from app.utils.contest import (
     get_contests,
     get_ok_submissions,
@@ -22,7 +22,9 @@ from app.utils.course import get_all_courses
 from app.utils.student import get_students_by_course_with_department
 
 
-async def save_to_csv(course_results: ContestResults, filename: str) -> None:
+async def save_to_csv(
+    course_results: ContestResultsCSV, filename: str
+) -> None:
     with open(filename, 'w', encoding='utf-8') as f:
         f.write(','.join(course_results.keys))
         f.write('\n')
@@ -39,7 +41,7 @@ async def process_contest(  # pylint: disable=too-many-arguments
     login_to_id: dict[str, int],
     results: list[ContestSubmission],
     contest: Contest,
-    course_results: ContestResults,
+    course_results: ContestResultsCSV,
     session: AsyncSession | None = None,
 ) -> None:
     if session is None:
@@ -87,7 +89,7 @@ async def process_contest(  # pylint: disable=too-many-arguments
 
 async def update_course_results(
     course: Course, logger: logging.Logger | None = None
-) -> ContestResults:
+) -> ContestResultsCSV:
     SessionManager().refresh()
     async with SessionManager().create_async_session() as session:
         contests = await get_contests(session, course.id)
@@ -95,7 +97,7 @@ async def update_course_results(
             await get_students_by_course_with_department(session, course.id)
         )
     logger = logger or logging.getLogger(__name__)
-    course_results = ContestResults(
+    course_results = ContestResultsCSV(
         keys=['contest_login', 'fio', 'department'],
         results=defaultdict(dict),
     )

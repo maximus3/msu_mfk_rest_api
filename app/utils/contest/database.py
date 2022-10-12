@@ -101,3 +101,26 @@ async def get_student_contest_relation(
         .where(StudentContest.contest_id == contest_id)
     )
     return (await session.execute(query)).scalars().first()
+
+
+async def get_contests_with_relations(
+    session: AsyncSession,
+    student_id: UUID,
+    course_id: UUID,
+) -> list[tuple[Contest, StudentContest]]:
+    """
+    Get contests with relation.
+
+    :param session: Database session
+    :param student_id: Student id
+    :param course_id: Course id
+
+    :return: List of contests with relation
+    """
+    query = (
+        select(Contest, StudentContest)
+        .where(Contest.id == StudentContest.contest_id)
+        .where(StudentContest.student_id == student_id)
+        .where(StudentContest.course_id == course_id)
+    )
+    return (await session.execute(query)).fetchall()

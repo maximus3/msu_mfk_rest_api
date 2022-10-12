@@ -6,6 +6,7 @@ from .department import api_router as department_router
 from .logs import api_router as logs_router
 from .ping import api_router as ping_router
 from .register import api_router as register_router
+from .results import api_router as results_router
 
 
 prefix = '/v1'
@@ -19,6 +20,7 @@ router.include_router(register_router)
 router.include_router(logs_router)
 router.include_router(course_router)
 router.include_router(department_router)
+router.include_router(results_router)
 
 
 __all__ = [
