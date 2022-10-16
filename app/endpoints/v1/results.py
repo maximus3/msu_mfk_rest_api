@@ -54,10 +54,13 @@ async def get_all_results(
                             '%Y-%m-%d %H:%M:%S',
                         ),
                     )
-                    for contest, student_contest in await get_contests_with_relations(  # pylint: disable=line-too-long
-                        session,
-                        course.id,
-                        student.id,
+                    for contest, student_contest in sorted(
+                        await get_contests_with_relations(  # pylint: disable=line-too-long
+                            session,
+                            course.id,
+                            student.id,
+                        ),
+                        key=lambda x: x[0].lecture,
                     )
                 ],
             )
