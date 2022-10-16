@@ -7,6 +7,7 @@ class ContestResults(BaseModel):
     link: str
     tasks_count: int
     tasks_need: int
+    lecture: int
     tasks_done: int
     is_ok: bool
     updated_at: str

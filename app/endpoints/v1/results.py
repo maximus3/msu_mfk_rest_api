@@ -46,6 +46,7 @@ async def get_all_results(
                         link=contest.link,
                         tasks_count=contest.tasks_count,
                         tasks_need=contest.tasks_need,
+                        lecture=contest.lecture,
                         tasks_done=student_contest.tasks_done,
                         is_ok=student_contest.is_ok,
                         updated_at=datetime.strftime(
