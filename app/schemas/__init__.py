@@ -3,7 +3,7 @@ from .auth.token import Token, TokenData
 from .auth.user import User as UserSchema
 from .contest.problem import ContestProblem
 from .contest.results import ContestResultsCSV
-from .contest.submission import ContestSubmission
+from .contest.submission import ContestSubmission, ContestSubmissionFull
 from .course.course import CourseBase, CourseResponse
 from .department.department import DepartmentBase, DepartmentResponse
 from .register.register import RegisterRequest, RegisterResponse
@@ -26,6 +26,7 @@ __all__ = [
     'DepartmentBase',
     'ContestProblem',
     'ContestSubmission',
+    'ContestSubmissionFull',
     'ContestResultsCSV',
     'StudentResults',
     'CourseResults',

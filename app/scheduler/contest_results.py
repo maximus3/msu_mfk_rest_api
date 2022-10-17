@@ -11,11 +11,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.bot_helper.send import send_error_message, send_results
 from app.database.connection import SessionManager
 from app.database.models import Contest, Course, Department, Student
-from app.schemas import ContestResultsCSV, ContestSubmission
+from app.schemas import ContestResultsCSV, ContestSubmissionFull
 from app.utils.contest import (
     get_contests,
     get_ok_submissions,
-    get_participants_login_to_id,
     get_student_contest_relation,
 )
 from app.utils.course import get_all_courses
@@ -38,8 +37,7 @@ async def save_to_csv(
 
 async def process_contest(  # pylint: disable=too-many-arguments
     students_and_departments: list[tuple[Student, Department]],
-    login_to_id: dict[str, int],
-    results: list[ContestSubmission],
+    results: list[ContestSubmissionFull],
     contest: Contest,
     course_results: ContestResultsCSV,
     session: AsyncSession | None = None,
@@ -49,16 +47,14 @@ async def process_contest(  # pylint: disable=too-many-arguments
         async with SessionManager().create_async_session() as session:
             return await process_contest(
                 students_and_departments,
-                login_to_id,
                 results,
                 contest,
                 course_results,
                 session,
             )
     for student, department in students_and_departments:
-        author_id = login_to_id.get(student.contest_login)
         student_tasks_done = sum(
-            True for submission in results if submission.authorId == author_id
+            True for submission in results if submission.login == student.login
         )
         is_ok = student_tasks_done >= contest.tasks_need
         course_results.results[student.contest_login][
@@ -103,13 +99,9 @@ async def update_course_results(
     )
     for contest in contests:
         logger.info('Contest: %s', contest)
-        login_to_id = await get_participants_login_to_id(
-            contest.yandex_contest_id
-        )
         results = await get_ok_submissions(contest.yandex_contest_id)
         await process_contest(
             students_and_departments,
-            login_to_id,
             results,
             contest,
             course_results,

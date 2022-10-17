@@ -3,7 +3,11 @@ import logging
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database.models import Contest, Student
-from app.schemas import ContestProblem, ContestSubmission
+from app.schemas import (
+    ContestProblem,
+    ContestSubmission,
+    ContestSubmissionFull,
+)
 from app.utils.yandex_request import make_request_to_yandex_contest_api
 
 from .database import add_student_contest_relation
@@ -107,9 +111,32 @@ async def _add_results(
     )
 
 
+async def extend_submissions(
+    submissions: list[ContestSubmission],
+    yandex_contest_id: int,
+) -> list[ContestSubmissionFull]:
+    url = f'contests/{yandex_contest_id}/submissions/multiple?'
+    url = url + '&'.join(
+        map(
+            lambda run_id: f'runIds={run_id}',
+            [submission.id for submission in submissions],
+        )
+    )
+    response = await make_request_to_yandex_contest_api(url)
+    return [
+        ContestSubmissionFull(
+            **submission.dict(),
+            id=submission['runId'],
+            authorId=submission['participantInfo']['id'],
+            login=submission['participantInfo']['login'],
+        )
+        for submission in response.json()
+    ]
+
+
 async def get_ok_submissions(
     yandex_contest_id: int,
-) -> list[ContestSubmission]:
+) -> list[ContestSubmissionFull]:
     logger = logging.getLogger(__name__)
     url = f'contests/{yandex_contest_id}/submissions?page={{}}&pageSize={{}}'
     page = 1
@@ -133,4 +160,4 @@ async def get_ok_submissions(
             url.format(page, page_size)
         )
         data = response.json()
-    return list(set(result_list))
+    return await extend_submissions(result_list, yandex_contest_id)
