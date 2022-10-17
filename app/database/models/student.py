@@ -82,4 +82,5 @@ class StudentContest(BaseModel):
         index=True,
     )
     tasks_done = sa.Column(sa.Integer)
+    score = sa.Column(sa.Float)
     is_ok = sa.Column(sa.Boolean, default=False)

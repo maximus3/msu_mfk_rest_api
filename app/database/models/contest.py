@@ -20,5 +20,6 @@ class Contest(BaseModel):
     lecture = sa.Column(sa.Integer)
     link = sa.Column(sa.String, unique=True)
     tasks_count = sa.Column(sa.Integer)
-    tasks_need = sa.Column(sa.Integer)
-    is_necessary = sa.Column(sa.Boolean)
+    score_max = sa.Column(sa.Float, nullable=True)
+    levels = sa.Column(sa.JSON)
+    is_necessary = sa.Column(sa.Boolean, default=True)
