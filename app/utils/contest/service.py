@@ -129,12 +129,42 @@ async def extend_submissions(
             id=submission['runId'],
             authorId=submission['participantInfo']['id'],
             login=submission['participantInfo']['login'],
+            finalScore=float(submission['finalScore'])
+            if isinstance(submission['finalScore'], str)
+            and submission['finalScore']
+            else 1,
         )
         for submission in response.json()
     ]
 
 
-async def get_ok_submissions(
+async def filter_best_submissions_only(
+    submissions: list[ContestSubmissionFull],
+) -> list[ContestSubmissionFull]:
+    result = []
+    for login in set(map(lambda submission: submission.login, submissions)):
+        for task_id in set(
+            map(lambda submission: submission.problemId, submissions)
+        ):
+            result.extend(
+                sorted(
+                    filter(
+                        lambda submission: (
+                            submission.login
+                            == login  # pylint: disable=cell-var-from-loop
+                            and submission.problemId
+                            == task_id  # pylint: disable=cell-var-from-loop
+                        ),
+                        submissions,
+                    ),
+                    key=lambda submission: submission.finalScore,
+                    reverse=True,
+                )[:1]
+            )
+    return result
+
+
+async def get_best_submissions(
     yandex_contest_id: int,
 ) -> list[ContestSubmissionFull]:
     logger = logging.getLogger(__name__)
@@ -160,4 +190,6 @@ async def get_ok_submissions(
             url.format(page, page_size)
         )
         data = response.json()
-    return await extend_submissions(result_list, yandex_contest_id)
+    return await filter_best_submissions_only(
+        await extend_submissions(result_list, yandex_contest_id)
+    )

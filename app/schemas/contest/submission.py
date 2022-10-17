@@ -10,5 +10,5 @@ class ContestSubmission(BaseModel):
 
 
 class ContestSubmissionFull(ContestSubmission):
-    finalScore: int
+    finalScore: float
     login: str

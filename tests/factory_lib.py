@@ -56,7 +56,8 @@ class ContestFactory(Factory):
     lecture = fuzzy.FuzzyInteger(1, 10)
     link = fuzzy.FuzzyText(length=10, prefix='https://')
     tasks_count = fuzzy.FuzzyInteger(1, 10)
-    tasks_need = fuzzy.FuzzyInteger(1, 10)
+    score_max = fuzzy.FuzzyInteger(1, 10)
+    levels = {'count': 1, 'levels': [{'name': 'level1', 'score_need': 1}]}
     is_necessary = fuzzy.FuzzyChoice([True, False])
     yandex_contest_id = fuzzy.FuzzyInteger(30000, 40000)
 
@@ -77,6 +78,7 @@ class StudentContestFactory(Factory):
     contest_id = Faker('uuid4')
     student_id = Faker('uuid4')
     tasks_done = fuzzy.FuzzyInteger(1, 10)
+    score = fuzzy.FuzzyInteger(1, 10)
     is_ok = fuzzy.FuzzyChoice([True, False])
 
 

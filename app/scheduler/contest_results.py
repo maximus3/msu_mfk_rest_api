@@ -11,10 +11,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.bot_helper.send import send_error_message, send_results
 from app.database.connection import SessionManager
 from app.database.models import Contest, Course, Department, Student
-from app.schemas import ContestResultsCSV, ContestSubmissionFull
+from app.schemas import ContestResultsCSV, ContestSubmissionFull, Levels
 from app.utils.contest import (
+    get_best_submissions,
     get_contests,
-    get_ok_submissions,
     get_student_contest_relation,
 )
 from app.utils.course import get_all_courses
@@ -52,11 +52,21 @@ async def process_contest(  # pylint: disable=too-many-arguments
                 course_results,
                 session,
             )
+    contest_levels = Levels(**contest.levels) if contest.levels else None
+    if contest_levels:
+        contest_levels.levels = sorted(
+            contest_levels.levels, key=lambda x: x.score_need
+        )
     for student, department in students_and_departments:
         student_tasks_done = sum(
             True for submission in results if submission.login == student.login
         )
-        is_ok = student_tasks_done >= contest.tasks_need
+        student_score = round(
+            sum(submission.finalScore for submission in results), 2
+        )  # TODO: magic constant
+        is_ok = student_tasks_done == contest.tasks_count
+        if contest_levels and contest_levels.count > 0:
+            is_ok = student_score >= contest_levels.levels[0].score_need
         course_results.results[student.contest_login][
             'contest_login'
         ] = student.contest_login
@@ -64,6 +74,9 @@ async def process_contest(  # pylint: disable=too-many-arguments
         course_results.results[student.contest_login][
             'department'
         ] = department.name
+        course_results.results[student.contest_login][
+            f'lecture_{contest.lecture}_score'
+        ] = student_score
         course_results.results[student.contest_login][
             f'lecture_{contest.lecture}'
         ] = is_ok
@@ -77,9 +90,11 @@ async def process_contest(  # pylint: disable=too-many-arguments
         )
         if student_contest is not None:
             student_contest.tasks_done = student_tasks_done
+            student_contest.score = student_score
             student_contest.is_ok = is_ok
             session.add(student_contest)
 
+    course_results.keys.append(f'lecture_{contest.lecture}_score')
     course_results.keys.append(f'lecture_{contest.lecture}')
 
 
@@ -99,7 +114,7 @@ async def update_course_results(
     )
     for contest in contests:
         logger.info('Contest: %s', contest)
-        results = await get_ok_submissions(contest.yandex_contest_id)
+        results = await get_best_submissions(contest.yandex_contest_id)
         await process_contest(
             students_and_departments,
             results,
