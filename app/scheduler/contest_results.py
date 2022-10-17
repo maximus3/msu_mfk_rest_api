@@ -59,10 +59,17 @@ async def process_contest(  # pylint: disable=too-many-arguments
         )
     for student, department in students_and_departments:
         student_tasks_done = sum(
-            True for submission in results if submission.login == student.login
+            True
+            for submission in results
+            if submission.login == student.contest_login
         )
         student_score = round(
-            sum(submission.finalScore for submission in results), 2
+            sum(
+                submission.finalScore
+                for submission in results
+                if submission.login == student.contest_login
+            ),
+            2,
         )  # TODO: magic constant
         is_ok = student_tasks_done == contest.tasks_count
         if contest_levels and contest_levels.count > 0:

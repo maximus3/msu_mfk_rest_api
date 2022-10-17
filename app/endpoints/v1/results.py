@@ -45,9 +45,15 @@ async def get_all_results(
                     ContestResults(
                         link=contest.link,
                         tasks_count=contest.tasks_count,
-                        tasks_need=contest.tasks_need,
+                        score_max=contest.score_max,
+                        levels_count=contest.levels['count'],
+                        levels=sorted(
+                            contest.levels['levels'],
+                            key=lambda level: level['score_need'],
+                        ),
                         lecture=contest.lecture,
                         tasks_done=student_contest.tasks_done,
+                        score=student_contest.score,
                         is_ok=student_contest.is_ok,
                         updated_at=datetime.strftime(
                             student_contest.dt_updated,
@@ -55,7 +61,7 @@ async def get_all_results(
                         ),
                     )
                     for contest, student_contest in sorted(
-                        await get_contests_with_relations(  # pylint: disable=line-too-long
+                        await get_contests_with_relations(
                             session,
                             course.id,
                             student.id,

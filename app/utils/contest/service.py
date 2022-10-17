@@ -115,27 +115,40 @@ async def extend_submissions(
     submissions: list[ContestSubmission],
     yandex_contest_id: int,
 ) -> list[ContestSubmissionFull]:
+    logger = logging.getLogger(__name__)
     url = f'contests/{yandex_contest_id}/submissions/multiple?'
-    url = url + '&'.join(
-        map(
-            lambda run_id: f'runIds={run_id}',
-            [submission.id for submission in submissions],
+    batch_size = 100
+    results: list[ContestSubmissionFull] = []
+    for i in range(0, len(submissions), batch_size):
+        batch_url = url + '&'.join(
+            map(
+                lambda run_id: f'runIds={run_id}',
+                [
+                    submission.id
+                    for submission in submissions[i : i + batch_size]
+                ],
+            )
         )
-    )
-    response = await make_request_to_yandex_contest_api(url)
-    return [
-        ContestSubmissionFull(
-            **submission.dict(),
-            id=submission['runId'],
-            authorId=submission['participantInfo']['id'],
-            login=submission['participantInfo']['login'],
-            finalScore=float(submission['finalScore'])
-            if isinstance(submission['finalScore'], str)
-            and submission['finalScore']
-            else 1,
+        logger.info('Getting submissions %s-%s', i, i + batch_size)
+        response = await make_request_to_yandex_contest_api(
+            batch_url, timeout=30
         )
-        for submission in response.json()
-    ]
+        results.extend(
+            ContestSubmissionFull(
+                id=submission['runId'],
+                authorId=submission['participantInfo']['id'],
+                problemId=submission['problemId'],
+                problemAlias=submission['problemAlias'],
+                verdict=submission['verdict'],
+                login=submission['participantInfo']['login'],
+                finalScore=float(submission['finalScore'])
+                if isinstance(submission['finalScore'], str)
+                and submission['finalScore']
+                else 1,
+            )
+            for submission in response.json()
+        )
+    return results
 
 
 async def filter_best_submissions_only(
