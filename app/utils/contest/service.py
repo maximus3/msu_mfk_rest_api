@@ -1,6 +1,7 @@
 import logging
 from datetime import datetime, timedelta
 
+import httpx
 import pytz
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -117,11 +118,12 @@ async def _add_results(
 async def extend_submissions(
     submissions: list[ContestSubmission],
     yandex_contest_id: int,
-) -> list[ContestSubmissionFull]:
+) -> tuple[list[ContestSubmissionFull], bool]:
     logger = logging.getLogger(__name__)
     url = f'contests/{yandex_contest_id}/submissions/multiple?'
     batch_size = 100
     results: list[ContestSubmissionFull] = []
+    is_all_results = True
     for i in range(0, len(submissions), batch_size):
         batch_url = url + '&'.join(
             map(
@@ -133,9 +135,14 @@ async def extend_submissions(
             )
         )
         logger.info('Getting submissions %s-%s', i, i + batch_size)
-        response = await make_request_to_yandex_contest_api(
-            batch_url, timeout=30
-        )
+        try:
+            response = await make_request_to_yandex_contest_api(
+                batch_url, timeout=60, retry_count=5
+            )
+        except httpx.ReadTimeout:
+            logger.error('Timeout error')
+            is_all_results = False
+            continue
         results.extend(
             ContestSubmissionFull(
                 id=submission['runId'],
@@ -151,7 +158,7 @@ async def extend_submissions(
             )
             for submission in response.json()
         )
-    return results
+    return results, is_all_results
 
 
 async def filter_best_submissions_only(
@@ -182,7 +189,7 @@ async def filter_best_submissions_only(
 
 async def get_best_submissions(
     yandex_contest_id: int,
-) -> list[ContestSubmissionFull]:
+) -> tuple[list[ContestSubmissionFull], bool]:
     logger = logging.getLogger(__name__)
     url = f'contests/{yandex_contest_id}/submissions?page={{}}&pageSize={{}}'
     page = 1
@@ -206,9 +213,10 @@ async def get_best_submissions(
             url.format(page, page_size)
         )
         data = response.json()
-    return await filter_best_submissions_only(
-        await extend_submissions(result_list, yandex_contest_id)
+    extended_results, is_all_results = await extend_submissions(
+        result_list, yandex_contest_id
     )
+    return await filter_best_submissions_only(extended_results), is_all_results
 
 
 async def get_contest_info(

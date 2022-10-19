@@ -5,9 +5,9 @@ from .contest.create import ContestCreateRequest
 from .contest.info import ContestInfoResponse, YandexContestInfo
 from .contest.levels import Level, Levels
 from .contest.problem import ContestProblem
-from .contest.results import ContestResultsCSV
 from .contest.submission import ContestSubmission, ContestSubmissionFull
 from .course.course import CourseBase, CourseResponse
+from .course.results import CourseResultsCSV
 from .department.department import DepartmentBase, DepartmentResponse
 from .register.register import RegisterRequest, RegisterResponse
 from .results.results import ContestResults, CourseResults, StudentResults
@@ -30,7 +30,7 @@ __all__ = [
     'ContestProblem',
     'ContestSubmission',
     'ContestSubmissionFull',
-    'ContestResultsCSV',
+    'CourseResultsCSV',
     'StudentResults',
     'CourseResults',
     'ContestResults',

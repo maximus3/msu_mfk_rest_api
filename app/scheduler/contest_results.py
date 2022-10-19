@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.bot_helper.send import send_error_message, send_results
 from app.database.connection import SessionManager
 from app.database.models import Contest, Course, Department, Student
-from app.schemas import ContestResultsCSV, ContestSubmissionFull, Levels
+from app.schemas import ContestSubmissionFull, CourseResultsCSV, Levels
 from app.utils.contest import (
     get_best_submissions,
     get_contests,
@@ -21,9 +21,7 @@ from app.utils.course import get_all_courses
 from app.utils.student import get_students_by_course_with_department
 
 
-async def save_to_csv(
-    course_results: ContestResultsCSV, filename: str
-) -> None:
+async def save_to_csv(course_results: CourseResultsCSV, filename: str) -> None:
     with open(filename, 'w', encoding='utf-8') as f:
         f.write(','.join(course_results.keys))
         f.write('\n')
@@ -39,7 +37,7 @@ async def process_contest(  # pylint: disable=too-many-arguments
     students_and_departments: list[tuple[Student, Department]],
     results: list[ContestSubmissionFull],
     contest: Contest,
-    course_results: ContestResultsCSV,
+    course_results: CourseResultsCSV,
     session: AsyncSession | None = None,
 ) -> None:
     if session is None:
@@ -107,7 +105,7 @@ async def process_contest(  # pylint: disable=too-many-arguments
 
 async def update_course_results(
     course: Course, logger: logging.Logger | None = None
-) -> ContestResultsCSV:
+) -> CourseResultsCSV:
     SessionManager().refresh()
     async with SessionManager().create_async_session() as session:
         contests = await get_contests(session, course.id)
@@ -115,13 +113,17 @@ async def update_course_results(
             await get_students_by_course_with_department(session, course.id)
         )
     logger = logger or logging.getLogger(__name__)
-    course_results = ContestResultsCSV(
+    course_results = CourseResultsCSV(
         keys=['contest_login', 'fio', 'department'],
         results=defaultdict(dict),
     )
+    is_all_results_ok = True
     for contest in contests:
         logger.info('Contest: %s', contest)
-        results = await get_best_submissions(contest.yandex_contest_id)
+        results, is_all_results = await get_best_submissions(
+            contest.yandex_contest_id
+        )
+        is_all_results_ok = is_all_results_ok and is_all_results
         await process_contest(
             students_and_departments,
             results,
@@ -129,6 +131,9 @@ async def update_course_results(
             course_results,
         )
     course_results.keys.append('ok')
+    if not is_all_results_ok:
+        logger.error('Not all results ok')
+        raise RuntimeError('Not all results ok')
     return course_results
 
 
