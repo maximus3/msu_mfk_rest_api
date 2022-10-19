@@ -34,6 +34,24 @@ async def get_contests(
     return (await session.execute(query)).scalars().fetchall()
 
 
+async def get_contest_by_yandex_contest_id(
+    session: AsyncSession,
+    yandex_contest_id: int,
+) -> Contest | None:
+    """
+    Get contest by yandex contest id.
+
+    :param session: Database session
+    :param yandex_contest_id: Yandex contest id
+
+    :return: Contest if exists, None otherwise
+    """
+    query = select(Contest).where(
+        Contest.yandex_contest_id == yandex_contest_id
+    )
+    return (await session.execute(query)).scalars().first()
+
+
 async def is_student_registered_on_contest(
     session: AsyncSession,
     student_id: UUID,

@@ -1,6 +1,8 @@
 from .application_health.ping import PingMessage, PingResponse
 from .auth.token import Token, TokenData
 from .auth.user import User as UserSchema
+from .contest.create import ContestCreateRequest
+from .contest.info import ContestInfoResponse, YandexContestInfo
 from .contest.levels import Level, Levels
 from .contest.problem import ContestProblem
 from .contest.results import ContestResultsCSV
@@ -34,4 +36,7 @@ __all__ = [
     'ContestResults',
     'Level',
     'Levels',
+    'ContestCreateRequest',
+    'YandexContestInfo',
+    'ContestInfoResponse',
 ]

@@ -7,7 +7,7 @@ class Level(BaseModel):
     """
 
     name: str
-    score_need: float
+    score_need: float | int
 
 
 class Levels(BaseModel):

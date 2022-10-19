@@ -1126,6 +1126,14 @@ optional = false
 python-versions = ">=3.6,<4.0"
 
 [[package]]
+name = "types-pytz"
+version = "2022.5.0.0"
+description = "Typing stubs for pytz"
+category = "dev"
+optional = false
+python-versions = "*"
+
+[[package]]
 name = "typing-extensions"
 version = "4.3.0"
 description = "Backported and Experimental Type Hints for Python 3.7+"
@@ -1227,7 +1235,7 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "15cee210cf663958d417405bd58e0763833233be874ade010b4b5c2daee3a8d8"
+content-hash = "5f3b44a8d3856792984f73047add9a4bea4ee73580bb67bdb188079a0989d956"
 
 [metadata.files]
 aiogram = [
@@ -2160,6 +2168,10 @@ tomli = [
 tomlkit = [
     {file = "tomlkit-0.11.5-py3-none-any.whl", hash = "sha256:f2ef9da9cef846ee027947dc99a45d6b68a63b0ebc21944649505bf2e8bc5fe7"},
     {file = "tomlkit-0.11.5.tar.gz", hash = "sha256:571854ebbb5eac89abcb4a2e47d7ea27b89bf29e09c35395da6f03dd4ae23d1c"},
+]
+types-pytz = [
+    {file = "types-pytz-2022.5.0.0.tar.gz", hash = "sha256:0c163b15d3e598e6cc7074a99ca9ec72b25dc1b446acc133b827667af0b7b09a"},
+    {file = "types_pytz-2022.5.0.0-py3-none-any.whl", hash = "sha256:a8e1fe6a1b270fbfaf2553b20ad0f1316707cc320e596da903bb17d7373fed2d"},
 ]
 typing-extensions = [
     {file = "typing_extensions-4.3.0-py3-none-any.whl", hash = "sha256:25642c956049920a5aa49edcdd6ab1e06d7e5d467fc00e0506c44ac86fbfca02"},

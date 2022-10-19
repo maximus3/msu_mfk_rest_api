@@ -1,6 +1,7 @@
 from .database import (
     add_student_contest_relation,
     get_all_contests,
+    get_contest_by_yandex_contest_id,
     get_contests,
     get_contests_with_relations,
     get_student_contest_relation,
@@ -9,6 +10,7 @@ from .database import (
 from .service import (
     add_student_to_contest,
     get_best_submissions,
+    get_contest_info,
     get_participants_login_to_id,
     get_problems,
 )
@@ -25,4 +27,6 @@ __all__ = [
     'get_best_submissions',
     'get_student_contest_relation',
     'get_contests_with_relations',
+    'get_contest_info',
+    'get_contest_by_yandex_contest_id',
 ]

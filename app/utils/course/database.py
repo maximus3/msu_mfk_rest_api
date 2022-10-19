@@ -11,6 +11,13 @@ async def get_course(session: AsyncSession, name: str) -> Course | None:
     return await session.scalar(query)
 
 
+async def get_course_by_short_name(
+    session: AsyncSession, short_name: str
+) -> Course | None:
+    query = select(Course).where(Course.short_name == short_name)
+    return await session.scalar(query)
+
+
 async def get_all_courses(session: AsyncSession) -> list[Course]:
     query = select(Course)
     return (await session.execute(query)).scalars().all()

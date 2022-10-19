@@ -1,5 +1,7 @@
 import logging
+from datetime import datetime, timedelta
 
+import pytz
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database.models import Contest, Student
@@ -7,6 +9,7 @@ from app.schemas import (
     ContestProblem,
     ContestSubmission,
     ContestSubmissionFull,
+    YandexContestInfo,
 )
 from app.utils.yandex_request import make_request_to_yandex_contest_api
 
@@ -205,4 +208,33 @@ async def get_best_submissions(
         data = response.json()
     return await filter_best_submissions_only(
         await extend_submissions(result_list, yandex_contest_id)
+    )
+
+
+async def get_contest_info(
+    yandex_contest_id: int,
+) -> YandexContestInfo:
+    response_contest = await make_request_to_yandex_contest_api(
+        f'contests/{yandex_contest_id}'
+    )
+    data = response_contest.json()
+    if data['startTime'].lower()[-1] == 'z':
+        data['startTime'] = data['startTime'][:-1] + '+00:00'
+    deadline = datetime.fromisoformat(data['startTime']) + timedelta(
+        seconds=data['duration']
+    )
+    deadline = deadline.replace(tzinfo=None)
+    deadline += timedelta(
+        seconds=pytz.timezone('Europe/Moscow')
+        .utcoffset(deadline)
+        .total_seconds()
+    )
+    resopnse_task = await make_request_to_yandex_contest_api(
+        f'contests/{yandex_contest_id}/problems'
+    )
+    data = resopnse_task.json()
+    tasks_count = len(data['problems'])
+    return YandexContestInfo(
+        deadline=deadline,
+        tasks_count=tasks_count,
     )
