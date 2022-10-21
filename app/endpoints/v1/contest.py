@@ -1,5 +1,3 @@
-import json
-
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -55,7 +53,7 @@ async def create(
         link='https://contest.yandex.ru/contest/'
         + str(contest_request.yandex_contest_id),
         score_max=contest_request.score_max,
-        levels=contest_request.levels.json(),
+        levels=contest_request.levels.dict(),
         deadline=contest_info.deadline,
         tasks_count=contest_info.tasks_count,
     )
@@ -69,6 +67,6 @@ async def create(
         link=contest.link,
         tasks_count=contest.tasks_count,
         score_max=contest.score_max,
-        levels=json.loads(contest.levels),
+        levels=contest.levels,
         is_necessary=contest.is_necessary,
     )
