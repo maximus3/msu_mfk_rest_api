@@ -18,5 +18,5 @@ class ContestInfoResponse(BaseModel):
     link: str
     tasks_count: int
     score_max: float
-    levels: Levels
+    levels: Levels | None
     is_necessary: bool

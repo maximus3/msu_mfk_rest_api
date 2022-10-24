@@ -46,11 +46,15 @@ async def get_all_results(
                         link=contest.link,
                         tasks_count=contest.tasks_count,
                         score_max=contest.score_max,
-                        levels_count=contest.levels['count'],
+                        levels_count=contest.levels['count']
+                        if contest.levels
+                        else 0,
                         levels=sorted(
                             contest.levels['levels'],
                             key=lambda level: level['score_need'],
-                        ),
+                        )
+                        if contest.levels
+                        else [],
                         lecture=contest.lecture,
                         tasks_done=student_contest.tasks_done,
                         score=student_contest.score,

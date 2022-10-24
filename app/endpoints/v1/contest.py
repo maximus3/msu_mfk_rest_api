@@ -53,7 +53,9 @@ async def create(
         link='https://contest.yandex.ru/contest/'
         + str(contest_request.yandex_contest_id),
         score_max=contest_request.score_max,
-        levels=contest_request.levels.dict(),
+        levels=contest_request.levels.dict()
+        if contest_request.levels
+        else None,
         deadline=contest_info.deadline,
         tasks_count=contest_info.tasks_count,
     )

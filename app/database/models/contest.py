@@ -21,5 +21,5 @@ class Contest(BaseModel):
     link = sa.Column(sa.String, unique=True)
     tasks_count = sa.Column(sa.Integer)
     score_max = sa.Column(sa.Float, nullable=True)
-    levels = sa.Column(sa.JSON)
+    levels = sa.Column(sa.JSON, nullable=True)
     is_necessary = sa.Column(sa.Boolean, default=True)
