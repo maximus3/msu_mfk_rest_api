@@ -115,11 +115,21 @@ async def _add_results(
     )
 
 
+async def get_contest_duration_ms(
+    yandex_contest_id: int,
+) -> int:
+    response = await make_request_to_yandex_contest_api(
+        f'contests/{yandex_contest_id}'
+    )
+    return response.json()['duration'] * 1000
+
+
 async def extend_submissions(
     submissions: list[ContestSubmission],
     yandex_contest_id: int,
 ) -> tuple[list[ContestSubmissionFull], bool]:
     logger = logging.getLogger(__name__)
+    contest_duration = await get_contest_duration_ms(yandex_contest_id)
     url = f'contests/{yandex_contest_id}/submissions/multiple?'
     batch_size = 100
     results: list[ContestSubmissionFull] = []
@@ -151,10 +161,20 @@ async def extend_submissions(
                 problemAlias=submission['problemAlias'],
                 verdict=submission['verdict'],
                 login=submission['participantInfo']['login'],
-                finalScore=float(submission['finalScore'])
-                if isinstance(submission['finalScore'], str)
-                and submission['finalScore']
-                else 1,
+                timeFromStart=submission['timeFromStart'],
+                finalScore=(
+                    float(submission['finalScore'])
+                    if isinstance(submission['finalScore'], str)
+                    and submission['finalScore']
+                    else 1
+                )
+                if submission['timeFromStart'] <= contest_duration
+                else (
+                    float(submission['finalScore']) / 2
+                    if isinstance(submission['finalScore'], str)
+                    and submission['finalScore']
+                    else 0.5
+                ),
             )
             for submission in response.json()
         )

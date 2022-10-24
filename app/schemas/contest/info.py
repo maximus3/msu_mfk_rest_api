@@ -8,6 +8,7 @@ from .levels import Levels
 class YandexContestInfo(BaseModel):
     deadline: datetime
     tasks_count: int
+    duration: int
 
 
 class ContestInfoResponse(BaseModel):
