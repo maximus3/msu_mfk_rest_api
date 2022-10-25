@@ -60,11 +60,8 @@ async def get_all_results(
                         tasks_done=student_contest.tasks_done,
                         score=student_contest.score,
                         is_ok=student_contest.is_ok,
-                        updated_at=get_datetime_msk_tz(
-                            datetime.strftime(
-                                student_contest.dt_updated,
-                                '%Y-%m-%d %H:%M:%S',
-                            )
+                        updated_at=get_datetime_msk_tz(student_contest.dt_updated).strftime(
+                            '%Y-%m-%d %H:%M:%S',
                         ),
                     )
                     for contest, student_contest in sorted(
