@@ -33,23 +33,90 @@ async def save_to_csv(course_results: CourseResultsCSV, filename: str) -> None:
             f.write('\n')
 
 
+async def fill_course_results(  # pylint: disable=too-many-arguments
+    course_results: CourseResultsCSV,
+    student: Student,
+    department: Department,
+    contest: Contest,
+    student_score: float,
+    is_ok: bool,
+) -> None:
+    course_results.results[student.contest_login][
+        'contest_login'
+    ] = student.contest_login
+    course_results.results[student.contest_login]['fio'] = student.fio
+    course_results.results[student.contest_login][
+        'department'
+    ] = department.name
+    course_results.results[student.contest_login][
+        f'lecture_{contest.lecture}_score'
+    ] = student_score
+    course_results.results[student.contest_login][
+        f'lecture_{contest.lecture}'
+    ] = is_ok
+    course_results.results[student.contest_login][
+        'ok'
+    ] = is_ok and course_results.results[student.contest_login].get('ok', True)
+
+
+async def update_student_contest_relation(  # pylint: disable=too-many-arguments
+    student: Student,
+    contest: Contest,
+    student_tasks_done: int,
+    student_score: float,
+    is_ok: bool,
+    session: AsyncSession | None = None,
+    logger: logging.Logger | None = None,
+) -> None:
+    if session is None:
+        SessionManager().refresh()
+        async with SessionManager().create_async_session() as session:
+            return await update_student_contest_relation(
+                student,
+                contest,
+                student_tasks_done,
+                student_score,
+                is_ok,
+                session,
+                logger,
+            )
+    logger = logger or logging.getLogger(__name__)
+    student_contest = await get_student_contest_relation(
+        session, student.id, contest.id
+    )
+    if student_contest is None:
+        logger.warning(
+            'Student %s has no relation with contest %s',
+            student.contest_login,
+            contest.id,
+        )
+        return
+    if (
+        student_contest.tasks_done != student_tasks_done
+        or student_contest.score != student_score
+        or student_contest.is_ok != is_ok
+    ):
+        student_contest.tasks_done = student_tasks_done
+        student_contest.score = student_score
+        student_contest.is_ok = is_ok
+        session.add(student_contest)
+    else:
+        logger.info(
+            'Student %s has no changes in contest %s',
+            student.contest_login,
+            contest.id,
+        )
+
+
 async def process_contest(  # pylint: disable=too-many-arguments
     students_and_departments: list[tuple[Student, Department]],
     results: list[ContestSubmissionFull],
     contest: Contest,
     course_results: CourseResultsCSV,
+    logger: logging.Logger | None = None,
     session: AsyncSession | None = None,
 ) -> None:
-    if session is None:
-        SessionManager().refresh()
-        async with SessionManager().create_async_session() as session:
-            return await process_contest(
-                students_and_departments,
-                results,
-                contest,
-                course_results,
-                session,
-            )
+    logger = logger or logging.getLogger(__name__)
     contest_levels = Levels(**contest.levels) if contest.levels else None
     if contest_levels:
         contest_levels.levels = sorted(
@@ -67,37 +134,37 @@ async def process_contest(  # pylint: disable=too-many-arguments
                 for submission in results
                 if submission.login == student.contest_login
             ),
-            2,
+            4,
         )  # TODO: magic constant
         is_ok = student_tasks_done == contest.tasks_count
+        logger.info(
+            'Student: %s, tasks done: %s, score: %s, is ok: %s',
+            student.contest_login,
+            student_tasks_done,
+            student_score,
+            is_ok,
+        )
         if contest_levels and contest_levels.count > 0:
             is_ok = student_score >= contest_levels.levels[0].score_need
-        course_results.results[student.contest_login][
-            'contest_login'
-        ] = student.contest_login
-        course_results.results[student.contest_login]['fio'] = student.fio
-        course_results.results[student.contest_login][
-            'department'
-        ] = department.name
-        course_results.results[student.contest_login][
-            f'lecture_{contest.lecture}_score'
-        ] = student_score
-        course_results.results[student.contest_login][
-            f'lecture_{contest.lecture}'
-        ] = is_ok
-        course_results.results[student.contest_login][
-            'ok'
-        ] = is_ok and course_results.results[student.contest_login].get(
-            'ok', True
+
+        await fill_course_results(
+            course_results,
+            student,
+            department,
+            contest,
+            student_score,
+            is_ok,
         )
-        student_contest = await get_student_contest_relation(
-            session, student.id, contest.id
+
+        await update_student_contest_relation(
+            student,
+            contest,
+            student_tasks_done,
+            student_score,
+            is_ok,
+            session,
+            logger,
         )
-        if student_contest is not None:
-            student_contest.tasks_done = student_tasks_done
-            student_contest.score = student_score
-            student_contest.is_ok = is_ok
-            session.add(student_contest)
 
     course_results.keys.append(f'lecture_{contest.lecture}_score')
     course_results.keys.append(f'lecture_{contest.lecture}')
@@ -127,6 +194,7 @@ async def update_course_results(
             results,
             contest,
             course_results,
+            logger,
         )
     course_results.keys.append('ok')
     if not is_all_results_ok:
