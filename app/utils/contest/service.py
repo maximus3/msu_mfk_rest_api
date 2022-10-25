@@ -115,22 +115,12 @@ async def _add_results(
     )
 
 
-async def get_contest_duration_ms(
-    yandex_contest_id: int,
-) -> int:
-    response = await make_request_to_yandex_contest_api(
-        f'contests/{yandex_contest_id}'
-    )
-    return response.json()['duration'] * 1000
-
-
 async def extend_submissions(
     submissions: list[ContestSubmission],
-    yandex_contest_id: int,
+    contest: Contest,
 ) -> tuple[list[ContestSubmissionFull], bool]:
     logger = logging.getLogger(__name__)
-    contest_duration = await get_contest_duration_ms(yandex_contest_id)
-    url = f'contests/{yandex_contest_id}/submissions/multiple?'
+    url = f'contests/{contest.yandex_contest_id}/submissions/multiple?'
     batch_size = 100
     results: list[ContestSubmissionFull] = []
     is_all_results = True
@@ -168,7 +158,10 @@ async def extend_submissions(
                     and submission['finalScore']
                     else 1
                 )
-                if submission['timeFromStart'] <= contest_duration
+                if datetime.fromisoformat(
+                    submission['submissionTime']
+                ).replace(tzinfo=None)
+                <= contest.deadline
                 else (
                     float(submission['finalScore']) / 2
                     if isinstance(submission['finalScore'], str)
@@ -208,10 +201,13 @@ async def filter_best_submissions_only(
 
 
 async def get_best_submissions(
-    yandex_contest_id: int,
+    contest: Contest,
 ) -> tuple[list[ContestSubmissionFull], bool]:
     logger = logging.getLogger(__name__)
-    url = f'contests/{yandex_contest_id}/submissions?page={{}}&pageSize={{}}'
+    url = (
+        f'contests/{contest.yandex_contest_id}/submissions'
+        f'?page={{}}&pageSize={{}}'
+    )
     page = 1
     page_size = 100
     result_list: list[ContestSubmission] = []
@@ -222,7 +218,9 @@ async def get_best_submissions(
     data = response.json()
     count = data['count']
     count_done = 0
-    logger.info('Contest %s has %s submissions', yandex_contest_id, count)
+    logger.info(
+        'Contest %s has %s submissions', contest.yandex_contest_id, count
+    )
     while count_done < count:
         await _add_results(data['submissions'], result_list)
         count_done += len(data['submissions'])
@@ -234,7 +232,7 @@ async def get_best_submissions(
         )
         data = response.json()
     extended_results, is_all_results = await extend_submissions(
-        result_list, yandex_contest_id
+        result_list, contest
     )
     return await filter_best_submissions_only(extended_results), is_all_results
 

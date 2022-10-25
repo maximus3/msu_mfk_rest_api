@@ -120,9 +120,7 @@ async def update_course_results(
     is_all_results_ok = True
     for contest in contests:
         logger.info('Contest: %s', contest)
-        results, is_all_results = await get_best_submissions(
-            contest.yandex_contest_id
-        )
+        results, is_all_results = await get_best_submissions(contest)
         is_all_results_ok = is_all_results_ok and is_all_results
         await process_contest(
             students_and_departments,
