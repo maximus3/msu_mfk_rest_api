@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.database.connection import SessionManager
 from app.database.models import User
 from app.schemas import ContestResults, CourseResults, StudentResults
+from app.utils.common import get_datetime_msk_tz
 from app.utils.contest import get_contests_with_relations
 from app.utils.course import get_student_courses
 from app.utils.student import get_student
@@ -59,9 +60,11 @@ async def get_all_results(
                         tasks_done=student_contest.tasks_done,
                         score=student_contest.score,
                         is_ok=student_contest.is_ok,
-                        updated_at=datetime.strftime(
-                            student_contest.dt_updated,
-                            '%Y-%m-%d %H:%M:%S',
+                        updated_at=get_datetime_msk_tz(
+                            datetime.strftime(
+                                student_contest.dt_updated,
+                                '%Y-%m-%d %H:%M:%S',
+                            )
                         ),
                     )
                     for contest, student_contest in sorted(

@@ -2,7 +2,6 @@ import logging
 from datetime import datetime, timedelta
 
 import httpx
-import pytz
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database.models import Contest, Student
@@ -12,6 +11,7 @@ from app.schemas import (
     ContestSubmissionFull,
     YandexContestInfo,
 )
+from app.utils.common import get_datetime_msk_tz
 from app.utils.yandex_request import make_request_to_yandex_contest_api
 
 from .database import add_student_contest_relation
@@ -244,16 +244,8 @@ async def get_contest_info(
         f'contests/{yandex_contest_id}'
     )
     data = response_contest.json()
-    if data['startTime'].lower()[-1] == 'z':
-        data['startTime'] = data['startTime'][:-1] + '+00:00'
-    deadline = datetime.fromisoformat(data['startTime']) + timedelta(
+    deadline = get_datetime_msk_tz(data['startTime']) + timedelta(
         seconds=data['duration']
-    )
-    deadline = deadline.replace(tzinfo=None)
-    deadline += timedelta(
-        seconds=pytz.timezone('Europe/Moscow')
-        .utcoffset(deadline)
-        .total_seconds()
     )
     resopnse_task = await make_request_to_yandex_contest_api(
         f'contests/{yandex_contest_id}/problems'
