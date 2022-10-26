@@ -1,5 +1,3 @@
-from datetime import datetime
-
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -60,7 +58,9 @@ async def get_all_results(
                         tasks_done=student_contest.tasks_done,
                         score=student_contest.score,
                         is_ok=student_contest.is_ok,
-                        updated_at=get_datetime_msk_tz(student_contest.dt_updated).strftime(
+                        updated_at=get_datetime_msk_tz(
+                            student_contest.dt_updated
+                        ).strftime(
                             '%Y-%m-%d %H:%M:%S',
                         ),
                     )

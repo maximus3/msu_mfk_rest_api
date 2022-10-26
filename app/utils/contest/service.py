@@ -156,6 +156,7 @@ async def extend_submissions(
                     float(submission['finalScore'])
                     if isinstance(submission['finalScore'], str)
                     and submission['finalScore']
+                    and float(submission['finalScore'])
                     else 1
                 )
                 if datetime.fromisoformat(
@@ -166,6 +167,7 @@ async def extend_submissions(
                     float(submission['finalScore']) / 2
                     if isinstance(submission['finalScore'], str)
                     and submission['finalScore']
+                    and float(submission['finalScore'])
                     else 0.5
                 ),
             )
