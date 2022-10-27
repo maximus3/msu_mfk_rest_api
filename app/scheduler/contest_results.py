@@ -94,7 +94,9 @@ async def get_author_id_update(
             student.id,
             contest.id,
             contest.course_id,
-            await get_author_id(student.contest_login, contest.id),
+            await get_author_id(
+                student.contest_login, contest.yandex_contest_id
+            ),
         )
     elif student_contest.author_id is None:
         logger.info(
@@ -103,7 +105,7 @@ async def get_author_id_update(
             contest.id,
         )
         student_contest.author_id = await get_author_id(
-            student.contest_login, contest.id
+            student.contest_login, contest.yandex_contest_id
         )
         session.add(student_contest)
     return student_contest.author_id

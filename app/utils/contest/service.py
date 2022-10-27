@@ -249,10 +249,10 @@ async def get_best_submissions(
 
 async def get_author_id(
     login: str,
-    contest: Contest,
+    yandex_contest_id: int,
 ) -> int:
     response = await make_request_to_yandex_contest_api(
-        f'contests/{contest.yandex_contest_id}/participants' f'?login={login}',
+        f'contests/{yandex_contest_id}/participants' f'?login={login}',
         method='POST',
     )
     return int(response.text)
