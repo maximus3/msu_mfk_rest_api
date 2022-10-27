@@ -81,6 +81,7 @@ class StudentContest(BaseModel):
         nullable=False,
         index=True,
     )
+    author_id = sa.Column(sa.Integer, nullable=True)
     tasks_done = sa.Column(sa.Integer)
     score = sa.Column(sa.Float)
     is_ok = sa.Column(sa.Boolean, default=False)
