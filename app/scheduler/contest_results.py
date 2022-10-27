@@ -1,4 +1,6 @@
-# pylint: disable=duplicate-code
+# pylint: disable=duplicate-code,too-many-lines
+
+# TODO: too many lines
 
 import logging
 import traceback
@@ -13,6 +15,8 @@ from app.database.connection import SessionManager
 from app.database.models import Contest, Course, Department, Student
 from app.schemas import ContestSubmissionFull, CourseResultsCSV, Levels
 from app.utils.contest import (
+    add_student_contest_relation,
+    get_author_id,
     get_best_submissions,
     get_contests,
     get_student_contest_relation,
@@ -57,6 +61,52 @@ async def fill_course_results(  # pylint: disable=too-many-arguments
     course_results.results[student.contest_login][
         'ok'
     ] = is_ok and course_results.results[student.contest_login].get('ok', True)
+
+
+async def get_author_id_update(
+    student: Student,
+    contest: Contest,
+    session: AsyncSession | None = None,
+    logger: logging.Logger | None = None,
+) -> int:
+    if session is None:
+        SessionManager().refresh()
+        async with SessionManager().create_async_session() as session:
+            return await get_author_id_update(
+                student,
+                contest,
+                session,
+                logger,
+            )
+    logger = logger or logging.getLogger(__name__)
+    student_contest = await get_student_contest_relation(
+        session, student.id, contest.id
+    )
+
+    if student_contest is None:
+        logger.warning(
+            'Student %s has no relation with contest %s',
+            student.contest_login,
+            contest.id,
+        )
+        student_contest = await add_student_contest_relation(
+            session,
+            student.id,
+            contest.id,
+            contest.course_id,
+            await get_author_id(student.contest_login, contest.id),
+        )
+    elif student_contest.author_id is None:
+        logger.info(
+            'Student %s has no author id in contest %s',
+            student.contest_login,
+            contest.id,
+        )
+        student_contest.author_id = await get_author_id(
+            student.contest_login, contest.id
+        )
+        session.add(student_contest)
+    return student_contest.author_id
 
 
 async def update_student_contest_relation(  # pylint: disable=too-many-arguments
@@ -123,16 +173,17 @@ async def process_contest(  # pylint: disable=too-many-arguments
             contest_levels.levels, key=lambda x: x.score_need
         )
     for student, department in students_and_departments:
+        author_id = await get_author_id_update(
+            student, contest, logger=logger
+        )  # TODO: many queries to db
         student_tasks_done = sum(
-            True
-            for submission in results
-            if submission.login == student.contest_login
+            True for submission in results if submission.authorId == author_id
         )
         student_score = round(
             sum(
                 submission.finalScore
                 for submission in results
-                if submission.login == student.contest_login
+                if submission.authorId == author_id
             ),
             4,
         )  # TODO: magic constant

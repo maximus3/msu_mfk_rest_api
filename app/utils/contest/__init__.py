@@ -9,6 +9,7 @@ from .database import (
 )
 from .service import (
     add_student_to_contest,
+    get_author_id,
     get_best_submissions,
     get_contest_info,
     get_participants_login_to_id,
@@ -29,4 +30,5 @@ __all__ = [
     'get_contests_with_relations',
     'get_contest_info',
     'get_contest_by_yandex_contest_id',
+    'get_author_id',
 ]

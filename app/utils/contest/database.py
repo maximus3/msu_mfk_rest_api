@@ -79,6 +79,7 @@ async def add_student_contest_relation(
     student_id: UUID,
     contest_id: UUID,
     course_id: UUID,
+    author_id: int,
 ) -> StudentContest:
     """
     Add student contest relation.
@@ -87,6 +88,7 @@ async def add_student_contest_relation(
     :param student_id: Student id
     :param contest_id: Contest id
     :param course_id: Course id
+    :param author_id: Author id in yandex contest
 
     :return: Student contest relation
     """
@@ -94,6 +96,7 @@ async def add_student_contest_relation(
         student_id=student_id,
         contest_id=contest_id,
         course_id=course_id,
+        author_id=author_id,
     )
     session.add(student_contest)
     return student_contest

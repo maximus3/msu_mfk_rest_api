@@ -69,7 +69,7 @@ async def add_student_to_contest(
             return False, message
 
     await add_student_contest_relation(
-        session, student.id, contest.id, contest.course_id
+        session, student.id, contest.id, contest.course_id, int(response.text)
     )
     logger.info(
         'Student "%s" successfully added to contest "%s" in database',
@@ -105,18 +105,23 @@ async def get_participants_login_to_id(
 
 async def _add_results(
     data: list[dict[str, str]],
-    result_list: list[ContestSubmission],
+    result_list: dict[int, ContestSubmission],
 ) -> None:
-    result_list.extend(
-        map(
-            lambda submission: ContestSubmission(**submission),
-            filter(lambda submission: submission['verdict'] == 'OK', data),
+    result_list.update(
+        dict(
+            map(
+                lambda submission: (
+                    int(submission['id']),
+                    ContestSubmission(**submission),
+                ),
+                filter(lambda submission: submission['verdict'] == 'OK', data),
+            )
         )
     )
 
 
 async def extend_submissions(
-    submissions: list[ContestSubmission],
+    submissions: dict[int, ContestSubmission],
     contest: Contest,
 ) -> tuple[list[ContestSubmissionFull], bool]:
     logger = logging.getLogger(__name__)
@@ -124,13 +129,14 @@ async def extend_submissions(
     batch_size = 100
     results: list[ContestSubmissionFull] = []
     is_all_results = True
+    submission_values = list(submissions.values())
     for i in range(0, len(submissions), batch_size):
         batch_url = url + '&'.join(
             map(
                 lambda run_id: f'runIds={run_id}',
                 [
                     submission.id
-                    for submission in submissions[i : i + batch_size]
+                    for submission in submission_values[i : i + batch_size]
                 ],
             )
         )
@@ -146,7 +152,7 @@ async def extend_submissions(
         results.extend(
             ContestSubmissionFull(
                 id=submission['runId'],
-                authorId=submission['participantInfo']['id'],
+                authorId=submissions[submission['runId']].authorId,
                 problemId=submission['problemId'],
                 problemAlias=submission['problemAlias'],
                 verdict=submission['verdict'],
@@ -180,7 +186,9 @@ async def filter_best_submissions_only(
     submissions: list[ContestSubmissionFull],
 ) -> list[ContestSubmissionFull]:
     result = []
-    for login in set(map(lambda submission: submission.login, submissions)):
+    for author_id in set(
+        map(lambda submission: submission.authorId, submissions)
+    ):
         for task_id in set(
             map(lambda submission: submission.problemId, submissions)
         ):
@@ -188,8 +196,8 @@ async def filter_best_submissions_only(
                 sorted(
                     filter(
                         lambda submission: (
-                            submission.login
-                            == login  # pylint: disable=cell-var-from-loop
+                            submission.authorId
+                            == author_id  # pylint: disable=cell-var-from-loop
                             and submission.problemId
                             == task_id  # pylint: disable=cell-var-from-loop
                         ),
@@ -212,7 +220,7 @@ async def get_best_submissions(
     )
     page = 1
     page_size = 100
-    result_list: list[ContestSubmission] = []
+    result_dict: dict[int, ContestSubmission] = {}
 
     response = await make_request_to_yandex_contest_api(
         url.format(page, page_size)
@@ -224,7 +232,7 @@ async def get_best_submissions(
         'Contest %s has %s submissions', contest.yandex_contest_id, count
     )
     while count_done < count:
-        await _add_results(data['submissions'], result_list)
+        await _add_results(data['submissions'], result_dict)
         count_done += len(data['submissions'])
         if count_done == count:
             break
@@ -234,9 +242,20 @@ async def get_best_submissions(
         )
         data = response.json()
     extended_results, is_all_results = await extend_submissions(
-        result_list, contest
+        result_dict, contest
     )
     return await filter_best_submissions_only(extended_results), is_all_results
+
+
+async def get_author_id(
+    login: str,
+    contest: Contest,
+) -> int:
+    response = await make_request_to_yandex_contest_api(
+        f'contests/{contest.yandex_contest_id}/participants' f'?login={login}',
+        method='POST',
+    )
+    return int(response.text)
 
 
 async def get_contest_info(

@@ -126,6 +126,7 @@ class TestAddStudentContestRelationHandler:
             contest_id=created_contest.id,
             student_id=created_student.id,
             course_id=created_contest.course_id,
+            author_id=123,
         )
         student_contest = (
             await session.execute(
