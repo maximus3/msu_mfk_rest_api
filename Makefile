@@ -209,15 +209,48 @@ commit: format ##@Git Commit with message all files
 push: ##@Git Push to origin
 	@git push
 
+.PHONY: pull
+pull: ##@Git Pull from origin
+	@git pull
+
 .PHONY: check-git
 git: check commit ##@Git Check and commit
 
 .PHONY: update
-update: ##@Application Update docker app
-	@git pull
+update: pull dump-local ##@Application Update docker app
 	@make docker-stop nginx
 	@make docker
 	@make docker-migrate head
+
+.PHONY: dump
+dump: ##@Database Dump database from server
+	$(eval FILENAME=backup_$(shell date +%Y%m%d_%H%M%S).sql)
+	$(eval PORT=$(shell cat deploy/port.txt))
+	$(eval HOST=$(shell cat deploy/host.txt))
+	$(eval USERNAME=$(shell cat deploy/username.txt))
+	$(eval DB_NAME=$(shell cat deploy/db_name.txt))
+	$(eval DB_USERNAME=$(shell cat deploy/db_username.txt))
+
+	echo "Dumping database to $(FILENAME)"
+	ssh -p $(PORT) $(USERNAME)@$(HOST) "docker exec postgres_container pg_dump -f $(FILENAME) -d $(DB_NAME) -U $(DB_USERNAME);docker cp postgres_container:$(FILENAME) $(FILENAME);docker exec postgres_container rm $(FILENAME);exit;"
+	scp -P $(PORT) $(USERNAME)@$(HOST):$(FILENAME) db/$(FILENAME)
+	ssh -p $(PORT) $(USERNAME)@$(HOST) "rm $(FILENAME); exit;"
+	echo "Done"
+
+.PHONY: dump-local
+dump-local: ##@Database Dump database local
+	$(eval FILENAME=backup_$(shell date +%Y%m%d_%H%M%S).sql)
+	$(eval PORT=$(shell cat deploy/port.txt))
+	$(eval HOST=$(shell cat deploy/host.txt))
+	$(eval USERNAME=$(shell cat deploy/username.txt))
+	$(eval DB_NAME=$(shell cat deploy/db_name.txt))
+	$(eval DB_USERNAME=$(shell cat deploy/db_username.txt))
+
+	echo "Dumping database to $(FILENAME)"
+	docker exec postgres_container pg_dump -f $(FILENAME) -d $(DB_NAME) -U $(DB_USERNAME)
+	docker cp postgres_container:$(FILENAME) db/$(FILENAME)
+	docker exec postgres_container rm $(FILENAME)
+	echo "Done"
 
 %::
 	echo $(MESSAGE)
