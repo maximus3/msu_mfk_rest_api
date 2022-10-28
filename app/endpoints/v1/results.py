@@ -63,6 +63,11 @@ async def get_all_results(
                         ).strftime(
                             '%Y-%m-%d %H:%M:%S',
                         ),
+                        deadline=get_datetime_msk_tz(
+                            contest.deadline,
+                        ).strftime(
+                            '%Y-%m-%d %H:%M:%S',
+                        ),
                     )
                     for contest, student_contest in sorted(
                         await get_contests_with_relations(

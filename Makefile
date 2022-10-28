@@ -194,16 +194,12 @@ docker: docker-clean docker-build docker-up-d docker-clean ##@Application Docker
 open: ##@Application Open container in docker
 	docker exec -it $(args) /bin/bash
 
-.PHONY: open-app
-open-app: ##@Application Open app in docker
-	docker exec -it app /bin/bash
-
 .PHONY: docker-migrate
 docker-migrate: ##@Application Migrate db in docker
 	docker exec app make migrate $(args)
 
 .PHONY: commit
-commit: ##@Git Commit with message all files
+commit: format ##@Git Commit with message all files
 	@git add .
 	@git status
 	$(eval MESSAGE := $(shell read -p "Commit message: " MESSAGE; echo $$MESSAGE))
