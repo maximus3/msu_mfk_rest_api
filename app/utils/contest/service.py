@@ -281,4 +281,5 @@ async def get_contest_info(
     return YandexContestInfo(
         deadline=deadline,
         tasks_count=tasks_count,
+        duration=data['duration'],
     )
