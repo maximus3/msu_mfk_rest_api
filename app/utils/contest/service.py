@@ -192,6 +192,11 @@ async def filter_best_submissions_only(
         for task_id in set(
             map(lambda submission: submission.problemId, submissions)
         ):
+            if task_id in [
+                '5897533/2021_10_05/6OX0YJhjMw',
+                '5897533/2021_10_13/4aAHf8v2kd',
+            ]:  # TODO: ФИО and  Факультет tasks
+                continue
             result.extend(
                 sorted(
                     filter(
