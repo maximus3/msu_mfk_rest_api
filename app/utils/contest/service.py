@@ -123,6 +123,7 @@ async def _add_results(
 async def extend_submissions(
     submissions: dict[int, ContestSubmission],
     contest: Contest,
+    zero_is_ok: bool = False,
 ) -> tuple[list[ContestSubmissionFull], bool]:
     logger = logging.getLogger(__name__)
     url = f'contests/{contest.yandex_contest_id}/submissions/multiple?'
@@ -163,7 +164,7 @@ async def extend_submissions(
                     if isinstance(submission['finalScore'], str)
                     and submission['finalScore']
                     and float(submission['finalScore'])
-                    else 1
+                    else (1 if zero_is_ok else 0)
                 )
                 if datetime.fromisoformat(
                     submission['submissionTime']
@@ -174,7 +175,7 @@ async def extend_submissions(
                     if isinstance(submission['finalScore'], str)
                     and submission['finalScore']
                     and float(submission['finalScore'])
-                    else 0.5
+                    else (0.5 if zero_is_ok else 0)
                 ),
             )
             for submission in response.json()
@@ -217,6 +218,7 @@ async def filter_best_submissions_only(
 
 async def get_best_submissions(
     contest: Contest,
+    zero_is_ok: bool = False,
 ) -> tuple[list[ContestSubmissionFull], bool]:
     logger = logging.getLogger(__name__)
     url = (
@@ -247,7 +249,7 @@ async def get_best_submissions(
         )
         data = response.json()
     extended_results, is_all_results = await extend_submissions(
-        result_dict, contest
+        result_dict, contest, zero_is_ok
     )
     return await filter_best_submissions_only(extended_results), is_all_results
 
