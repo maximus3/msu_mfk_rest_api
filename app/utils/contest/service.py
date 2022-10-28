@@ -273,6 +273,7 @@ async def get_contest_info(
     deadline = get_datetime_msk_tz(data['startTime']) + timedelta(
         seconds=data['duration']
     )
+    duration = data['duration']
     resopnse_task = await make_request_to_yandex_contest_api(
         f'contests/{yandex_contest_id}/problems'
     )
@@ -281,5 +282,5 @@ async def get_contest_info(
     return YandexContestInfo(
         deadline=deadline,
         tasks_count=tasks_count,
-        duration=data['duration'],
+        duration=duration,
     )
