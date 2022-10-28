@@ -55,8 +55,8 @@ async def get_all_results(
                         if contest.levels
                         else [],
                         lecture=contest.lecture,
-                        tasks_done=student_contest.tasks_done,
-                        score=student_contest.score,
+                        tasks_done=student_contest.tasks_done or 0,
+                        score=student_contest.score or 0,
                         is_ok=student_contest.is_ok,
                         updated_at=get_datetime_msk_tz(
                             student_contest.dt_updated
