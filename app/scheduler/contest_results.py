@@ -104,6 +104,7 @@ async def check_student_contest_relation(
                 student.contest_login, contest.yandex_contest_id
             ),
         )
+        session.add(student_contest)
     elif student_contest.author_id is None:
         logger.info(
             'Student %s has no author id in contest %s',
@@ -120,6 +121,7 @@ async def check_student_contest_relation(
 async def update_student_contest_relation(  # pylint: disable=too-many-arguments
     student: Student,
     contest: Contest,
+    student_contest: StudentContest,
     student_tasks_done: int,
     student_score: float,
     is_ok: bool,
@@ -132,6 +134,7 @@ async def update_student_contest_relation(  # pylint: disable=too-many-arguments
             return await update_student_contest_relation(
                 student,
                 contest,
+                student_contest,
                 student_tasks_done,
                 student_score,
                 is_ok,
@@ -139,16 +142,6 @@ async def update_student_contest_relation(  # pylint: disable=too-many-arguments
                 logger,
             )
     logger = logger or logging.getLogger(__name__)
-    student_contest = await get_student_contest_relation(
-        session, student.id, contest.id
-    )
-    if student_contest is None:
-        logger.warning(
-            'Student %s has no relation with contest %s',
-            student.contest_login,
-            contest.id,
-        )
-        return
     if (
         student_contest.tasks_done != student_tasks_done
         or student_contest.score != student_score
@@ -166,6 +159,85 @@ async def update_student_contest_relation(  # pylint: disable=too-many-arguments
         )
 
 
+async def process_student(  # pylint: disable=too-many-arguments
+    student: Student,
+    department: Department,
+    contest: Contest,
+    results: list[ContestSubmissionFull],
+    contest_levels: Levels | None,
+    course_results: CourseResultsCSV,
+    session: AsyncSession | None = None,
+    logger: logging.Logger | None = None,
+) -> None:
+    if session is None:
+        SessionManager().refresh()
+        async with SessionManager().create_async_session() as session:
+            return await process_student(
+                student,
+                department,
+                contest,
+                results,
+                contest_levels,
+                course_results,
+                session=session,
+                logger=logger,
+            )
+    logger = logger or logging.getLogger(__name__)
+    student_contest = await check_student_contest_relation(
+        student, contest, session=session, logger=logger
+    )
+    if student_contest.score == contest.score_max:
+        logger.debug(
+            'Student %s has already max score in contest %s',
+            student.contest_login,
+            contest.id,
+        )
+        return
+    student_tasks_done = sum(
+        True
+        for submission in results
+        if submission.authorId == student_contest.author_id
+    )
+    student_score = round(
+        sum(
+            submission.finalScore
+            for submission in results
+            if submission.authorId == student_contest.author_id
+        ),
+        4,
+    )  # TODO: magic constant
+    is_ok = student_tasks_done == contest.tasks_count
+    logger.info(
+        'Student: %s, tasks done: %s, score: %s, is ok: %s',
+        student.contest_login,
+        student_tasks_done,
+        student_score,
+        is_ok,
+    )
+    if contest_levels and contest_levels.count > 0:
+        is_ok = student_score >= contest_levels.levels[0].score_need
+
+    await fill_course_results(
+        course_results,
+        student,
+        department,
+        contest,
+        student_score,
+        is_ok,
+    )
+
+    await update_student_contest_relation(
+        student,
+        contest,
+        student_contest,
+        student_tasks_done,
+        student_score,
+        is_ok,
+        session,
+        logger,
+    )
+
+
 async def process_contest(  # pylint: disable=too-many-arguments
     students_and_departments: list[tuple[Student, Department]],
     results: list[ContestSubmissionFull],
@@ -181,55 +253,13 @@ async def process_contest(  # pylint: disable=too-many-arguments
             contest_levels.levels, key=lambda x: x.score_need
         )
     for student, department in students_and_departments:
-        student_contest = await check_student_contest_relation(
-            student, contest, logger=logger
-        )  # TODO: many queries to db
-        if student_contest.score == contest.score_max:
-            logger.debug(
-                'Student %s has already max score in contest %s',
-                student.contest_login,
-                contest.id,
-            )
-            continue
-        student_tasks_done = sum(
-            True
-            for submission in results
-            if submission.authorId == student_contest.author_id
-        )
-        student_score = round(
-            sum(
-                submission.finalScore
-                for submission in results
-                if submission.authorId == student_contest.author_id
-            ),
-            4,
-        )  # TODO: magic constant
-        is_ok = student_tasks_done == contest.tasks_count
-        logger.info(
-            'Student: %s, tasks done: %s, score: %s, is ok: %s',
-            student.contest_login,
-            student_tasks_done,
-            student_score,
-            is_ok,
-        )
-        if contest_levels and contest_levels.count > 0:
-            is_ok = student_score >= contest_levels.levels[0].score_need
-
-        await fill_course_results(
-            course_results,
+        await process_student(
             student,
             department,
             contest,
-            student_score,
-            is_ok,
-        )
-
-        await update_student_contest_relation(
-            student,
-            contest,
-            student_tasks_done,
-            student_score,
-            is_ok,
+            results,
+            contest_levels,
+            course_results,
             session,
             logger,
         )
