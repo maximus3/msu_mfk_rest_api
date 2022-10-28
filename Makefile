@@ -240,14 +240,9 @@ dump: ##@Database Dump database from server
 .PHONY: dump-local
 dump-local: ##@Database Dump database local
 	$(eval FILENAME=backup_$(shell date +%Y%m%d_%H%M%S).sql)
-	$(eval PORT=$(shell cat deploy/port.txt))
-	$(eval HOST=$(shell cat deploy/host.txt))
-	$(eval USERNAME=$(shell cat deploy/username.txt))
-	$(eval DB_NAME=$(shell cat deploy/db_name.txt))
-	$(eval DB_USERNAME=$(shell cat deploy/db_username.txt))
 
 	echo "Dumping database to $(FILENAME)"
-	docker exec postgres_container pg_dump -f $(FILENAME) -d $(DB_NAME) -U $(DB_USERNAME)
+	docker exec postgres_container pg_dump -f $(FILENAME) -d $(POSTGRES_DB) -U $(POSTGRES_USER)
 	docker cp postgres_container:$(FILENAME) db/$(FILENAME)
 	docker exec postgres_container rm $(FILENAME)
 	echo "Done"
