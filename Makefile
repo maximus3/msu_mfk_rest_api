@@ -252,5 +252,12 @@ dump-local: ##@Database Dump database local
 	docker exec postgres_container rm $(FILENAME)
 	echo "Done"
 
+.PHONY: connect
+connect: ##@Server Connect to server
+	$(eval PORT=$(shell cat deploy/port.txt))
+	$(eval HOST=$(shell cat deploy/host.txt))
+	$(eval USERNAME=$(shell cat deploy/username.txt))
+	ssh -p $(PORT) $(USERNAME)@$(HOST)
+
 %::
 	echo $(MESSAGE)
