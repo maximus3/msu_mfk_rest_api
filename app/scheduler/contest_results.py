@@ -12,7 +12,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.bot_helper.send import send_error_message, send_results
 from app.database.connection import SessionManager
-from app.database.models import Contest, Course, Department, Student
+from app.database.models import (
+    Contest,
+    Course,
+    Department,
+    Student,
+    StudentContest,
+)
 from app.schemas import ContestSubmissionFull, CourseResultsCSV, Levels
 from app.utils.contest import (
     add_student_contest_relation,
@@ -63,16 +69,16 @@ async def fill_course_results(  # pylint: disable=too-many-arguments
     ] = is_ok and course_results.results[student.contest_login].get('ok', True)
 
 
-async def get_author_id_update(
+async def check_student_contest_relation(
     student: Student,
     contest: Contest,
     session: AsyncSession | None = None,
     logger: logging.Logger | None = None,
-) -> int:
+) -> StudentContest:
     if session is None:
         SessionManager().refresh()
         async with SessionManager().create_async_session() as session:
-            return await get_author_id_update(
+            return await check_student_contest_relation(
                 student,
                 contest,
                 session,
@@ -108,7 +114,7 @@ async def get_author_id_update(
             student.contest_login, contest.yandex_contest_id
         )
         session.add(student_contest)
-    return student_contest.author_id
+    return student_contest
 
 
 async def update_student_contest_relation(  # pylint: disable=too-many-arguments
@@ -175,17 +181,26 @@ async def process_contest(  # pylint: disable=too-many-arguments
             contest_levels.levels, key=lambda x: x.score_need
         )
     for student, department in students_and_departments:
-        author_id = await get_author_id_update(
+        student_contest = await check_student_contest_relation(
             student, contest, logger=logger
         )  # TODO: many queries to db
+        if student_contest.score == contest.score_max:
+            logger.debug(
+                'Student %s has already max score in contest %s',
+                student.contest_login,
+                contest.id,
+            )
+            continue
         student_tasks_done = sum(
-            True for submission in results if submission.authorId == author_id
+            True
+            for submission in results
+            if submission.authorId == student_contest.author_id
         )
         student_score = round(
             sum(
                 submission.finalScore
                 for submission in results
-                if submission.authorId == author_id
+                if submission.authorId == student_contest.author_id
             ),
             4,
         )  # TODO: magic constant
