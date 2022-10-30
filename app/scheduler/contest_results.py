@@ -286,7 +286,7 @@ async def update_course_results(
     for contest in contests:
         logger.info('Contest: %s', contest)
         results, is_all_results = await get_best_submissions(
-            contest, course.short_name in ['ml_autumn_2022', 'da_autumn_2022']
+            contest, course.short_name in ['ml_autumn_2022', 'da_autumn_2022']  # TODO: magic constant
         )
         is_all_results_ok = is_all_results_ok and is_all_results
         await process_contest(

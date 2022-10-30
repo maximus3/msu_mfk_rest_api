@@ -110,6 +110,7 @@ venv.bak/
 # database
 *.db
 *.sql
+*.csv
 pgadmin/*
 pgdata/*
 db/*
