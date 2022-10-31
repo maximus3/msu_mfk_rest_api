@@ -72,7 +72,7 @@ install: ##@Code Install dependencies
 
 
 .PHONY: install-prod
-install-prod: ##@Code Install dependencies for production
+install-prod: ##@Code Install dependencies for production only
 	$(VENV_BIN)/poetry install --without dev --no-interaction --no-ansi
 
 
