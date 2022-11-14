@@ -283,6 +283,7 @@ async def update_course_results(
         results=defaultdict(dict),
     )
     is_all_results_ok = True
+    contests.sort(key=lambda x: x.lecture)
     for contest in contests:
         logger.info('Contest: %s', contest)
         results, is_all_results = await get_best_submissions(
