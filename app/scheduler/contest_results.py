@@ -50,6 +50,8 @@ async def fill_course_results(  # pylint: disable=too-many-arguments
     contest: Contest,
     student_score: float,
     is_ok: bool,
+    contest_levels: Levels | None,
+    levels_ok: list[bool] | None,
 ) -> None:
     course_results.results[student.contest_login][
         'contest_login'
@@ -61,9 +63,15 @@ async def fill_course_results(  # pylint: disable=too-many-arguments
     course_results.results[student.contest_login][
         f'lecture_{contest.lecture}_score'
     ] = student_score
-    course_results.results[student.contest_login][
-        f'lecture_{contest.lecture}'
-    ] = is_ok
+    if contest_levels and levels_ok:
+        for i, level in enumerate(contest_levels.levels):
+            course_results.results[student.contest_login][
+                f'lecture_{contest.lecture}_level_{level.name}'
+            ] = levels_ok[i]
+    else:
+        course_results.results[student.contest_login][
+            f'lecture_{contest.lecture}'
+        ] = is_ok
     course_results.results[student.contest_login][
         'ok'
     ] = is_ok and course_results.results[student.contest_login].get('ok', True)
@@ -214,8 +222,15 @@ async def process_student(  # pylint: disable=too-many-arguments
         student_score,
         is_ok,
     )
+    levels_ok = None
     if contest_levels and contest_levels.count > 0:
-        is_ok = student_score >= contest_levels.levels[0].score_need
+        is_ok = student_score >= min(
+            level.score_need for level in contest_levels.levels
+        )
+        levels_ok = [
+            student_score >= level.score_need
+            for level in contest_levels.levels
+        ]
 
     await fill_course_results(
         course_results,
@@ -224,6 +239,8 @@ async def process_student(  # pylint: disable=too-many-arguments
         contest,
         student_score,
         is_ok,
+        contest_levels,
+        levels_ok,
     )
 
     await update_student_contest_relation(
