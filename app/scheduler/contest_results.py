@@ -50,9 +50,12 @@ async def fill_course_results(  # pylint: disable=too-many-arguments
     contest: Contest,
     student_score: float,
     is_ok: bool,
+    course_score_sum: float,
     contest_levels: Levels | None,
     levels_ok: list[bool] | None,
+    logger: logging.Logger | None = None,
 ) -> None:
+    logger = logger or logging.getLogger(__name__)
     course_results.results[student.contest_login][
         'contest_login'
     ] = student.contest_login
@@ -63,14 +66,57 @@ async def fill_course_results(  # pylint: disable=too-many-arguments
     course_results.results[student.contest_login][
         f'lecture_{contest.lecture}_score'
     ] = student_score
+    if 'score_sum' not in course_results.results[student.contest_login]:
+        course_results.results[student.contest_login]['score_sum'] = 0
+    if not isinstance(
+        course_results.results[student.contest_login]['score_sum'], float
+    ):
+        logger.warning('score_sum of %s is not float', student.contest_login)
+    current_score_sum = course_results.results[student.contest_login][
+        'score_sum'
+    ]
+    course_results.results[student.contest_login]['score_sum'] = (
+        current_score_sum + student_score
+        if isinstance(current_score_sum, float)
+        else 'error'
+    )
+    course_results.results[student.contest_login][
+        'score_max'
+    ] = course_score_sum
     if contest_levels and levels_ok:
         for i, level in enumerate(contest_levels.levels):
             course_results.results[student.contest_login][
                 f'lecture_{contest.lecture}_level_{level.name}'
             ] = levels_ok[i]
-    course_results.results[student.contest_login][
-        'ok'
-    ] = is_ok and course_results.results[student.contest_login].get('ok', True)
+        course_results.results[student.contest_login][
+            'ok'
+        ] = is_ok and course_results.results[student.contest_login].get(
+            'ok', True
+        )
+    else:
+        score_sum = course_results.results[student.contest_login]['score_sum']
+        score_max = course_results.results[student.contest_login]['score_max']
+        if not isinstance(score_sum, float):
+            logger.warning(
+                'score_sum of %s is not float', student.contest_login
+            )
+            course_results.results[student.contest_login][
+                'score_sum'
+            ] = 'error'
+            score_sum = 'error'
+        if not isinstance(score_max, float):
+            logger.warning(
+                'score_max of %s is not float', student.contest_login
+            )
+            course_results.results[student.contest_login][
+                'score_max'
+            ] = 'error'
+            score_max = 'error'
+        course_results.results[student.contest_login]['ok'] = (
+            (score_sum / score_max >= 0.7)  # TODO: magic constant for dl
+            if isinstance(score_sum, float) and isinstance(score_max, float)
+            else 'error'
+        )
 
 
 async def check_student_contest_relation(
@@ -170,6 +216,7 @@ async def process_student(  # pylint: disable=too-many-arguments
     results: list[ContestSubmissionFull],
     contest_levels: Levels | None,
     course_results: CourseResultsCSV,
+    course_score_sum: float,
     session: AsyncSession | None = None,
     logger: logging.Logger | None = None,
 ) -> None:
@@ -183,6 +230,7 @@ async def process_student(  # pylint: disable=too-many-arguments
                 results,
                 contest_levels,
                 course_results,
+                course_score_sum,
                 session=session,
                 logger=logger,
             )
@@ -228,8 +276,10 @@ async def process_student(  # pylint: disable=too-many-arguments
         contest,
         student_score,
         is_ok,
+        course_score_sum,
         contest_levels,
         levels_ok,
+        logger=logger,
     )
 
     if student_contest.score == contest.score_max:
@@ -256,6 +306,7 @@ async def process_contest(  # pylint: disable=too-many-arguments
     results: list[ContestSubmissionFull],
     contest: Contest,
     course_results: CourseResultsCSV,
+    course_score_sum: float,
     logger: logging.Logger | None = None,
     session: AsyncSession | None = None,
 ) -> None:
@@ -273,14 +324,17 @@ async def process_contest(  # pylint: disable=too-many-arguments
             results,
             contest_levels,
             course_results,
+            course_score_sum,
             session,
             logger,
         )
 
     course_results.keys.append(f'lecture_{contest.lecture}_score')
     if contest_levels and contest_levels.count > 0:
-        for i, level in enumerate(contest_levels.levels):
-            course_results.keys.append(f'lecture_{contest.lecture}_level_{level.name}')
+        for level in contest_levels.levels:
+            course_results.keys.append(
+                f'lecture_{contest.lecture}_level_{level.name}'
+            )
 
 
 async def update_course_results(
@@ -299,8 +353,10 @@ async def update_course_results(
     )
     is_all_results_ok = True
     contests.sort(key=lambda x: x.lecture)
+    course_score_sum = 0
     for contest in contests:
         logger.info('Contest: %s', contest)
+        course_score_sum += contest.score_max
         results, is_all_results = await get_best_submissions(
             contest,
             course.short_name
@@ -312,8 +368,11 @@ async def update_course_results(
             results,
             contest,
             course_results,
-            logger,
+            course_score_sum,
+            logger=logger,
         )
+    course_results.keys.append('score_sum')
+    course_results.keys.append('score_max')
     course_results.keys.append('ok')
     if not is_all_results_ok:
         logger.error('Not all results ok')
