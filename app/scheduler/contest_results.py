@@ -67,11 +67,15 @@ async def fill_course_results(  # pylint: disable=too-many-arguments
         f'lecture_{contest.lecture}_score'
     ] = student_score
     if 'score_sum' not in course_results.results[student.contest_login]:
-        course_results.results[student.contest_login]['score_sum'] = 0
+        course_results.results[student.contest_login]['score_sum'] = 0.0
     if not isinstance(
         course_results.results[student.contest_login]['score_sum'], float
     ):
-        logger.warning('score_sum of %s is not float', student.contest_login)
+        logger.warning(
+            'score_sum of %s is not float, it is %s',
+            student.contest_login,
+            type(course_results.results[student.contest_login]['score_sum']),
+        )
     current_score_sum = course_results.results[student.contest_login][
         'score_sum'
     ]
