@@ -68,10 +68,6 @@ async def fill_course_results(  # pylint: disable=too-many-arguments
             course_results.results[student.contest_login][
                 f'lecture_{contest.lecture}_level_{level.name}'
             ] = levels_ok[i]
-    else:
-        course_results.results[student.contest_login][
-            f'lecture_{contest.lecture}'
-        ] = is_ok
     course_results.results[student.contest_login][
         'ok'
     ] = is_ok and course_results.results[student.contest_login].get('ok', True)
@@ -194,13 +190,6 @@ async def process_student(  # pylint: disable=too-many-arguments
     student_contest = await check_student_contest_relation(
         student, contest, session=session, logger=logger
     )
-    if student_contest.score == contest.score_max:
-        logger.debug(
-            'Student %s has already max score in contest %s',
-            student.contest_login,
-            contest.id,
-        )
-        return
     student_tasks_done = sum(
         True
         for submission in results
@@ -243,6 +232,13 @@ async def process_student(  # pylint: disable=too-many-arguments
         levels_ok,
     )
 
+    if student_contest.score == contest.score_max:
+        logger.debug(
+            'Student %s has already max score in contest %s',
+            student.contest_login,
+            contest.id,
+        )
+        return
     await update_student_contest_relation(
         student,
         contest,
@@ -282,7 +278,9 @@ async def process_contest(  # pylint: disable=too-many-arguments
         )
 
     course_results.keys.append(f'lecture_{contest.lecture}_score')
-    course_results.keys.append(f'lecture_{contest.lecture}')
+    if contest_levels and contest_levels.count > 0:
+        for i, level in enumerate(contest_levels.levels):
+            course_results.keys.append(f'lecture_{contest.lecture}_level_{level.name}')
 
 
 async def update_course_results(
