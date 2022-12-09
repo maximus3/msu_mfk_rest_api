@@ -55,6 +55,7 @@ class StudentCourse(BaseModel):
         nullable=False,
         index=True,
     )
+    is_ok = sa.Column(sa.Boolean, default=False)
 
 
 class StudentContest(BaseModel):

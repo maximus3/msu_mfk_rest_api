@@ -11,3 +11,9 @@ class Course(BaseModel):
     channel_link = sa.Column(sa.String)
     chat_link = sa.Column(sa.String)
     lk_link = sa.Column(sa.String)
+    ok_method = sa.Column(
+        sa.Enum('contests_ok', 'score_sum', name='ok_method'),
+        default='contests_ok',
+        nullable=False,
+    )
+    ok_threshold_perc = sa.Column(sa.Integer, default=100, nullable=False)
