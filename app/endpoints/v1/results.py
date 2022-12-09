@@ -1,12 +1,14 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from pathlib import Path
+
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database.connection import SessionManager
 from app.database.models import User
 from app.schemas import ContestResults, CourseResults, StudentResults
-from app.utils.common import get_datetime_msk_tz
+from app.utils.common import fill_pdf, get_datetime_msk_tz
 from app.utils.contest import get_contests_with_relations
-from app.utils.course import get_student_courses
+from app.utils.course import get_course_by_short_name, get_student_courses
 from app.utils.student import get_student
 from app.utils.user import get_current_user
 
@@ -82,3 +84,27 @@ async def get_all_results(
             for course in await get_student_courses(session, student.id)
         ]
     )
+
+
+@api_router.post(
+    '/fill/{course_short_name}',
+    response_model=None,
+    status_code=status.HTTP_200_OK,
+)
+async def fill_results(
+    file: UploadFile,
+    course_short_name: str,
+    _: User = Depends(get_current_user),
+    session: AsyncSession = Depends(SessionManager().get_async_session),
+) -> dict[str, str]:
+    course = await get_course_by_short_name(session, course_short_name)
+    if course is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail='Course not found',
+        )
+    with open('temp.pdf', 'wb') as f:
+        f.write(await file.read())
+    result_filename = await fill_pdf('temp.pdf', course.id, session)
+    Path('temp.pdf').unlink()
+    return {'filename': result_filename}

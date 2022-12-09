@@ -35,7 +35,7 @@ class DefaultSettings(BaseSettings):
     )
     LOGGING_APP_FILE = 'logfile.log'
 
-    BASE_DIR: Path = Path(__file__).resolve().parent.parent
+    BASE_DIR: Path = Path(__file__).resolve().parent.parent.parent
 
     # to get a string like this run: "openssl rand -hex 32"
     SECRET_KEY: str = Field('', env='SECRET_KEY')

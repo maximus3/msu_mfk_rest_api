@@ -23,15 +23,21 @@ async def get_all_courses(session: AsyncSession) -> list[Course]:
     return (await session.execute(query)).scalars().all()
 
 
-async def is_student_registered_on_course(
+async def get_student_course(
     session: AsyncSession, student_id: UUID, course_id: UUID
-) -> bool:
+) -> StudentCourse | None:
     query = (
         select(StudentCourse)
         .where(StudentCourse.student_id == student_id)
         .where(StudentCourse.course_id == course_id)
     )
-    return await session.scalar(query) is not None
+    return await session.scalar(query)
+
+
+async def is_student_registered_on_course(
+    session: AsyncSession, student_id: UUID, course_id: UUID
+) -> bool:
+    return await get_student_course(session, student_id, course_id) is not None
 
 
 async def add_student_to_course(

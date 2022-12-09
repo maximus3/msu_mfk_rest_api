@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from sqlalchemy import and_, select
+from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database.models import (
@@ -80,3 +80,10 @@ async def create_student(
         StudentDepartment(student_id=student.id, department_id=department.id)
     )
     return student
+
+
+async def get_student_by_fio(
+    session: AsyncSession, fio: str
+) -> Student | None:
+    query = select(Student).where(func.lower(Student.fio) == fio.lower())
+    return await session.scalar(query)

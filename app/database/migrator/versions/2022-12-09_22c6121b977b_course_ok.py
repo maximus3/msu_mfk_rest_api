@@ -5,8 +5,8 @@ Revises: edccbc1f4833
 Create Date: 2022-12-09 16:13:32.595835
 
 """
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 
 # revision identifiers, used by Alembic.
@@ -23,9 +23,30 @@ def upgrade() -> None:
     for type_ in types:
         type_.create(op.get_bind(), checkfirst=False)
 
-    op.add_column('course', sa.Column('ok_method', sa.Enum('contests_ok', 'score_sum', name='ok_method'), nullable=False, server_default='contests_ok'))
-    op.add_column('course', sa.Column('ok_threshold_perc', sa.Integer(), nullable=False, server_default='100'))
-    op.add_column('student_course', sa.Column('is_ok', sa.Boolean(), nullable=True, server_default='False'))
+    op.add_column(
+        'course',
+        sa.Column(
+            'ok_method',
+            sa.Enum('contests_ok', 'score_sum', name='ok_method'),
+            nullable=False,
+            server_default='contests_ok',
+        ),
+    )
+    op.add_column(
+        'course',
+        sa.Column(
+            'ok_threshold_perc',
+            sa.Integer(),
+            nullable=False,
+            server_default='100',
+        ),
+    )
+    op.add_column(
+        'student_course',
+        sa.Column(
+            'is_ok', sa.Boolean(), nullable=True, server_default='False'
+        ),
+    )
 
 
 def downgrade() -> None:
