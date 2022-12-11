@@ -16,7 +16,7 @@ POETRY_RUN = $(VENV_BIN)/poetry run
 
 # Manually define main variables
 
-APPLICATION_NAME = app
+APPLICATION_NAME = app_msu_mfk_rest_api
 
 ifndef APP_PORT
 override APP_PORT = 8090
@@ -196,7 +196,7 @@ open: ##@Application Open container in docker
 
 .PHONY: docker-migrate
 docker-migrate: ##@Application Migrate db in docker
-	docker exec app make migrate $(args)
+	docker exec $(APPLICATION_NAME) make migrate $(args)
 
 .PHONY: commit
 commit: format ##@Git Commit with message all files
