@@ -32,6 +32,7 @@ COPY alembic.ini alembic.ini
 COPY log.ini log.ini
 
 COPY app app
+COPY static static
 
 ENTRYPOINT []
 CMD ["make", "up"]
