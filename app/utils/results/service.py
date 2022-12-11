@@ -41,7 +41,7 @@ async def get_student_course_results(
                 if contest.levels
                 else [],
                 levels_ok=[
-                    (student_contest.score or 0) >= level.score_need
+                    (student_contest.score or 0) >= level['score_need']
                     for level in sorted(
                         contest.levels['levels'],
                         key=lambda level: level['score_need'],
