@@ -5,10 +5,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database.connection import SessionManager
 from app.database.models import User
-from app.schemas import ContestResults, CourseResults, StudentResults
-from app.utils.common import fill_pdf, get_datetime_msk_tz
-from app.utils.contest import get_contests_with_relations
+from app.schemas import StudentResults
+from app.utils.common import fill_pdf
 from app.utils.course import get_course_by_short_name, get_student_courses
+from app.utils.results import get_student_course_results
 from app.utils.student import get_student
 from app.utils.user import get_current_user
 
@@ -40,47 +40,7 @@ async def get_all_results(
         )
     return StudentResults(
         courses=[
-            CourseResults(
-                name=course.name,
-                contests=[
-                    ContestResults(
-                        link=contest.link,
-                        tasks_count=contest.tasks_count,
-                        score_max=contest.score_max,
-                        levels_count=contest.levels['count']
-                        if contest.levels
-                        else 0,
-                        levels=sorted(
-                            contest.levels['levels'],
-                            key=lambda level: level['score_need'],
-                        )
-                        if contest.levels
-                        else [],
-                        lecture=contest.lecture,
-                        tasks_done=student_contest.tasks_done or 0,
-                        score=student_contest.score or 0,
-                        is_ok=student_contest.is_ok,
-                        updated_at=get_datetime_msk_tz(
-                            student_contest.dt_updated
-                        ).strftime(
-                            '%Y-%m-%d %H:%M:%S',
-                        ),
-                        deadline=get_datetime_msk_tz(
-                            contest.deadline,
-                        ).strftime(
-                            '%Y-%m-%d %H:%M:%S',
-                        ),
-                    )
-                    for contest, student_contest in sorted(
-                        await get_contests_with_relations(
-                            session,
-                            course.id,
-                            student.id,
-                        ),
-                        key=lambda x: x[0].lecture,
-                    )
-                ],
-            )
+            await get_student_course_results(student, course, session)
             for course in await get_student_courses(session, student.id)
         ]
     )

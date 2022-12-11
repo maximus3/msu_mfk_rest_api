@@ -11,10 +11,12 @@ class ContestResults(BaseModel):
     score_max: float
     levels_count: int
     levels: list[Level]
+    levels_ok: list[bool]
     lecture: int
     tasks_done: int
     score: float
     is_ok: bool
+    is_necessary: bool
     updated_at: str
     deadline: str
 
@@ -22,6 +24,10 @@ class ContestResults(BaseModel):
 class CourseResults(BaseModel):
     name: str
     contests: list[ContestResults]
+    score_sum: float
+    score_max: float
+    is_ok: bool
+    perc_ok: int
 
 
 class StudentResults(BaseModel):

@@ -1,16 +1,11 @@
-# pylint: disable=duplicate-code,too-many-lines
-
-# TODO: too many lines
+# pylint: disable=duplicate-code
 
 import logging
 import traceback
-from collections import defaultdict
-from datetime import datetime
-from pathlib import Path
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.bot_helper.send import send_error_message, send_results
+from app.bot_helper.send import send_message
 from app.database.connection import SessionManager
 from app.database.models import (
     Contest,
@@ -19,7 +14,7 @@ from app.database.models import (
     Student,
     StudentContest,
 )
-from app.schemas import ContestSubmissionFull, CourseResultsCSV, Levels
+from app.schemas import ContestSubmissionFull, Levels
 from app.utils.contest import (
     add_student_contest_relation,
     get_author_id,
@@ -29,98 +24,6 @@ from app.utils.contest import (
 )
 from app.utils.course import get_all_courses
 from app.utils.student import get_students_by_course_with_department
-
-
-async def save_to_csv(course_results: CourseResultsCSV, filename: str) -> None:
-    with open(filename, 'w', encoding='utf-8') as f:
-        f.write(','.join(course_results.keys))
-        f.write('\n')
-        for data in course_results.results.values():
-            for i, key in enumerate(course_results.keys):
-                f.write(f'{data.get(key, "")}')
-                if i != len(course_results.keys) - 1:
-                    f.write(',')
-            f.write('\n')
-
-
-async def fill_course_results(  # pylint: disable=too-many-arguments
-    course_results: CourseResultsCSV,
-    student: Student,
-    department: Department,
-    contest: Contest,
-    student_score: float,
-    is_ok: bool,
-    course_score_sum: float,
-    contest_levels: Levels | None,
-    levels_ok: list[bool] | None,
-    logger: logging.Logger | None = None,
-) -> None:
-    logger = logger or logging.getLogger(__name__)
-    course_results.results[student.contest_login][
-        'contest_login'
-    ] = student.contest_login
-    course_results.results[student.contest_login]['fio'] = student.fio
-    course_results.results[student.contest_login][
-        'department'
-    ] = department.name
-    course_results.results[student.contest_login][
-        f'lecture_{contest.lecture}_score'
-    ] = student_score
-    if 'score_sum' not in course_results.results[student.contest_login]:
-        course_results.results[student.contest_login]['score_sum'] = 0.0
-    if not isinstance(
-        course_results.results[student.contest_login]['score_sum'], float
-    ):
-        logger.warning(
-            'score_sum of %s is not float, it is %s',
-            student.contest_login,
-            type(course_results.results[student.contest_login]['score_sum']),
-        )
-    current_score_sum = course_results.results[student.contest_login][
-        'score_sum'
-    ]
-    course_results.results[student.contest_login]['score_sum'] = (
-        current_score_sum + student_score
-        if isinstance(current_score_sum, float)
-        else 'error'
-    )
-    course_results.results[student.contest_login][
-        'score_max'
-    ] = course_score_sum
-    if contest_levels and levels_ok:
-        for i, level in enumerate(contest_levels.levels):
-            course_results.results[student.contest_login][
-                f'lecture_{contest.lecture}_level_{level.name}'
-            ] = levels_ok[i]
-        course_results.results[student.contest_login][
-            'ok'
-        ] = is_ok and course_results.results[student.contest_login].get(
-            'ok', True
-        )
-    else:
-        score_sum = course_results.results[student.contest_login]['score_sum']
-        score_max = course_results.results[student.contest_login]['score_max']
-        if not isinstance(score_sum, float):
-            logger.warning(
-                'score_sum of %s is not float', student.contest_login
-            )
-            course_results.results[student.contest_login][
-                'score_sum'
-            ] = 'error'
-            score_sum = 'error'
-        if not isinstance(score_max, float):
-            logger.warning(
-                'score_max of %s is not float', student.contest_login
-            )
-            course_results.results[student.contest_login][
-                'score_max'
-            ] = 'error'
-            score_max = 'error'
-        course_results.results[student.contest_login]['ok'] = (
-            (score_sum / score_max >= 0.7)  # TODO: magic constant for dl
-            if isinstance(score_sum, float) and isinstance(score_max, float)
-            else 'error'
-        )
 
 
 async def check_student_contest_relation(
@@ -219,7 +122,6 @@ async def process_student(  # pylint: disable=too-many-arguments
     contest: Contest,
     results: list[ContestSubmissionFull],
     contest_levels: Levels | None,
-    course_results: CourseResultsCSV,
     course_score_sum: float,
     session: AsyncSession | None = None,
     logger: logging.Logger | None = None,
@@ -233,7 +135,6 @@ async def process_student(  # pylint: disable=too-many-arguments
                 contest,
                 results,
                 contest_levels,
-                course_results,
                 course_score_sum,
                 session=session,
                 logger=logger,
@@ -263,28 +164,10 @@ async def process_student(  # pylint: disable=too-many-arguments
         student_score,
         is_ok,
     )
-    levels_ok = None
     if contest_levels and contest_levels.count > 0:
         is_ok = student_score >= min(
             level.score_need for level in contest_levels.levels
         )
-        levels_ok = [
-            student_score >= level.score_need
-            for level in contest_levels.levels
-        ]
-
-    await fill_course_results(
-        course_results,
-        student,
-        department,
-        contest,
-        student_score,
-        is_ok,
-        course_score_sum,
-        contest_levels,
-        levels_ok,
-        logger=logger,
-    )
 
     if student_contest.score == contest.score_max:
         logger.debug(
@@ -309,7 +192,6 @@ async def process_contest(  # pylint: disable=too-many-arguments
     students_and_departments: list[tuple[Student, Department]],
     results: list[ContestSubmissionFull],
     contest: Contest,
-    course_results: CourseResultsCSV,
     course_score_sum: float,
     logger: logging.Logger | None = None,
     session: AsyncSession | None = None,
@@ -327,23 +209,15 @@ async def process_contest(  # pylint: disable=too-many-arguments
             contest,
             results,
             contest_levels,
-            course_results,
             course_score_sum,
             session,
             logger,
         )
 
-    course_results.keys.append(f'lecture_{contest.lecture}_score')
-    if contest_levels and contest_levels.count > 0:
-        for level in contest_levels.levels:
-            course_results.keys.append(
-                f'lecture_{contest.lecture}_level_{level.name}'
-            )
-
 
 async def update_course_results(
     course: Course, logger: logging.Logger | None = None
-) -> CourseResultsCSV:
+) -> None:
     SessionManager().refresh()
     async with SessionManager().create_async_session() as session:
         contests = await get_contests(session, course.id)
@@ -351,10 +225,6 @@ async def update_course_results(
             await get_students_by_course_with_department(session, course.id)
         )
     logger = logger or logging.getLogger(__name__)
-    course_results = CourseResultsCSV(
-        keys=['contest_login', 'fio', 'department'],
-        results=defaultdict(dict),
-    )
     is_all_results_ok = True
     contests.sort(key=lambda x: x.lecture)
     course_score_sum = 0
@@ -371,17 +241,12 @@ async def update_course_results(
             students_and_departments,
             results,
             contest,
-            course_results,
             course_score_sum,
             logger=logger,
         )
-    course_results.keys.append('score_sum')
-    course_results.keys.append('score_max')
-    course_results.keys.append('ok')
     if not is_all_results_ok:
         logger.error('Not all results ok')
         raise RuntimeError('Not all results ok')
-    return course_results
 
 
 async def job() -> None:
@@ -389,11 +254,10 @@ async def job() -> None:
     async with SessionManager().create_async_session() as session:
         courses = await get_all_courses(session)
     logger = logging.getLogger(__name__)
-    filenames = []
     for course in courses:
         logger.info('Course: %s', course)
         try:
-            course_results = await update_course_results(course, logger)
+            await update_course_results(course, logger)
         except Exception as exc:  # pylint: disable=broad-except
             logger.exception(
                 'Error while updating course results for %s: %s',
@@ -401,7 +265,7 @@ async def job() -> None:
                 exc,
             )
             try:
-                await send_error_message(
+                await send_message(
                     f'Error while updating course results for {course.name}'
                     f': {exc}\n{traceback.format_exc()}'
                 )
@@ -410,21 +274,11 @@ async def job() -> None:
                     'Error while sending error message: %s', send_exc
                 )
             continue
-        filename = (
-            f'results_{course.short_name}_'
-            f'{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.csv'
-        )
-        await save_to_csv(course_results, filename)
-        filenames.append(filename)
 
-    try:
-        await send_results(filenames)
-    except Exception as e:
-        logger.error('Error while sending results: %s', e)
-        raise e
-    finally:
-        for filename in filenames:
-            Path(filename).unlink()
+    await send_message(
+        'Results updated',
+        level='info',
+    )
 
 
 job_info = {

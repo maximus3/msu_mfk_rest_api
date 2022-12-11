@@ -4,7 +4,7 @@ from fastapi.requests import Request
 from fastapi.responses import JSONResponse
 from uvicorn import run
 
-from app.bot_helper import send_error_message
+from app.bot_helper import send_message
 from app.config import get_settings
 from app.creator import get_app
 from app.utils.common import get_hostname
@@ -27,7 +27,7 @@ async def exception_handler(
     message_list.extend(
         ['', f'EXCEPTION: {exc}', '', f'{traceback.format_exc()}']
     )
-    await send_error_message(
+    await send_message(
         message='\n'.join(message_list),
     )
     return JSONResponse(
