@@ -232,7 +232,7 @@ dump: ##@Database Dump database from server
 	$(eval DB_USERNAME=$(shell cat deploy/db_username.txt))
 
 	echo "Dumping database to $(FILENAME)"
-	ssh -p $(PORT) $(USERNAME)@$(HOST) "docker exec postgres_container pg_dump -f $(FILENAME) -d $(DB_NAME) -U $(DB_USERNAME);docker cp postgres_container:$(FILENAME) $(FILENAME);docker exec postgres_container rm $(FILENAME);exit;"
+	ssh -p $(PORT) $(USERNAME)@$(HOST) "docker exec postgres_msu_mfk_rest_api pg_dump -f $(FILENAME) -d $(DB_NAME) -U $(DB_USERNAME);docker cp postgres_msu_mfk_rest_api:$(FILENAME) $(FILENAME);docker exec postgres_msu_mfk_rest_api rm $(FILENAME);exit;"
 	scp -P $(PORT) $(USERNAME)@$(HOST):$(FILENAME) db/$(FILENAME)
 	ssh -p $(PORT) $(USERNAME)@$(HOST) "rm $(FILENAME); exit;"
 	echo "Done"
@@ -242,9 +242,9 @@ dump-local: ##@Database Dump database local
 	$(eval FILENAME=backup_$(shell date +%Y%m%d_%H%M%S).sql)
 
 	echo "Dumping database to $(FILENAME)"
-	docker exec postgres_container pg_dump -f $(FILENAME) -d $(POSTGRES_DB) -U $(POSTGRES_USER)
-	docker cp postgres_container:$(FILENAME) db/$(FILENAME)
-	docker exec postgres_container rm $(FILENAME)
+	docker exec postgres_msu_mfk_rest_api pg_dump -f $(FILENAME) -d $(POSTGRES_DB) -U $(POSTGRES_USER)
+	docker cp postgres_msu_mfk_rest_api:$(FILENAME) db/$(FILENAME)
+	docker exec postgres_msu_mfk_rest_api rm $(FILENAME)
 	echo "Done"
 
 .PHONY: connect
