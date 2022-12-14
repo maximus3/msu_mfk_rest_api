@@ -2,10 +2,11 @@ import logging
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.database.models import Course, Student
+from app.database.models import Course, Student, StudentCourse
 from app.schemas import ContestResults, CourseResults
 from app.utils.common import get_datetime_msk_tz
 from app.utils.contest import get_contests_with_relations
+from app.utils.course import get_student_course
 
 
 async def get_student_course_results(
@@ -13,8 +14,18 @@ async def get_student_course_results(
 ) -> CourseResults:
     logger = logging.getLogger(__name__)
 
+    student_course = await get_student_course(
+        session,
+        student.id,
+        course.id,
+    )
+    if student_course is None:
+        raise ValueError(
+            f'StudentCourse not found for student '
+            f'{student.id} and course {course.id}'
+        )
+
     contests = []
-    course_score_sum = 0
     course_score_max = 0
 
     for contest, student_contest in sorted(
@@ -25,7 +36,6 @@ async def get_student_course_results(
         ),
         key=lambda x: x[0].lecture,
     ):
-        course_score_sum += student_contest.score
         course_score_max += contest.score_max
 
         contests.append(
@@ -50,8 +60,8 @@ async def get_student_course_results(
                 if contest.levels
                 else [],
                 lecture=contest.lecture,
-                tasks_done=student_contest.tasks_done or 0,
-                score=student_contest.score or 0,
+                tasks_done=student_contest.tasks_done,
+                score=student_contest.score,
                 is_ok=student_contest.is_ok,
                 is_necessary=contest.is_necessary,
                 updated_at=get_datetime_msk_tz(
@@ -59,37 +69,91 @@ async def get_student_course_results(
                 ).strftime(
                     '%Y-%m-%d %H:%M:%S',
                 ),
-                deadline=get_datetime_msk_tz(contest.deadline,).strftime(
+                deadline=get_datetime_msk_tz(contest.deadline).strftime(
                     '%Y-%m-%d %H:%M:%S',
                 ),
             )
         )
 
-    count_necessary_contests = sum(
-        1 for contest in contests if contest.is_necessary
-    )
     if course.ok_method == 'contests_ok':
-        perc_ok = (
-            100
-            * sum(
-                contest.is_ok
-                for contest in filter(lambda x: x.is_necessary, contests)
-            )
-            / count_necessary_contests
-        )
+        perc_ok = student_course.contests_ok_percent
     elif course.ok_method == 'score_sum':
-        perc_ok = 100 * course_score_sum / course_score_max
+        perc_ok = student_course.score_percent
+    else:
+        logger.error('Unknown ok_method: %s', course.ok_method)
+        raise ValueError(f'Unknown ok_method: {course.ok_method}')
+
+    return CourseResults(
+        name=course.name,
+        contests=contests,
+        score_sum=student_course.score,
+        score_max=course_score_max,
+        is_ok=student_course.is_ok,
+        perc_ok=int(perc_ok),
+    )
+
+
+async def update_student_course_results(  # pylint: disable=too-many-statements
+    student: Student, course: Course, session: AsyncSession
+) -> None:
+    logger = logging.getLogger(__name__)
+
+    course_score_sum = 0
+    course_score_max = 0
+    necessary_contests_results = []
+
+    for contest, student_contest in await get_contests_with_relations(
+        session,
+        course.id,
+        student.id,
+    ):
+        course_score_sum += student_contest.score
+        course_score_max += contest.score_max
+
+        if contest.is_necessary:
+            necessary_contests_results.append(student_contest.is_ok)
+
+    count_necessary_contests = len(necessary_contests_results)
+    contests_ok = sum(necessary_contests_results)
+    contests_ok_percent = 100 * contests_ok / count_necessary_contests
+    score_percent = 100 * course_score_sum / course_score_max
+    if course.ok_method == 'contests_ok':
+        perc_ok = contests_ok_percent
+    elif course.ok_method == 'score_sum':
+        perc_ok = score_percent
     else:
         logger.error('Unknown ok_method: %s', course.ok_method)
         raise ValueError(f'Unknown ok_method: {course.ok_method}')
 
     is_ok = perc_ok >= course.ok_threshold_perc
 
-    return CourseResults(
-        name=course.name,
-        contests=contests,
-        score_sum=course_score_sum,
-        score_max=course_score_max,
-        is_ok=is_ok,
-        perc_ok=int(perc_ok),
+    student_course = await get_student_course(
+        session,
+        student.id,
+        course.id,
     )
+    if student_course is None:
+        logger.warning(
+            'StudentCourse not found for student %s and course %s',
+            student.id,
+            course.id,
+        )
+        student_course = StudentCourse(
+            student_id=student.id,
+            course_id=course.id,
+        )
+        session.add(student_course)
+
+    if (
+        student_course.score != course_score_sum
+        or student_course.contests_ok != contests_ok
+        or student_course.contests_ok_percent != contests_ok_percent
+        or student_course.score_percent != score_percent
+        or student_course.is_ok != is_ok
+    ):
+        student_course.score = course_score_sum
+        student_course.contests_ok = contests_ok
+        student_course.contests_ok_percent = contests_ok_percent
+        student_course.score_percent = score_percent
+        student_course.is_ok = is_ok
+        session.add(student_course)

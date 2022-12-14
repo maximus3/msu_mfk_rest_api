@@ -10,7 +10,10 @@ from app.database.connection import SessionManager
 from app.database.models import Course
 from app.schemas import CourseResultsCSV
 from app.utils.course import get_all_courses
-from app.utils.results import get_student_course_results
+from app.utils.results import (
+    get_student_course_results,
+    update_student_course_results,
+)
 from app.utils.student import get_students_by_course_with_department
 
 
@@ -34,6 +37,10 @@ async def get_course_results(course: Course) -> CourseResultsCSV:
             student,
             department,
         ) in await get_students_by_course_with_department(session, course.id):
+            await update_student_course_results(
+                student, course, session=session
+            )
+            await session.commit()
             student_results = await get_student_course_results(
                 student, course, session=session
             )
