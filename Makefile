@@ -34,7 +34,7 @@ MESSAGE = "Done"
 endif
 
 TEST = $(POETRY_RUN) pytest --verbosity=2 --showlocals --log-level=DEBUG
-CODE = $(APPLICATION_NAME) tests
+CODE = app tests
 
 HELP_FUN = \
 	%help; while(<>){push@{$$help{$$2//'options'}},[$$1,$$3] \
