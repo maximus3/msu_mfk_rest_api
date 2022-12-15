@@ -55,7 +55,7 @@ class StudentCourse(BaseModel):
         nullable=False,
         index=True,
     )
-    score = sa.Column(sa.Integer, nullable=False, server_default='0')
+    score = sa.Column(sa.Float, nullable=False, server_default='0.0')
     contests_ok = sa.Column(sa.Integer, nullable=False, server_default='0')
     score_percent = sa.Column(sa.Float, nullable=False, server_default='0.0')
     contests_ok_percent = sa.Column(
