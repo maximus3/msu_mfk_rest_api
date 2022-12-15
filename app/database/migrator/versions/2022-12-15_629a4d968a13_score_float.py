@@ -5,8 +5,8 @@ Revises: b2649c8cd243
 Create Date: 2022-12-15 15:27:22.068557
 
 """
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 
 # revision identifiers, used by Alembic.
@@ -17,8 +17,12 @@ depends_on = None
 
 
 def upgrade() -> None:
-    op.alter_column('student_course', 'score', existing_type=sa.INTEGER(), type_=sa.FLOAT())
+    op.alter_column(
+        'student_course', 'score', existing_type=sa.INTEGER(), type_=sa.FLOAT()
+    )
 
 
 def downgrade() -> None:
-    op.alter_column('student_course', 'score', existing_type=sa.FLOAT(), type_=sa.INTEGER())
+    op.alter_column(
+        'student_course', 'score', existing_type=sa.FLOAT(), type_=sa.INTEGER()
+    )
