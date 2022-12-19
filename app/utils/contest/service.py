@@ -146,7 +146,7 @@ async def extend_submissions(
         contest.yandex_contest_id,
         len(submission_values),
     )
-    for i in range(0, len(submissions), batch_size):
+    for i in range(0, len(submission_values), batch_size):
         batch_url = url + '&'.join(
             map(
                 lambda run_id: f'runIds={run_id}',
