@@ -165,6 +165,16 @@ async def extend_submissions(
             logger.error('Timeout error')
             is_all_results = False
             continue
+        if response.status_code != 200:
+            logger.error(
+                'Error while getting submissions %s-%s. Status code: %s. Response: %s',
+                i,
+                i + batch_size,
+                response.status_code,
+                response.text,
+            )
+            is_all_results = False
+            continue
         results.extend(
             ContestSubmissionFull(
                 id=submission['runId'],
