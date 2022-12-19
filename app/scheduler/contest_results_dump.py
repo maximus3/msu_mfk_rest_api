@@ -170,5 +170,5 @@ job_info = {
     'func': job,
     'trigger': 'interval',
     'hours': 3,
-    'name': 'contest_results',
+    'name': 'contest_results_dump',
 }
