@@ -53,7 +53,8 @@ def tqdm(
         if logger:
             logger.info(text)
         if sql_write_func:
-            asyncio.run(
+            loop = asyncio.get_event_loop()
+            task = loop.create_task(
                 sql_write_func(
                     name,
                     current,
@@ -64,6 +65,7 @@ def tqdm(
                     all_time,
                 )
             )
+            loop.run_until_complete(asyncio.wait([task]))
         # else:
         #     print('\r', ' ' * max_len, '\r', sep='', end='')
         #     print(f'\r{text}\r', end=end)
