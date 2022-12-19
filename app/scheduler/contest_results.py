@@ -26,7 +26,7 @@ from app.utils.contest import (
 )
 from app.utils.contest.database import get_ok_author_ids
 from app.utils.course import get_all_courses, get_student_course
-from app.utils.scheduler import wirte_sql_tqdm
+from app.utils.scheduler import write_sql_tqdm
 from app.utils.student import get_students_by_course_with_department
 
 
@@ -104,18 +104,24 @@ async def update_student_contest_relation(  # pylint: disable=too-many-arguments
                 logger,
             )
     logger = logger or logging.getLogger(__name__)
-    if (
-        student_contest.tasks_done != student_tasks_done
-        or student_contest.score != student_score
-        or student_contest.is_ok != is_ok
-        or student_contest.score_no_deadline != student_score_no_deadline
-    ):
+    changes = False
+    if student_contest.tasks_done < student_tasks_done:
         student_contest.tasks_done = student_tasks_done
+        session.add(student_contest)
+        changes = True
+    if student_contest.score < student_score:
         student_contest.score = student_score
-        student_contest.is_ok = is_ok
+        session.add(student_contest)
+        changes = True
+    if student_contest.score_no_deadline < student_score_no_deadline:
         student_contest.score_no_deadline = student_score_no_deadline
         session.add(student_contest)
-    else:
+        changes = True
+    if not student_contest.is_ok and is_ok:
+        student_contest.is_ok = is_ok
+        session.add(student_contest)
+        changes = True
+    if not changes:
         logger.info(
             'Student %s has no changes in contest %s',
             student.contest_login,
@@ -244,7 +250,7 @@ async def process_contest(  # pylint: disable=too-many-arguments
     for student, department in tqdm(
         students_and_departments,
         name='contest_results_students',
-        sql_write_func=wirte_sql_tqdm,
+        sql_write_func=write_sql_tqdm,
     ):
         await process_student(
             student,
@@ -276,7 +282,7 @@ async def update_course_results(
         contests,
         name='contest_results_contests',
         logger=logger,
-        sql_write_func=wirte_sql_tqdm,
+        sql_write_func=write_sql_tqdm,
     ):
         logger.info('Contest: %s', contest)
         course_score_sum += contest.score_max
@@ -313,7 +319,7 @@ async def job() -> None:
         courses,
         name='contest_results_courses',
         logger=logger,
-        sql_write_func=wirte_sql_tqdm,
+        sql_write_func=write_sql_tqdm,
     ):
         logger.info('Course: %s', course)
         try:

@@ -17,7 +17,7 @@ from app.utils.common import get_datetime_msk_tz
 from app.utils.yandex_request import make_request_to_yandex_contest_api
 
 from ...m3tqdm import tqdm
-from ..scheduler import wirte_sql_tqdm
+from ..scheduler import write_sql_tqdm
 from .database import add_student_contest_relation
 
 
@@ -152,7 +152,7 @@ async def extend_submissions(
         range(0, len(submission_values), batch_size),
         name='extend_submissions',
         total=(len(submission_values) + batch_size - 1) // batch_size,
-        sql_write_func=wirte_sql_tqdm,
+        sql_write_func=write_sql_tqdm,
     ):
         batch_url = url + '&'.join(
             map(

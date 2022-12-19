@@ -121,16 +121,18 @@ async def update_student_course_results(  # pylint: disable=too-many-statements
 
     is_ok = perc_ok >= course.ok_threshold_perc
 
-    if (
-        student_course.score != course_score_sum
-        or student_course.contests_ok != contests_ok
-        or student_course.contests_ok_percent != contests_ok_percent
-        or student_course.score_percent != score_percent
-        or student_course.is_ok != is_ok
-    ):
+    if student_course.score < course_score_sum:
         student_course.score = course_score_sum
+        session.add(student_course)
+    if student_course.contests_ok < contests_ok:
         student_course.contests_ok = contests_ok
+        session.add(student_course)
+    if student_course.contests_ok_percent < contests_ok_percent:
         student_course.contests_ok_percent = contests_ok_percent
+        session.add(student_course)
+    if student_course.score_percent < score_percent:
         student_course.score_percent = score_percent
+        session.add(student_course)
+    if not student_course.is_ok and is_ok:
         student_course.is_ok = is_ok
         session.add(student_course)

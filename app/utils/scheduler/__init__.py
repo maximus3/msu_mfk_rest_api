@@ -1,6 +1,6 @@
-from .database import wirte_sql_tqdm
+from .database import write_sql_tqdm
 
 
 __all__ = [
-    'wirte_sql_tqdm',
+    'write_sql_tqdm',
 ]

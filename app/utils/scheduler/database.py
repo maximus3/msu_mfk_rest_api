@@ -4,7 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database.connection import SessionManager
-from app.database.models.tqdm_logs import TQDMLogs
+from app.database.models import TQDMLogs
 
 
 async def get_sql_tqdm(
@@ -15,15 +15,15 @@ async def get_sql_tqdm(
     return await session.scalar(query)
 
 
-async def wirte_sql_tqdm(
-    name,
-    current,
-    total,
-    need_time,
-    need_time_for_all,
-    avg_data,
-    all_time,
-):
+async def write_sql_tqdm(
+    name: str,
+    current: int,
+    total: int | None,
+    need_time: str,
+    need_time_for_all: str,
+    avg_data: str,
+    all_time: str,
+) -> None:
     async with SessionManager().create_async_session() as session:
         model = await get_sql_tqdm(session, name)
         if model is None:

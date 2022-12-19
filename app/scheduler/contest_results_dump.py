@@ -17,7 +17,7 @@ from app.utils.results import (
     get_student_course_results,
     update_student_course_results,
 )
-from app.utils.scheduler import wirte_sql_tqdm
+from app.utils.scheduler import write_sql_tqdm
 from app.utils.student import get_students_by_course_with_department
 
 
@@ -43,7 +43,7 @@ async def get_course_results(
         for (student, department,) in tqdm(
             await get_students_by_course_with_department(session, course.id),
             name='contest_results_dump_students',
-            sql_write_func=wirte_sql_tqdm,
+            sql_write_func=write_sql_tqdm,
         ):
             student_course = await get_student_course(
                 session,
@@ -136,7 +136,7 @@ async def job() -> None:
         courses,
         name='contest_results_dump_courses',
         logger=logger,
-        sql_write_func=wirte_sql_tqdm,
+        sql_write_func=write_sql_tqdm,
     ):
         logger.info('Course: %s', course)
         try:
@@ -177,6 +177,6 @@ async def job() -> None:
 job_info = {
     'func': job,
     'trigger': 'interval',
-    'hours': 3,
+    'minutes': 30,
     'name': 'contest_results_dump',
 }

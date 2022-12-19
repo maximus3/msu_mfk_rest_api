@@ -1,22 +1,28 @@
 # pylint: disable=too-many-arguments,too-many-statements
-
+import asyncio
 import logging
 import time
+import typing as tp
+from pathlib import Path
 
 
-def get_need_time(total, current, avg_speed):
+def get_need_time(total: int, current: int, avg_speed: float) -> str:
     return time.strftime('%X', time.gmtime((total - current) / avg_speed))
 
 
 def tqdm(
-    iterable,
-    total=None,
+    iterable: tp.Any,
+    total: int | None = None,
     # end='',
     name: str = '',
-    logger=None,
-    tmp_filename=None,
-    sql_write_func=None,
-):
+    logger: logging.Logger | None = None,
+    tmp_filename: Path | None = None,
+    sql_write_func: tp.Callable[
+        [str, int, int | None, str, str, str, str],
+        tp.Coroutine[tp.Any, tp.Any, None],
+    ]
+    | None = None,
+) -> tp.Any:
     logger = logger or logging.getLogger(__name__)
     if name:
         name = '>>' + name + '\t'
@@ -28,12 +34,12 @@ def tqdm(
     current = 0
     iter_obj = iter(iterable)
     all_time = '00:00:00'
-    avg_speed = 1
+    avg_speed = 1.0
     start_time = time.time()
     max_len = 0
     while True:
-        need_time = get_need_time(total, current, avg_speed)
-        need_time_for_all = get_need_time(total, 0, avg_speed)
+        need_time = get_need_time(total or 0, current, avg_speed)
+        need_time_for_all = get_need_time(total or 0, 0, avg_speed)
         avg_data = (
             f'{1 / avg_speed:.2f} s/it'
             if avg_speed < 1
@@ -47,14 +53,16 @@ def tqdm(
         if logger:
             logger.info(text)
         if sql_write_func:
-            sql_write_func(
-                name,
-                current,
-                total,
-                need_time,
-                need_time_for_all,
-                avg_data,
-                all_time,
+            asyncio.run(
+                sql_write_func(
+                    name,
+                    current,
+                    total,
+                    need_time,
+                    need_time_for_all,
+                    avg_data,
+                    all_time,
+                )
             )
         # else:
         #     print('\r', ' ' * max_len, '\r', sep='', end='')

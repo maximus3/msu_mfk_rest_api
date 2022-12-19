@@ -20,6 +20,7 @@ TABLE_NAMES = [
     'student_course',
     'student_contest',
     'user',
+    'tqdm_logs',
 ]
 
 
