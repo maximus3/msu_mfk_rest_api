@@ -66,9 +66,9 @@ async def get_course_results(
                     student, course, student_course, session=session
                 )
                 await session.commit()
-                student_results = await get_student_course_results(
-                    student, course, student_course, session=session
-                )
+            student_results = await get_student_course_results(
+                student, course, student_course, session=session
+            )
             students_departments_results.append(
                 (student, department, student_results)
             )
