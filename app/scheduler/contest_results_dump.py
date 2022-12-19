@@ -10,12 +10,14 @@ from app.bot_helper import send_message
 from app.bot_helper.send import send_results
 from app.database.connection import SessionManager
 from app.database.models import Course, StudentCourse
+from app.m3tqdm import tqdm
 from app.schemas import CourseResultsCSV
 from app.utils.course import get_all_courses, get_student_course
 from app.utils.results import (
     get_student_course_results,
     update_student_course_results,
 )
+from app.utils.scheduler import wirte_sql_tqdm
 from app.utils.student import get_students_by_course_with_department
 
 
@@ -38,10 +40,11 @@ async def get_course_results(
     SessionManager().refresh()
     async with SessionManager().create_async_session() as session:
         students_departments_results = []
-        for (
-            student,
-            department,
-        ) in await get_students_by_course_with_department(session, course.id):
+        for (student, department,) in tqdm(
+            await get_students_by_course_with_department(session, course.id),
+            name='contest_results_dump_students',
+            sql_write_func=wirte_sql_tqdm,
+        ):
             student_course = await get_student_course(
                 session,
                 student.id,
@@ -129,7 +132,12 @@ async def job() -> None:
         courses = await get_all_courses(session)
     logger = logging.getLogger(__name__)
     filenames = []
-    for course in courses:
+    for course in tqdm(
+        courses,
+        name='contest_results_dump_courses',
+        logger=logger,
+        sql_write_func=wirte_sql_tqdm,
+    ):
         logger.info('Course: %s', course)
         try:
             course_results = await get_course_results(course, logger=logger)

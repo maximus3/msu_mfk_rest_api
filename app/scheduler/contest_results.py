@@ -15,6 +15,7 @@ from app.database.models import (
     StudentContest,
     StudentCourse,
 )
+from app.m3tqdm import tqdm
 from app.schemas import ContestSubmissionFull, Levels
 from app.utils.contest import (
     add_student_contest_relation,
@@ -25,6 +26,7 @@ from app.utils.contest import (
 )
 from app.utils.contest.database import get_ok_author_ids
 from app.utils.course import get_all_courses, get_student_course
+from app.utils.scheduler import wirte_sql_tqdm
 from app.utils.student import get_students_by_course_with_department
 
 
@@ -239,7 +241,11 @@ async def process_contest(  # pylint: disable=too-many-arguments
         contest_levels.levels = sorted(
             contest_levels.levels, key=lambda x: x.score_need
         )
-    for student, department in students_and_departments:
+    for student, department in tqdm(
+        students_and_departments,
+        name='contest_results_students',
+        sql_write_func=wirte_sql_tqdm,
+    ):
         await process_student(
             student,
             department,
@@ -266,7 +272,12 @@ async def update_course_results(
     is_all_results_ok = True
     contests.sort(key=lambda x: x.lecture)
     course_score_sum = 0
-    for contest in contests:
+    for contest in tqdm(
+        contests,
+        name='contest_results_contests',
+        logger=logger,
+        sql_write_func=wirte_sql_tqdm,
+    ):
         logger.info('Contest: %s', contest)
         course_score_sum += contest.score_max
         async with SessionManager().create_async_session() as session:
@@ -298,7 +309,12 @@ async def job() -> None:
     async with SessionManager().create_async_session() as session:
         courses = await get_all_courses(session)
     logger = logging.getLogger(__name__)
-    for course in courses:
+    for course in tqdm(
+        courses,
+        name='contest_results_courses',
+        logger=logger,
+        sql_write_func=wirte_sql_tqdm,
+    ):
         logger.info('Course: %s', course)
         try:
             await update_course_results(course, logger)

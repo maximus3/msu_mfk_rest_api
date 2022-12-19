@@ -16,6 +16,8 @@ from app.schemas import (
 from app.utils.common import get_datetime_msk_tz
 from app.utils.yandex_request import make_request_to_yandex_contest_api
 
+from ...m3tqdm import tqdm
+from ..scheduler import wirte_sql_tqdm
 from .database import add_student_contest_relation
 
 
@@ -146,7 +148,12 @@ async def extend_submissions(
         contest.yandex_contest_id,
         len(submission_values),
     )
-    for i in range(0, len(submission_values), batch_size):
+    for i in tqdm(
+        range(0, len(submission_values), batch_size),
+        name='extend_submissions',
+        total=(len(submission_values) + batch_size - 1) // batch_size,
+        sql_write_func=wirte_sql_tqdm,
+    ):
         batch_url = url + '&'.join(
             map(
                 lambda run_id: f'runIds={run_id}',
@@ -167,7 +174,8 @@ async def extend_submissions(
             continue
         if response.status_code != 200:
             logger.error(
-                'Error while getting submissions %s-%s. Status code: %s. Response: %s',
+                'Error while getting submissions %s-%s. '
+                'Status code: %s. Response: %s',
                 i,
                 i + batch_size,
                 response.status_code,
