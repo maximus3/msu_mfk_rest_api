@@ -254,5 +254,9 @@ connect: ##@Server Connect to server
 	$(eval USERNAME=$(shell cat deploy/username.txt))
 	ssh -p $(PORT) $(USERNAME)@$(HOST)
 
+.PHONY: docker-clear-logs
+docker-clear-logs: ##@Application Clear logs
+	echo "" > $(docker inspect --format='{{.LogPath}}' $(args))
+
 %::
 	echo $(MESSAGE)
