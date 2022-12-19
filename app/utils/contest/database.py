@@ -145,3 +145,17 @@ async def get_contests_with_relations(
         .where(StudentContest.course_id == course_id)
     )
     return (await session.execute(query)).fetchall()
+
+
+async def get_ok_author_ids(
+    session: AsyncSession,
+    course_id: UUID,
+    contest_id: UUID,
+) -> list[int]:
+    query = (
+        select(StudentContest.author_id)
+        .where(StudentContest.course_id == course_id)
+        .where(StudentContest.contest_id == contest_id)
+        .where(StudentContest.is_ok)
+    )
+    return [author_id for author_id, in await session.execute(query)]

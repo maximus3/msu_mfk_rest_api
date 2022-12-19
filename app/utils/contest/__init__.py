@@ -4,6 +4,7 @@ from .database import (
     get_contest_by_yandex_contest_id,
     get_contests,
     get_contests_with_relations,
+    get_ok_author_ids,
     get_student_contest_relation,
     is_student_registered_on_contest,
 )
@@ -31,4 +32,5 @@ __all__ = [
     'get_contest_info',
     'get_contest_by_yandex_contest_id',
     'get_author_id',
+    'get_ok_author_ids',
 ]

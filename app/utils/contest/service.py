@@ -1,3 +1,5 @@
+# pylint: disable=too-many-lines
+
 import logging
 from datetime import datetime, timedelta
 
@@ -123,14 +125,27 @@ async def _add_results(
 async def extend_submissions(
     submissions: dict[int, ContestSubmission],
     contest: Contest,
+    ok_authors_ids: set[int],
     zero_is_ok: bool = False,
 ) -> tuple[list[ContestSubmissionFull], bool]:
+    ok_authors_ids = ok_authors_ids or set()
     logger = logging.getLogger(__name__)
     url = f'contests/{contest.yandex_contest_id}/submissions/multiple?'
     batch_size = 100
     results: list[ContestSubmissionFull] = []
     is_all_results = True
-    submission_values = list(submissions.values())
+    submission_values = list(
+        filter(
+            lambda submission: submission.authorId not in ok_authors_ids,
+            submissions.values(),
+        )
+    )
+    logger.info(
+        'Getting submissions for contest "%s" '
+        'with %s not ok authors submissions',
+        contest.yandex_contest_id,
+        len(submission_values),
+    )
     for i in range(0, len(submissions), batch_size):
         batch_url = url + '&'.join(
             map(
@@ -226,7 +241,9 @@ async def filter_best_submissions_only(
 async def get_best_submissions(
     contest: Contest,
     zero_is_ok: bool = False,
+    ok_authors_ids: set[int] | None = None,
 ) -> tuple[list[ContestSubmissionFull], bool]:
+    ok_authors_ids = ok_authors_ids or set()
     logger = logging.getLogger(__name__)
     url = (
         f'contests/{contest.yandex_contest_id}/submissions'
@@ -256,7 +273,7 @@ async def get_best_submissions(
         )
         data = response.json()
     extended_results, is_all_results = await extend_submissions(
-        result_dict, contest, zero_is_ok
+        result_dict, contest, ok_authors_ids, zero_is_ok
     )
     return await filter_best_submissions_only(extended_results), is_all_results
 

@@ -23,6 +23,7 @@ from app.utils.contest import (
     get_contests,
     get_student_contest_relation,
 )
+from app.utils.contest.database import get_ok_author_ids
 from app.utils.course import get_all_courses, get_student_course
 from app.utils.student import get_students_by_course_with_department
 
@@ -268,10 +269,15 @@ async def update_course_results(
     for contest in contests:
         logger.info('Contest: %s', contest)
         course_score_sum += contest.score_max
+        async with SessionManager().create_async_session() as session:
+            ok_authors_ids = set(
+                await get_ok_author_ids(session, course.id, contest.id)
+            )
         results, is_all_results = await get_best_submissions(
             contest,
             course.short_name
             in ['ml_autumn_2022', 'da_autumn_2022'],  # TODO: magic constant
+            ok_authors_ids,
         )
         is_all_results_ok = is_all_results_ok and is_all_results
         await process_contest(

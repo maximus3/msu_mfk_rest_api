@@ -363,6 +363,24 @@ async def student_contest(  # type: ignore
         student_id=created_student.id,
         contest_id=created_contest.id,
         course_id=created_contest.course_id,
+        is_ok=False,
+    )
+    session.add(relation)
+    await session.commit()
+    await session.refresh(relation)
+
+    yield relation
+
+
+@pytest.fixture
+async def student_contest_is_ok(  # type: ignore
+    created_student, created_contest, session
+):
+    relation = StudentContestFactory.build(
+        student_id=created_student.id,
+        contest_id=created_contest.id,
+        course_id=created_contest.course_id,
+        is_ok=True,
     )
     session.add(relation)
     await session.commit()

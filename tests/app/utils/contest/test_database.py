@@ -186,3 +186,27 @@ class TestGetStudentContestRelationHandler:
             )
             is None
         )
+
+
+class TestGetOkAuthorIdsHandler:
+    async def test_get_ok_author_ids(self, session, student_contest):
+        assert (
+            sorted(
+                await contest.get_ok_author_ids(
+                    session=session,
+                    course_id=student_contest.course_id,
+                    contest_id=student_contest.contest_id,
+                )
+            )
+            == []
+        )
+
+    async def test_get_ok_author_ids_has(self, session, student_contest_is_ok):
+
+        assert sorted(
+            await contest.get_ok_author_ids(
+                session=session,
+                course_id=student_contest_is_ok.course_id,
+                contest_id=student_contest_is_ok.contest_id,
+            )
+        ) == [student_contest_is_ok.author_id]
