@@ -52,10 +52,8 @@ async def add_student_to_course(
 
 async def get_student_courses(
     session: AsyncSession, student_id: UUID
-) -> list[Course]:
-    query = (
-        select(Course)
-        .join(StudentCourse)
-        .where(StudentCourse.student_id == student_id)
+) -> list[tuple[Course, StudentCourse]]:
+    query = select(Course, StudentCourse).where(
+        StudentCourse.student_id == student_id
     )
-    return (await session.execute(query)).scalars().all()
+    return (await session.execute(query)).fetchall()

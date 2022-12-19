@@ -1,4 +1,4 @@
-# pylint: disable=duplicate-code
+# pylint: disable=duplicate-code,too-many-lines
 
 import logging
 import traceback
@@ -13,6 +13,7 @@ from app.database.models import (
     Department,
     Student,
     StudentContest,
+    StudentCourse,
 )
 from app.schemas import ContestSubmissionFull, Levels
 from app.utils.contest import (
@@ -22,7 +23,7 @@ from app.utils.contest import (
     get_contests,
     get_student_contest_relation,
 )
-from app.utils.course import get_all_courses
+from app.utils.course import get_all_courses, get_student_course
 from app.utils.student import get_students_by_course_with_department
 
 
@@ -81,6 +82,7 @@ async def update_student_contest_relation(  # pylint: disable=too-many-arguments
     student_contest: StudentContest,
     student_tasks_done: int,
     student_score: float,
+    student_score_no_deadline: float,
     is_ok: bool,
     session: AsyncSession | None = None,
     logger: logging.Logger | None = None,
@@ -103,10 +105,12 @@ async def update_student_contest_relation(  # pylint: disable=too-many-arguments
         student_contest.tasks_done != student_tasks_done
         or student_contest.score != student_score
         or student_contest.is_ok != is_ok
+        or student_contest.score_no_deadline != student_score_no_deadline
     ):
         student_contest.tasks_done = student_tasks_done
         student_contest.score = student_score
         student_contest.is_ok = is_ok
+        student_contest.score_no_deadline = student_score_no_deadline
         session.add(student_contest)
     else:
         logger.info(
@@ -120,6 +124,7 @@ async def process_student(  # pylint: disable=too-many-arguments
     student: Student,
     department: Department,
     contest: Contest,
+    course: Course,
     results: list[ContestSubmissionFull],
     contest_levels: Levels | None,
     course_score_sum: float,
@@ -133,6 +138,7 @@ async def process_student(  # pylint: disable=too-many-arguments
                 student,
                 department,
                 contest,
+                course,
                 results,
                 contest_levels,
                 course_score_sum,
@@ -140,9 +146,29 @@ async def process_student(  # pylint: disable=too-many-arguments
                 logger=logger,
             )
     logger = logger or logging.getLogger(__name__)
+    student_course = await get_student_course(
+        session,
+        student.id,
+        course.id,
+    )
+    if student_course is None:
+        logger.warning(
+            'StudentCourse not found for student %s and course %s',
+            student.id,
+            course.id,
+        )
+        student_course = StudentCourse(
+            student_id=student.id,
+            course_id=course.id,
+        )
+        session.add(student_course)
+    if student_course.is_ok:
+        return
     student_contest = await check_student_contest_relation(
         student, contest, session=session, logger=logger
     )
+    if student_contest.is_ok:
+        return
     student_tasks_done = sum(
         True
         for submission in results
@@ -151,6 +177,14 @@ async def process_student(  # pylint: disable=too-many-arguments
     student_score = round(
         sum(
             submission.finalScore
+            for submission in results
+            if submission.authorId == student_contest.author_id
+        ),
+        4,
+    )  # TODO: magic constant
+    student_score_no_deadline = round(
+        sum(
+            submission.noDeadlineScore
             for submission in results
             if submission.authorId == student_contest.author_id
         ),
@@ -182,6 +216,7 @@ async def process_student(  # pylint: disable=too-many-arguments
         student_contest,
         student_tasks_done,
         student_score,
+        student_score_no_deadline,
         is_ok,
         session,
         logger,
@@ -192,6 +227,7 @@ async def process_contest(  # pylint: disable=too-many-arguments
     students_and_departments: list[tuple[Student, Department]],
     results: list[ContestSubmissionFull],
     contest: Contest,
+    course: Course,
     course_score_sum: float,
     logger: logging.Logger | None = None,
     session: AsyncSession | None = None,
@@ -207,6 +243,7 @@ async def process_contest(  # pylint: disable=too-many-arguments
             student,
             department,
             contest,
+            course,
             results,
             contest_levels,
             course_score_sum,
@@ -241,6 +278,7 @@ async def update_course_results(
             students_and_departments,
             results,
             contest,
+            course,
             course_score_sum,
             logger=logger,
         )

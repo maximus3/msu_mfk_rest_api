@@ -40,8 +40,12 @@ async def get_all_results(
         )
     return StudentResults(
         courses=[
-            await get_student_course_results(student, course, session)
-            for course in await get_student_courses(session, student.id)
+            await get_student_course_results(
+                student, course, student_course, session
+            )
+            for course, student_course in await get_student_courses(
+                session, student.id
+            )
         ]
     )
 

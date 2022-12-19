@@ -159,6 +159,13 @@ async def extend_submissions(
                 verdict=submission['verdict'],
                 login=submission['participantInfo']['login'],
                 timeFromStart=submission['timeFromStart'],
+                noDeadlineScore=(
+                    float(submission['finalScore'])
+                    if isinstance(submission['finalScore'], str)
+                    and submission['finalScore']
+                    and float(submission['finalScore'])
+                    else (1 if zero_is_ok else 0)
+                ),
                 finalScore=(
                     float(submission['finalScore'])
                     if isinstance(submission['finalScore'], str)

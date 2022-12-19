@@ -6,24 +6,15 @@ from app.database.models import Course, Student, StudentCourse
 from app.schemas import ContestResults, CourseResults
 from app.utils.common import get_datetime_msk_tz
 from app.utils.contest import get_contests_with_relations
-from app.utils.course import get_student_course
 
 
 async def get_student_course_results(
-    student: Student, course: Course, session: AsyncSession
+    student: Student,
+    course: Course,
+    student_course: StudentCourse,
+    session: AsyncSession,
 ) -> CourseResults:
     logger = logging.getLogger(__name__)
-
-    student_course = await get_student_course(
-        session,
-        student.id,
-        course.id,
-    )
-    if student_course is None:
-        raise ValueError(
-            f'StudentCourse not found for student '
-            f'{student.id} and course {course.id}'
-        )
 
     contests = []
     course_score_max = 0
@@ -94,7 +85,10 @@ async def get_student_course_results(
 
 
 async def update_student_course_results(  # pylint: disable=too-many-statements
-    student: Student, course: Course, session: AsyncSession
+    student: Student,
+    course: Course,
+    student_course: StudentCourse,
+    session: AsyncSession,
 ) -> None:
     logger = logging.getLogger(__name__)
 
@@ -126,23 +120,6 @@ async def update_student_course_results(  # pylint: disable=too-many-statements
         raise ValueError(f'Unknown ok_method: {course.ok_method}')
 
     is_ok = perc_ok >= course.ok_threshold_perc
-
-    student_course = await get_student_course(
-        session,
-        student.id,
-        course.id,
-    )
-    if student_course is None:
-        logger.warning(
-            'StudentCourse not found for student %s and course %s',
-            student.id,
-            course.id,
-        )
-        student_course = StudentCourse(
-            student_id=student.id,
-            course_id=course.id,
-        )
-        session.add(student_course)
 
     if (
         student_course.score != course_score_sum

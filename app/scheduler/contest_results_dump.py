@@ -1,3 +1,5 @@
+# pylint: disable=too-many-statements
+
 import logging
 import traceback
 from collections import defaultdict
@@ -7,9 +9,9 @@ from pathlib import Path
 from app.bot_helper import send_message
 from app.bot_helper.send import send_results
 from app.database.connection import SessionManager
-from app.database.models import Course
+from app.database.models import Course, StudentCourse
 from app.schemas import CourseResultsCSV
-from app.utils.course import get_all_courses
+from app.utils.course import get_all_courses, get_student_course
 from app.utils.results import (
     get_student_course_results,
     update_student_course_results,
@@ -29,7 +31,10 @@ async def save_to_csv(course_results: CourseResultsCSV, filename: str) -> None:
             f.write('\n')
 
 
-async def get_course_results(course: Course) -> CourseResultsCSV:
+async def get_course_results(
+    course: Course, logger: logging.Logger | None = None
+) -> CourseResultsCSV:
+    logger = logger or logging.getLogger(__name__)
     SessionManager().refresh()
     async with SessionManager().create_async_session() as session:
         students_departments_results = []
@@ -37,13 +42,30 @@ async def get_course_results(course: Course) -> CourseResultsCSV:
             student,
             department,
         ) in await get_students_by_course_with_department(session, course.id):
-            await update_student_course_results(
-                student, course, session=session
+            student_course = await get_student_course(
+                session,
+                student.id,
+                course.id,
             )
-            await session.commit()
-            student_results = await get_student_course_results(
-                student, course, session=session
-            )
+            if student_course is None:
+                logger.warning(
+                    'StudentCourse not found for student %s and course %s',
+                    student.id,
+                    course.id,
+                )
+                student_course = StudentCourse(
+                    student_id=student.id,
+                    course_id=course.id,
+                )
+                session.add(student_course)
+            if not student_course.is_ok:
+                await update_student_course_results(
+                    student, course, student_course, session=session
+                )
+                await session.commit()
+                student_results = await get_student_course_results(
+                    student, course, student_course, session=session
+                )
             students_departments_results.append(
                 (student, department, student_results)
             )
@@ -110,7 +132,7 @@ async def job() -> None:
     for course in courses:
         logger.info('Course: %s', course)
         try:
-            course_results = await get_course_results(course)
+            course_results = await get_course_results(course, logger=logger)
         except Exception as exc:  # pylint: disable=broad-except
             logger.exception(
                 'Error while getting course results for %s: %s',

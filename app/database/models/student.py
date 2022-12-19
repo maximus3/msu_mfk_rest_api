@@ -91,4 +91,7 @@ class StudentContest(BaseModel):
     author_id = sa.Column(sa.Integer, nullable=True)
     tasks_done = sa.Column(sa.Integer, default=0, nullable=False)
     score = sa.Column(sa.Float, default=0.0, nullable=False)
+    score_no_deadline = sa.Column(
+        sa.Float, default=0.0, nullable=False, server_default='0.0'
+    )
     is_ok = sa.Column(sa.Boolean, default=False, nullable=False)
