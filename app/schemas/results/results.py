@@ -28,6 +28,7 @@ class CourseResults(BaseModel):
     score_max: float
     is_ok: bool
     perc_ok: int
+    str_need: str
 
 
 class StudentResults(BaseModel):
