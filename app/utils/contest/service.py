@@ -148,7 +148,7 @@ async def extend_submissions(
         contest.yandex_contest_id,
         len(submission_values),
     )
-    for i in await tqdm(
+    async for i in tqdm(
         range(0, len(submission_values), batch_size),
         name='extend_submissions',
         total=(len(submission_values) + batch_size - 1) // batch_size,

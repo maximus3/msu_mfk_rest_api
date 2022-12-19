@@ -247,7 +247,7 @@ async def process_contest(  # pylint: disable=too-many-arguments
         contest_levels.levels = sorted(
             contest_levels.levels, key=lambda x: x.score_need
         )
-    for student, department in await tqdm(
+    async for student, department in tqdm(
         students_and_departments,
         name='contest_results_students',
         sql_write_func=write_sql_tqdm,
@@ -278,7 +278,7 @@ async def update_course_results(
     is_all_results_ok = True
     contests.sort(key=lambda x: x.lecture)
     course_score_sum = 0
-    for contest in await tqdm(
+    async for contest in tqdm(
         contests,
         name='contest_results_contests',
         logger=logger,
@@ -315,7 +315,7 @@ async def job() -> None:
     async with SessionManager().create_async_session() as session:
         courses = await get_all_courses(session)
     logger = logging.getLogger(__name__)
-    for course in await tqdm(
+    async for course in tqdm(
         courses,
         name='contest_results_courses',
         logger=logger,
