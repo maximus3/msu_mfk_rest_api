@@ -1,5 +1,5 @@
 # pylint: disable=too-many-arguments,too-many-statements
-import asyncio
+
 import logging
 import time
 import typing as tp
@@ -10,7 +10,7 @@ def get_need_time(total: int, current: int, avg_speed: float) -> str:
     return time.strftime('%X', time.gmtime((total - current) / avg_speed))
 
 
-def tqdm(
+async def tqdm(
     iterable: tp.Any,
     total: int | None = None,
     # end='',
@@ -25,7 +25,9 @@ def tqdm(
 ) -> tp.Any:
     logger = logger or logging.getLogger(__name__)
     if name:
-        name = '>>' + name + '\t'
+        name_log = '>>' + name + '\t'
+    else:
+        name_log = ''
     if total is None:
         try:
             total = len(iterable)
@@ -46,26 +48,22 @@ def tqdm(
             else f'{avg_speed:.2f} it/s'
         )
         text = (
-            f'{name}[{current}/{total}]\t{need_time}/'
+            f'{name_log}[{current}/{total}]\t{need_time}/'
             f'{need_time_for_all}\t{avg_data}\t{all_time}'
         )
         max_len = max(max_len, len(text) + 24)
         if logger:
             logger.info(text)
         if sql_write_func:
-            loop = asyncio.get_event_loop()
-            task = loop.create_task(
-                sql_write_func(
-                    name,
-                    current,
-                    total,
-                    need_time,
-                    need_time_for_all,
-                    avg_data,
-                    all_time,
-                )
+            await sql_write_func(
+                name,
+                current,
+                total,
+                need_time,
+                need_time_for_all,
+                avg_data,
+                all_time,
             )
-            loop.run_until_complete(asyncio.wait([task]))
         # else:
         #     print('\r', ' ' * max_len, '\r', sep='', end='')
         #     print(f'\r{text}\r', end=end)

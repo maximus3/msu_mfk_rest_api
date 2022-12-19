@@ -40,7 +40,7 @@ async def get_course_results(
     SessionManager().refresh()
     async with SessionManager().create_async_session() as session:
         students_departments_results = []
-        for (student, department,) in tqdm(
+        for (student, department,) in await tqdm(
             await get_students_by_course_with_department(session, course.id),
             name='contest_results_dump_students',
             sql_write_func=write_sql_tqdm,
@@ -132,7 +132,7 @@ async def job() -> None:
         courses = await get_all_courses(session)
     logger = logging.getLogger(__name__)
     filenames = []
-    for course in tqdm(
+    for course in await tqdm(
         courses,
         name='contest_results_dump_courses',
         logger=logger,
