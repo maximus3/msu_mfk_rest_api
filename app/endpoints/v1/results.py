@@ -46,7 +46,8 @@ async def get_all_results(
             for course, student_course in await get_student_courses(
                 session, student.id
             )
-        ]
+        ],
+        fio=student.fio,
     )
 
 

@@ -33,3 +33,4 @@ class CourseResults(BaseModel):
 
 class StudentResults(BaseModel):
     courses: list[CourseResults]
+    fio: str
