@@ -1,5 +1,6 @@
 import dataclasses
 import io
+import logging
 from pathlib import Path
 from uuid import UUID
 
@@ -77,10 +78,17 @@ async def fill_pdf(
     if session is None:
         async with SessionManager().create_async_session() as session:
             return await fill_pdf(filename, course_id, session)
+
+    logger = logging.getLogger(__name__)
+
     reader = PdfReader(filename)
     writer = PdfFileWriter()
 
-    for page_num in range(reader.getNumPages()):
+    num_pages = reader.getNumPages()
+    logger.info('filename have %s pages', num_pages)
+
+    for page_num in range(num_pages):
+
         list_of_students: dict[str, list[list[float | str]]] = {
             'num': [],
             'fio': [],
@@ -135,7 +143,8 @@ async def fill_pdf(
 
         new_pdf_page = PdfFileReader(packet)
 
-        page.mergePage(new_pdf_page.getPage(0))
+        if new_pdf_page.getNumPages() != 0:
+            page.mergePage(new_pdf_page.getPage(0))
         writer.addPage(page)
 
     # result_filename = (
