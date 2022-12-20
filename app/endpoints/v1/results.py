@@ -1,12 +1,14 @@
 import datetime as dt
 import logging
 import shutil
+import traceback
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, status
 from fastapi.responses import FileResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.bot_helper import send_message
 from app.database.connection import SessionManager
 from app.database.models import User
 from app.schemas import StudentResults
@@ -143,6 +145,12 @@ async def fill_results_archive(
                 )
             except Exception as e:
                 logger.exception('Error while filling pdf', exc_info=e)
+                try:
+                    await send_message(
+                        f'Error while filling pdf {filename.name}: {e}\n{traceback.format_exc()}'
+                    )
+                except Exception as e:
+                    logger.exception('Error while sending message', exc_info=e)
 
     shutil.make_archive(
         f'{course_short_name}_{dt.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}',
