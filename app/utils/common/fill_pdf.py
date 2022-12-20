@@ -125,8 +125,8 @@ async def fill_pdf(
                 # pylint: enable=line-too-long
             ):
                 can.drawString(x, y, 'Зачет')
-            else:
-                can.drawString(x, y, 'Незачет')
+            # else:
+            #     can.drawString(x, y, 'Незачет')
         can.save()
 
         # move to the beginning of the StringIO buffer
