@@ -1,6 +1,6 @@
 import dataclasses
-import datetime as dt
 import io
+from pathlib import Path
 from uuid import UUID
 
 from PyPDF2 import PdfFileReader, PdfFileWriter, PdfReader
@@ -68,8 +68,11 @@ def visitor_body(  # pylint: disable=too-many-arguments,too-many-nested-blocks
 
 
 async def fill_pdf(
-    filename: str, course_id: UUID, session: AsyncSession | None = None
-) -> str:
+    filename: str,
+    course_id: UUID,
+    session: AsyncSession | None = None,
+    result_filename='result.pdf',
+) -> Path:
     if session is None:
         async with SessionManager().create_async_session() as session:
             return await fill_pdf(filename, course_id, session)
@@ -134,11 +137,14 @@ async def fill_pdf(
         page.mergePage(new_pdf_page.getPage(0))
         writer.addPage(page)
 
-    result_filename = (
-        f'result_{dt.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.pdf'
-    )
+    # result_filename = (
+    #     f'result_{dt.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.pdf'
+    # )
 
-    with open(result_filename, 'wb') as output_stream:
+    path = Path('./tmp')
+    path.mkdir(parents=True, exist_ok=True)
+
+    with open(path / result_filename, 'wb') as output_stream:
         writer.write(output_stream)
 
-    return result_filename
+    return path / result_filename

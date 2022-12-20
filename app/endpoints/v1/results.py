@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, status
+from fastapi.responses import FileResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database.connection import SessionManager
@@ -61,7 +62,7 @@ async def fill_results(
     course_short_name: str,
     _: User = Depends(get_current_user),
     session: AsyncSession = Depends(SessionManager().get_async_session),
-) -> dict[str, str]:
+) -> FileResponse:
     course = await get_course_by_short_name(session, course_short_name)
     if course is None:
         raise HTTPException(
@@ -70,6 +71,15 @@ async def fill_results(
         )
     with open('temp.pdf', 'wb') as f:
         f.write(await file.read())
-    result_filename = await fill_pdf('temp.pdf', course.id, session)
+    result_path = await fill_pdf(
+        'temp.pdf',
+        course.id,
+        session,
+        result_filename=f'{course_short_name}_{file.filename}.pdf',
+    )
     Path('temp.pdf').unlink()
-    return {'filename': result_filename}
+    return FileResponse(
+        result_path,
+        media_type='application/octet-stream',
+        filename=result_path.name,
+    )
