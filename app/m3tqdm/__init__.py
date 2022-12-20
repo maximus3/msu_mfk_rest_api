@@ -55,15 +55,16 @@ async def tqdm(
         if logger:
             logger.info(text)
         if sql_write_func:
-            await sql_write_func(
-                name,
-                current,
-                total,
-                need_time,
-                need_time_for_all,
-                avg_data,
-                all_time,
-            )
+            pass  # TODO: TooManyClients
+            # await sql_write_func(
+            #     name,
+            #     current,
+            #     total,
+            #     need_time,
+            #     need_time_for_all,
+            #     avg_data,
+            #     all_time,
+            # )
         # else:
         #     print('\r', ' ' * max_len, '\r', sep='', end='')
         #     print(f'\r{text}\r', end=end)

@@ -176,7 +176,7 @@ async def job() -> None:
 
 job_info = {
     'func': job,
-    'trigger': 'interval',
-    'minutes': 30,
+    'trigger': 'cron',
+    'hour': 4,
     'name': 'contest_results_dump',
 }
