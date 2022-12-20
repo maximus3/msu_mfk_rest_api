@@ -1,3 +1,5 @@
+import datetime as dt
+import shutil
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, status
@@ -75,11 +77,73 @@ async def fill_results(
         'temp.pdf',
         course.id,
         session,
-        result_filename=f'{course_short_name}_{file.filename}.pdf',
+        result_filename=f'{course_short_name}_{file.filename}',
     )
     Path('temp.pdf').unlink()
     return FileResponse(
         result_path,
         media_type='application/octet-stream',
         filename=result_path.name,
+    )
+
+
+@api_router.post(
+    '/fill/{course_short_name}/archive',
+    response_model=None,
+    status_code=status.HTTP_200_OK,
+)
+async def fill_results_archive(
+    file_archive: UploadFile,
+    course_short_name: str,
+    _: User = Depends(get_current_user),
+    session: AsyncSession = Depends(SessionManager().get_async_session),
+) -> FileResponse:
+    if not file_archive.filename.endswith('.zip'):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail='File must be zip archive',
+        )
+    course = await get_course_by_short_name(session, course_short_name)
+    if course is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail='Course not found',
+        )
+    tmp_path = Path('temp')
+    if tmp_path.exists():
+        tmp_path.rmdir()
+    tmp_path.mkdir()
+
+    # unarchive in temp folder
+    with open('temp.zip', 'wb') as f:
+        f.write(await file_archive.read())
+    shutil.unpack_archive('temp.zip', 'temp')
+    Path('temp.zip').unlink()
+
+    results_path = Path('temp_results')
+    if results_path.exists():
+        results_path.rmdir()
+    results_path.mkdir()
+
+    # fill all pdfs in temp folder
+    for filename in tmp_path.iterdir():
+        if filename.suffix == '.pdf':
+            await fill_pdf(
+                filename,
+                course.id,
+                session,
+                result_filename=f'{course_short_name}_{filename.name}',
+                result_path=results_path,
+            )
+    shutil.make_archive(
+        f'{course_short_name}_{dt.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}',
+        'zip',
+        results_path,
+    )
+    shutil.rmtree(tmp_path)
+    shutil.rmtree(results_path)
+    return FileResponse(
+        f'{course_short_name}_{dt.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.zip',
+        media_type='application/octet-stream',
+        filename=f'{course_short_name}_{dt.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.zip',
     )
