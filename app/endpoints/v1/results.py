@@ -1,4 +1,5 @@
 import datetime as dt
+import logging
 import shutil
 from pathlib import Path
 
@@ -109,9 +110,12 @@ async def fill_results_archive(
             status_code=status.HTTP_404_NOT_FOUND,
             detail='Course not found',
         )
+
+    logger = logging.getLogger(__name__)
+
     tmp_path = Path('temp')
     if tmp_path.exists():
-        tmp_path.rmdir()
+        shutil.rmtree(tmp_path)
     tmp_path.mkdir()
 
     # unarchive in temp folder
@@ -122,19 +126,24 @@ async def fill_results_archive(
 
     results_path = Path('temp_results')
     if results_path.exists():
-        results_path.rmdir()
+        shutil.rmtree(results_path)
     results_path.mkdir()
 
     # fill all pdfs in temp folder
     for filename in tmp_path.iterdir():
         if filename.suffix == '.pdf':
-            await fill_pdf(
-                filename,
-                course.id,
-                session,
-                result_filename=f'{course_short_name}_{filename.name}',
-                result_path=results_path,
-            )
+            logger.info(f'Filling {filename}')
+            try:
+                await fill_pdf(
+                    filename,
+                    course.id,
+                    session,
+                    result_filename=f'{course_short_name}_{filename.name}',
+                    result_path=results_path,
+                )
+            except Exception as e:
+                logger.exception('Error while filling pdf', exc_info=e)
+
     shutil.make_archive(
         f'{course_short_name}_{dt.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}',
         'zip',
