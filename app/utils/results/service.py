@@ -119,7 +119,7 @@ async def get_student_course_results(
             f'нам с помощью этого чат-бота. О проставлении зачетов мы сообщим '
             f'в официальном Telegram-канале курса.'
             if student_course.is_ok
-            else tmp[course.short_name],
+            else tmp[course.short_name]
         ),
     )
 
