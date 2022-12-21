@@ -15,6 +15,7 @@ from app.schemas import CourseResultsCSV
 from app.utils.course import get_all_courses, get_student_course
 from app.utils.results import (
     get_student_course_results,
+    update_sc_results_final,
     update_student_course_results,
 )
 from app.utils.scheduler import write_sql_tqdm
@@ -62,9 +63,14 @@ async def get_course_results(
                 )
                 session.add(student_course)
             if not student_course.is_ok:
-                await update_student_course_results(
-                    student, course, student_course, session=session
-                )
+                if course.default_update_on:
+                    await update_student_course_results(
+                        student, course, student_course, session=session
+                    )
+                else:
+                    await update_sc_results_final(
+                        student, course, student_course, session=session
+                    )
                 await session.commit()
             student_results = await get_student_course_results(
                 student, course, student_course, session=session

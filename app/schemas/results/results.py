@@ -17,6 +17,7 @@ class ContestResults(BaseModel):
     score: float
     is_ok: bool
     is_necessary: bool
+    is_final: bool
     updated_at: str
     deadline: str
 
