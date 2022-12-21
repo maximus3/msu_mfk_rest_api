@@ -2,6 +2,8 @@
 
 import sqlalchemy as sa
 
+from app.schemas.contest import ContestTag
+
 from .base import BaseModel
 
 
@@ -16,10 +18,15 @@ class Contest(BaseModel):
     yandex_contest_id = sa.Column(
         sa.Integer, nullable=False, index=True, unique=True
     )
-    deadline = sa.Column(sa.DateTime)
-    lecture = sa.Column(sa.Integer)
+    deadline = sa.Column(sa.DateTime, nullable=True)
+    lecture = sa.Column(sa.Integer, nullable=True)
     link = sa.Column(sa.String, unique=True)
-    tasks_count = sa.Column(sa.Integer)
+    tasks_count = sa.Column(sa.Integer, nullable=True)
     score_max = sa.Column(sa.Float, nullable=True)
     levels = sa.Column(sa.JSON, nullable=True)
-    is_necessary = sa.Column(sa.Boolean, default=True)
+    tags = sa.Column(
+        sa.ARRAY(sa.Enum(ContestTag)),
+        nullable=False,
+        default=[],
+        server_default='{}',
+    )

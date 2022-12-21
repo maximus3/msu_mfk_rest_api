@@ -95,7 +95,7 @@ async def fill_results(
     response_model=None,
     status_code=status.HTTP_200_OK,
 )
-async def fill_results_archive(
+async def fill_results_archive(  # pylint: disable=too-many-statements
     file_archive: UploadFile,
     course_short_name: str,
     _: User = Depends(get_current_user),
@@ -134,7 +134,7 @@ async def fill_results_archive(
     # fill all pdfs in temp folder
     for filename in tmp_path.iterdir():
         if filename.suffix == '.pdf':
-            logger.info(f'Filling {filename}')
+            logger.info('Filling %s', filename)
             try:
                 await fill_pdf(
                     filename,
@@ -143,24 +143,30 @@ async def fill_results_archive(
                     result_filename=f'{course_short_name}_{filename.name}',
                     result_path=results_path,
                 )
-            except Exception as e:
-                logger.exception('Error while filling pdf', exc_info=e)
+            except Exception as exc:  # pylint: disable=broad-except
+                logger.exception('Error while filling pdf', exc_info=exc)
                 try:
                     await send_message(
-                        f'Error while filling pdf {filename.name}: {e}\n{traceback.format_exc()}'
+                        f'Error while filling pdf {filename.name}: '
+                        f'{exc}\n{traceback.format_exc()}'
                     )
-                except Exception as e:
-                    logger.exception('Error while sending message', exc_info=e)
+                except Exception as send_exc:  # pylint: disable=broad-except
+                    logger.exception(
+                        'Error while sending message', exc_info=send_exc
+                    )
 
     shutil.make_archive(
-        f'{course_short_name}_{dt.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}',
+        f'{course_short_name}_'
+        f'{dt.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}',
         'zip',
         results_path,
     )
     shutil.rmtree(tmp_path)
     shutil.rmtree(results_path)
     return FileResponse(
-        f'{course_short_name}_{dt.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.zip',
+        f'{course_short_name}_'
+        f'{dt.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.zip',
         media_type='application/octet-stream',
-        filename=f'{course_short_name}_{dt.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.zip',
+        filename=f'{course_short_name}_'
+        f'{dt.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.zip',
     )

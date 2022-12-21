@@ -68,12 +68,12 @@ def visitor_body(  # pylint: disable=too-many-arguments,too-many-nested-blocks
                         list_of_students[key].append([y, font_size, text])
 
 
-async def fill_pdf(
+async def fill_pdf(  # pylint: disable=too-many-statements
     filename: str | Path,
     course_id: UUID,
     session: AsyncSession | None = None,
-    result_filename='result.pdf',
-    result_path: Path | None = None,
+    result_filename: str = 'result.pdf',
+    result_path: str | Path = './tmp',
 ) -> Path:
     if session is None:
         async with SessionManager().create_async_session() as session:
@@ -151,7 +151,7 @@ async def fill_pdf(
     #     f'result_{dt.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.pdf'
     # )
 
-    path = result_path or Path('./tmp')
+    path = Path(result_path)
     path.mkdir(parents=True, exist_ok=True)
 
     with open(path / result_filename, 'wb') as output_stream:

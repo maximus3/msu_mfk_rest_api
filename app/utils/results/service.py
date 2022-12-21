@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database.models import Course, Student, StudentCourse
 from app.schemas import ContestResults, CourseResults
+from app.schemas.contest import ContestTag
 from app.utils.common import get_datetime_msk_tz
 from app.utils.contest import get_contests_with_relations
 
@@ -54,7 +55,7 @@ async def get_student_course_results(
                 tasks_done=student_contest.tasks_done,
                 score=student_contest.score,
                 is_ok=student_contest.is_ok,
-                is_necessary=contest.is_necessary,
+                is_necessary=ContestTag.NECESSARY in contest.tags,
                 updated_at=get_datetime_msk_tz(
                     student_contest.dt_updated
                 ).strftime(
@@ -75,9 +76,30 @@ async def get_student_course_results(
         raise ValueError(f'Unknown ok_method: {course.ok_method}')
 
     tmp = {
-        'dl_autumn_2022': 'Зачет пройдет 21 декабря и будет состоять из онлайн-задания на 1,5 часа в системе Яндекс.Контест. Ссылка на задание появится в Telegram-канале курса.\nНО для получения зачета вам необходимо набрать не менее 7 баллов за домашние задания по курсу.',
-        'da_autumn_2022': 'Зачет пройдет 21 декабря и будет состоять из онлайн-задания на 1,5 часа в системе Яндекс.Контест. Ссылка на задание появится в Telegram-канале курса.\nНО для получения зачета вам необходимо решить не менее 50% задач из каждого домашнего задания к лекциям 2-10.',
-        'ml_autumn_2022': 'Зачет пройдет 21 декабря и будет состоять из онлайн-задания на 1,5 часа в системе Яндекс.Контест. Ссылка на задание появится в Telegram-канале курса.\nНО для получения зачета вам необходимо решить все домашние задания по курсу. Домашнее задание считается решенным, если выполнено количество задач, определенное для получения зачета (например, для зачета нужно было набрать 12 баллов, но студент выполнил все задания после дедлайна, получил 6 баллов, этого достаточно, чтобы засчитать данное домашнее задание для допуска к зачету).',
+        'dl_autumn_2022': 'Зачет пройдет 21 декабря и будет состоять '
+        'из онлайн-задания на 1,5 часа в системе '
+        'Яндекс.Контест. Ссылка на задание появится '
+        'в Telegram-канале курса.\nНО для получения '
+        'зачета вам необходимо набрать не менее 7 '
+        'баллов за домашние задания по курсу.',
+        'da_autumn_2022': 'Зачет пройдет 21 декабря и будет состоять '
+        'из онлайн-задания на 1,5 часа в системе '
+        'Яндекс.Контест. Ссылка на задание появится '
+        'в Telegram-канале курса.\nНО для получения '
+        'зачета вам необходимо решить не менее 50% '
+        'задач из каждого домашнего задания к лекциям 2-10.',
+        'ml_autumn_2022': 'Зачет пройдет 21 декабря и будет состоять '
+        'из онлайн-задания на 1,5 часа в системе '
+        'Яндекс.Контест. Ссылка на задание появится '
+        'в Telegram-канале курса.\nНО для получения '
+        'зачета вам необходимо решить все домашние '
+        'задания по курсу. Домашнее задание считается '
+        'решенным, если выполнено количество задач, '
+        'определенное для получения зачета (например, '
+        'для зачета нужно было набрать 12 баллов, но '
+        'студент выполнил все задания после дедлайна, '
+        'получил 6 баллов, этого достаточно, чтобы '
+        'засчитать данное домашнее задание для допуска к зачету).',
     }
 
     return CourseResults(
@@ -87,9 +109,18 @@ async def get_student_course_results(
         score_max=course_score_max,
         is_ok=student_course.is_ok,
         perc_ok=int(perc_ok),
-        str_need=f'Вы набрали необходимое количество баллов для зачета по курсу "{course.name}". Обратите внимание, что для получения зачета, вы должны были зарегистрироваться на курс через ЛК до 18 декабря.  Проверьте, что ФИО, которое вы указывали при регистрации через чат-бота, полностью совпадает с ФИО в ЛК https://lk.msu.ru/. В случае обнаружения неточностей, напишите нам с помощью этого чат-бота. О проставлении зачетов мы сообщим в официальном Telegram-канале курса.'
-        if student_course.is_ok
-        else tmp[course.short_name],
+        str_need=(
+            f'Вы набрали необходимое количество баллов для зачета по курсу '
+            f'"{course.name}". Обратите внимание, что для получения зачета, '
+            f'вы должны были зарегистрироваться на курс через ЛК до 18 '
+            f'декабря. Проверьте, что ФИО, которое вы указывали при '
+            f'регистрации через чат-бота, полностью совпадает с ФИО в ЛК '
+            f'https://lk.msu.ru/. В случае обнаружения неточностей, напишите '
+            f'нам с помощью этого чат-бота. О проставлении зачетов мы сообщим '
+            f'в официальном Telegram-канале курса.'
+            if student_course.is_ok
+            else tmp[course.short_name],
+        ),
     )
 
 
@@ -113,7 +144,7 @@ async def update_student_course_results(  # pylint: disable=too-many-statements
         course_score_sum += student_contest.score
         course_score_max += contest.score_max
 
-        if contest.is_necessary:
+        if ContestTag.NECESSARY in contest.tags:
             necessary_contests_results.append(student_contest.is_ok)
 
     count_necessary_contests = len(necessary_contests_results)

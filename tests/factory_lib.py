@@ -58,7 +58,7 @@ class ContestFactory(Factory):
     tasks_count = fuzzy.FuzzyInteger(1, 10)
     score_max = fuzzy.FuzzyInteger(1, 10)
     levels = {'count': 1, 'levels': [{'name': 'level1', 'score_need': 1}]}
-    is_necessary = fuzzy.FuzzyChoice([True, False])
+    tags = ['NECESSARY']
     yandex_contest_id = fuzzy.FuzzyInteger(30000, 40000)
 
 

@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.database.connection import SessionManager
 from app.database.models import Contest, User
 from app.schemas import ContestCreateRequest, ContestInfoResponse
+from app.schemas.contest import ContestTag
 from app.utils.contest import (
     get_contest_by_yandex_contest_id,
     get_contest_info,
@@ -48,7 +49,7 @@ async def create(
     contest = Contest(
         yandex_contest_id=contest_request.yandex_contest_id,
         lecture=contest_request.lecture,
-        is_necessary=contest_request.is_necessary,
+        tags=[ContestTag.NECESSARY] if contest_request.is_necessary else [],
         course_id=course.id,
         link='https://contest.yandex.ru/contest/'
         + str(contest_request.yandex_contest_id),
@@ -70,5 +71,5 @@ async def create(
         tasks_count=contest.tasks_count,
         score_max=contest.score_max,
         levels=contest.levels,
-        is_necessary=contest.is_necessary,
+        is_necessary=ContestTag.NECESSARY in contest.tags,
     )
