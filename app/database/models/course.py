@@ -17,3 +17,6 @@ class Course(BaseModel):
         nullable=False,
     )
     ok_threshold_perc = sa.Column(sa.Integer, default=100, nullable=False)
+    default_update_on = sa.Column(
+        sa.Boolean, default=True, nullable=False, server_default='true'
+    )
