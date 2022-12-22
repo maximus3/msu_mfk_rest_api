@@ -200,14 +200,22 @@ async def extend_submissions(
                     if isinstance(submission['finalScore'], str)
                     and submission['finalScore']
                     and float(submission['finalScore'])
-                    else (1 if zero_is_ok else 0)
+                    else (
+                        1
+                        if zero_is_ok and submission['verdict'] == 'OK'
+                        else 0
+                    )
                 ),
                 finalScore=(
                     float(submission['finalScore'])
                     if isinstance(submission['finalScore'], str)
                     and submission['finalScore']
                     and float(submission['finalScore'])
-                    else (1 if zero_is_ok else 0)
+                    else (
+                        1
+                        if zero_is_ok and submission['verdict'] == 'OK'
+                        else 0
+                    )
                 )
                 if datetime.fromisoformat(
                     submission['submissionTime']
@@ -218,7 +226,11 @@ async def extend_submissions(
                     if isinstance(submission['finalScore'], str)
                     and submission['finalScore']
                     and float(submission['finalScore'])
-                    else (0.5 if zero_is_ok else 0)
+                    else (
+                        0.5
+                        if zero_is_ok and submission['verdict'] == 'OK'
+                        else 0
+                    )
                 ),
             )
             for submission in response.json()
@@ -380,14 +392,14 @@ async def get_student_best_submissions(
                 if isinstance(submission['finalScore'], str)
                 and submission['finalScore']
                 and float(submission['finalScore'])
-                else (1 if zero_is_ok else 0)
+                else (1 if zero_is_ok and submission['verdict'] == 'OK' else 0)
             ),
             finalScore=(
                 float(submission['finalScore'])
                 if isinstance(submission['finalScore'], str)
                 and submission['finalScore']
                 and float(submission['finalScore'])
-                else (1 if zero_is_ok else 0)
+                else (1 if zero_is_ok and submission['verdict'] == 'OK' else 0)
             )
             if datetime.fromisoformat(submission['submissionTime']).replace(
                 tzinfo=None
@@ -398,7 +410,7 @@ async def get_student_best_submissions(
                 if isinstance(submission['finalScore'], str)
                 and submission['finalScore']
                 and float(submission['finalScore'])
-                else (0.5 if zero_is_ok else 0)
+                else (0.5 if zero_is_ok and submission['verdict'] else 0)
             ),
         )
         for submission in runs

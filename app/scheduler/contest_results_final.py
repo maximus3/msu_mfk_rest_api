@@ -238,7 +238,7 @@ async def process_student(  # pylint: disable=too-many-arguments
         )
         if len(levels_ok_no_deadline) == 0:
             levels_ok_no_deadline = contest_levels.levels
-        is_ok_no_deadline = student_score >= min(
+        is_ok_no_deadline = student_score_no_deadline >= min(
             level.score_need for level in levels_ok_no_deadline
         )
     await update_student_contest_relation(
