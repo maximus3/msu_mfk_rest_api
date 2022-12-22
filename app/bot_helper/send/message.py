@@ -8,5 +8,6 @@ async def send_message(message: str, level: str = 'error') -> None:
             chat_id=get_settings().TG_ERROR_CHAT_ID,
             text=message[:4000],
             disable_notification=level != 'error',
+            parse_mode='HTML',
         )
         message = message[4000:]
