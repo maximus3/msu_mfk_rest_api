@@ -17,6 +17,7 @@ class TestSendErrorMessageHandler:
             chat_id=settings.TG_ERROR_CHAT_ID,
             text='test',
             disable_notification=False,
+            parse_mode='HTML',
         )
 
     async def test_send_message_long(self, mock_bot):
@@ -28,11 +29,13 @@ class TestSendErrorMessageHandler:
                     chat_id=settings.TG_ERROR_CHAT_ID,
                     text='t' * 4000,
                     disable_notification=False,
+                    parse_mode='HTML',
                 ),
                 mock.call(
                     chat_id=settings.TG_ERROR_CHAT_ID,
                     text='t' * 1000,
                     disable_notification=False,
+                    parse_mode='HTML',
                 ),
             ],
         )
