@@ -62,6 +62,7 @@ class StudentCourse(BaseModel):
         sa.Float, nullable=False, server_default='0.0'
     )
     is_ok = sa.Column(sa.Boolean, nullable=False, server_default='false')
+    is_ok_final = sa.Column(sa.Boolean, nullable=False, server_default='false')
 
 
 class StudentContest(BaseModel):
@@ -95,3 +96,6 @@ class StudentContest(BaseModel):
         sa.Float, default=0.0, nullable=False, server_default='0.0'
     )
     is_ok = sa.Column(sa.Boolean, default=False, nullable=False)
+    is_ok_no_deadline = sa.Column(
+        sa.Boolean, default=False, nullable=False, server_default='false'
+    )

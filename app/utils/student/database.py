@@ -54,9 +54,9 @@ async def get_students_by_course_with_no_contest(
 
 async def get_students_by_course_with_department(
     session: AsyncSession, course_id: UUID
-) -> list[tuple[Student, Department]]:
+) -> list[tuple[Student, StudentCourse, Department]]:
     query = (
-        select(Student, Department)
+        select(Student, StudentCourse, Department)
         .join(StudentCourse)
         .where(StudentCourse.course_id == course_id)
         .join(StudentDepartment, isouter=True)

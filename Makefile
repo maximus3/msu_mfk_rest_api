@@ -7,7 +7,7 @@ ifeq ($(OS),Windows_NT)
     PYTHON_EXECUTABLE = python
     VENV_BIN = $(VENV)/Scripts
 else
-    PYTHON_EXECUTABLE = python3
+    PYTHON_EXECUTABLE = python3.10
     VENV_BIN = $(VENV)/bin
 endif
 

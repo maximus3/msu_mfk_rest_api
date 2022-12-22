@@ -13,8 +13,10 @@ from .service import (
     get_author_id,
     get_best_submissions,
     get_contest_info,
+    get_or_create_student_contest,
     get_participants_login_to_id,
     get_problems,
+    get_student_best_submissions,
 )
 
 
@@ -33,4 +35,6 @@ __all__ = [
     'get_contest_by_yandex_contest_id',
     'get_author_id',
     'get_ok_author_ids',
+    'get_student_best_submissions',
+    'get_or_create_student_contest',
 ]

@@ -214,7 +214,7 @@ class TestGetStudentsByCourseWithDepartmentHandler:
         assert await student.get_students_by_course_with_department(
             session=session,
             course_id=created_course.id,
-        ) == [(created_student, None)]
+        ) == [(created_student, student_course, None)]
 
     async def test_get_students_by_course_with_department_ok(
         self,
@@ -228,7 +228,7 @@ class TestGetStudentsByCourseWithDepartmentHandler:
         assert await student.get_students_by_course_with_department(
             session=session,
             course_id=created_course.id,
-        ) == [(created_student, created_department)]
+        ) == [(created_student, student_course, created_department)]
 
 
 class TestCreateStudentHandler:

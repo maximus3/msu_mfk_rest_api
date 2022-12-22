@@ -25,7 +25,7 @@ from app.utils.contest import (
     get_student_contest_relation,
 )
 from app.utils.contest.database import get_ok_author_ids
-from app.utils.course import get_all_courses, get_student_course
+from app.utils.course import get_all_courses
 from app.utils.scheduler import write_sql_tqdm
 from app.utils.student import get_students_by_course_with_department
 
@@ -131,6 +131,7 @@ async def update_student_contest_relation(  # pylint: disable=too-many-arguments
 
 async def process_student(  # pylint: disable=too-many-arguments
     student: Student,
+    student_course: StudentCourse,
     department: Department,
     contest: Contest,
     course: Course,
@@ -140,11 +141,14 @@ async def process_student(  # pylint: disable=too-many-arguments
     session: AsyncSession | None = None,
     logger: logging.Logger | None = None,
 ) -> None:
+    if student_course.is_ok:
+        return
     if session is None:
         SessionManager().refresh()
         async with SessionManager().create_async_session() as session:
             return await process_student(
                 student,
+                student_course,
                 department,
                 contest,
                 course,
@@ -155,24 +159,6 @@ async def process_student(  # pylint: disable=too-many-arguments
                 logger=logger,
             )
     logger = logger or logging.getLogger(__name__)
-    student_course = await get_student_course(
-        session,
-        student.id,
-        course.id,
-    )
-    if student_course is None:
-        logger.warning(
-            'StudentCourse not found for student %s and course %s',
-            student.id,
-            course.id,
-        )
-        student_course = StudentCourse(
-            student_id=student.id,
-            course_id=course.id,
-        )
-        session.add(student_course)
-    if student_course.is_ok:
-        return
     student_contest = await check_student_contest_relation(
         student, contest, session=session, logger=logger
     )
@@ -233,7 +219,7 @@ async def process_student(  # pylint: disable=too-many-arguments
 
 
 async def process_contest(  # pylint: disable=too-many-arguments
-    students_and_departments: list[tuple[Student, Department]],
+    students_sc_departments: list[tuple[Student, StudentCourse, Department]],
     results: list[ContestSubmissionFull],
     contest: Contest,
     course: Course,
@@ -247,13 +233,14 @@ async def process_contest(  # pylint: disable=too-many-arguments
         contest_levels.levels = sorted(
             contest_levels.levels, key=lambda x: x.score_need
         )
-    async for student, department in tqdm(
-        students_and_departments,
+    async for student, student_course, department in tqdm(
+        students_sc_departments,
         name='contest_results_students',
         sql_write_func=write_sql_tqdm,
     ):
         await process_student(
             student,
+            student_course,
             department,
             contest,
             course,
@@ -271,8 +258,8 @@ async def update_course_results(
     SessionManager().refresh()
     async with SessionManager().create_async_session() as session:
         contests = await get_contests(session, course.id)
-        students_and_departments = (
-            await get_students_by_course_with_department(session, course.id)
+        students_sc_departments = await get_students_by_course_with_department(
+            session, course.id
         )
     logger = logger or logging.getLogger(__name__)
     is_all_results_ok = True
@@ -298,7 +285,7 @@ async def update_course_results(
         )
         is_all_results_ok = is_all_results_ok and is_all_results
         await process_contest(
-            students_and_departments,
+            students_sc_departments,
             results,
             contest,
             course,

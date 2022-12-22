@@ -9,10 +9,10 @@ from pathlib import Path
 from app.bot_helper import send_message
 from app.bot_helper.send import send_results
 from app.database.connection import SessionManager
-from app.database.models import Course, StudentCourse
+from app.database.models import Course
 from app.m3tqdm import tqdm
 from app.schemas import CourseResultsCSV
-from app.utils.course import get_all_courses, get_student_course
+from app.utils.course import get_all_courses
 from app.utils.results import (
     get_student_course_results,
     update_sc_results_final,
@@ -41,27 +41,12 @@ async def get_course_results(
     SessionManager().refresh()
     async with SessionManager().create_async_session() as session:
         students_departments_results = []
-        async for (student, department,) in tqdm(
+        async for (student, student_course, department,) in tqdm(
             await get_students_by_course_with_department(session, course.id),
             name='contest_results_dump_students',
+            logger=logger,
             sql_write_func=write_sql_tqdm,
         ):
-            student_course = await get_student_course(
-                session,
-                student.id,
-                course.id,
-            )
-            if student_course is None:
-                logger.warning(
-                    'StudentCourse not found for student %s and course %s',
-                    student.id,
-                    course.id,
-                )
-                student_course = StudentCourse(
-                    student_id=student.id,
-                    course_id=course.id,
-                )
-                session.add(student_course)
             if not student_course.is_ok:
                 if course.default_update_on:
                     await update_student_course_results(

@@ -6,7 +6,8 @@ from datetime import datetime, timedelta
 import httpx
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.database.models import Contest, Student
+from app.database.models import Contest, Course, Student, StudentContest
+from app.m3tqdm import tqdm
 from app.schemas import (
     ContestProblem,
     ContestSubmission,
@@ -14,11 +15,13 @@ from app.schemas import (
     YandexContestInfo,
 )
 from app.utils.common import get_datetime_msk_tz
+from app.utils.scheduler import write_sql_tqdm
 from app.utils.yandex_request import make_request_to_yandex_contest_api
 
-from ...m3tqdm import tqdm
-from ..scheduler import write_sql_tqdm
-from .database import add_student_contest_relation
+from .database import (
+    add_student_contest_relation,
+    get_student_contest_relation,
+)
 
 
 async def add_student_to_contest(
@@ -328,3 +331,97 @@ async def get_contest_info(
         tasks_count=tasks_count,
         duration=duration,
     )
+
+
+async def get_student_best_submissions(
+    contest: Contest,
+    student: Student,
+    student_contest: StudentContest,
+    zero_is_ok: bool = False,
+) -> list[ContestSubmissionFull]:
+    logger = logging.getLogger(__name__)
+    url = (
+        f'contests/{contest.yandex_contest_id}/participants/'
+        f'{student_contest.author_id}/stats'
+    )
+
+    response = await make_request_to_yandex_contest_api(url)
+    if response.status_code != 200:
+        logger.error(
+            'Error while getting results for student %s (id=%s)'
+            'Status code: %s. Response: %s',
+            student.contest_login,
+            student_contest.author_id,
+            response.status_code,
+            response.text,
+        )
+    data = response.json()
+    runs = data['runs']
+
+    logger.info(
+        'Got %s submissions for contest "%s" with author %s (id=%s)',
+        len(runs),
+        contest.yandex_contest_id,
+        student.contest_login,
+        student_contest.author_id,
+    )
+
+    results = [
+        ContestSubmissionFull(
+            id=submission['runId'],
+            authorId=data['id'],
+            problemId=submission['problemId'],
+            problemAlias=submission['problemAlias'],
+            verdict=submission['verdict'],
+            login=data['login'],
+            timeFromStart=submission['timeFromStart'],
+            noDeadlineScore=(
+                float(submission['finalScore'])
+                if isinstance(submission['finalScore'], str)
+                and submission['finalScore']
+                and float(submission['finalScore'])
+                else (1 if zero_is_ok else 0)
+            ),
+            finalScore=(
+                float(submission['finalScore'])
+                if isinstance(submission['finalScore'], str)
+                and submission['finalScore']
+                and float(submission['finalScore'])
+                else (1 if zero_is_ok else 0)
+            )
+            if datetime.fromisoformat(submission['submissionTime']).replace(
+                tzinfo=None
+            )
+            <= contest.deadline
+            else (
+                float(submission['finalScore']) / 2
+                if isinstance(submission['finalScore'], str)
+                and submission['finalScore']
+                and float(submission['finalScore'])
+                else (0.5 if zero_is_ok else 0)
+            ),
+        )
+        for submission in runs
+    ]
+
+    return await filter_best_submissions_only(results)
+
+
+async def get_or_create_student_contest(
+    session: AsyncSession,
+    student: Student,
+    contest: Contest,
+    course: Course,
+) -> StudentContest:
+    sc = await get_student_contest_relation(session, student.id, contest.id)
+    if sc is None:
+        sc = await add_student_contest_relation(
+            session,
+            student.id,
+            contest.id,
+            course.id,
+            await get_author_id(
+                student.contest_login, contest.yandex_contest_id
+            ),
+        )
+    return sc
