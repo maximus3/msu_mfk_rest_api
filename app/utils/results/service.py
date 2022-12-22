@@ -55,6 +55,7 @@ async def get_student_course_results(
                 tasks_done=student_contest.tasks_done,
                 score=student_contest.score,
                 is_ok=student_contest.is_ok,
+                is_ok_no_deadline=student_contest.is_ok_no_deadline,
                 is_necessary=ContestTag.NECESSARY in contest.tags,
                 is_final=ContestTag.FINAL in contest.tags,
                 updated_at=get_datetime_msk_tz(
@@ -109,6 +110,7 @@ async def get_student_course_results(
         score_sum=student_course.score,
         score_max=course_score_max,
         is_ok=student_course.is_ok,
+        is_ok_final=student_course.is_ok_final,
         perc_ok=int(perc_ok),
         str_need=(
             f'Вы набрали необходимое количество баллов для зачета по курсу '
@@ -200,7 +202,7 @@ async def update_sc_results_final(  # pylint: disable=too-many-statements
         if ContestTag.FINAL in contest.tags:
             final_results.append(student_contest.is_ok)
         else:
-            contests_results.append(student_contest.is_ok)
+            contests_results.append(student_contest.is_ok_no_deadline)
             course_score_sum += student_contest.score_no_deadline
             course_score_max += contest.score_max
 

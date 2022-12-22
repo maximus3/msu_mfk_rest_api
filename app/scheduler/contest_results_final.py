@@ -165,6 +165,8 @@ async def process_student(  # pylint: disable=too-many-arguments
 ) -> None:
     if student_course.is_ok:
         return
+    if student_course.is_ok_final:
+        return
     if session is None:
         SessionManager().refresh()
         async with SessionManager().create_async_session() as session:
@@ -313,5 +315,5 @@ job_info = {
     'func': job,
     'trigger': 'interval',
     'hours': 1,
-    'name': 'contest_results',
+    'name': 'contest_results_final',
 }
