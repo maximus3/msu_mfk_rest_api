@@ -16,6 +16,7 @@ class ContestResults(BaseModel):
     tasks_done: int
     score: float
     is_ok: bool
+    is_ok_no_deadline: bool
     is_necessary: bool
     is_final: bool
     updated_at: str
@@ -28,6 +29,7 @@ class CourseResults(BaseModel):
     score_sum: float
     score_max: float
     is_ok: bool
+    is_ok_final: bool
     perc_ok: int
     str_need: str
 
