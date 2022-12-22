@@ -54,6 +54,7 @@ async def get_student_course_results(
                 lecture=contest.lecture,
                 tasks_done=student_contest.tasks_done,
                 score=student_contest.score,
+                score_no_deadline=student_contest.score_no_deadline,
                 is_ok=student_contest.is_ok,
                 is_ok_no_deadline=student_contest.is_ok_no_deadline,
                 is_necessary=ContestTag.NECESSARY in contest.tags,

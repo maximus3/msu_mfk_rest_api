@@ -15,6 +15,7 @@ class ContestResults(BaseModel):
     lecture: int
     tasks_done: int
     score: float
+    score_no_deadline: float
     is_ok: bool
     is_ok_no_deadline: bool
     is_necessary: bool
