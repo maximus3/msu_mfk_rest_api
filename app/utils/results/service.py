@@ -212,6 +212,8 @@ async def update_sc_results_final(  # pylint: disable=too-many-statements
         raise ValueError(f'Unknown ok_method: {course.ok_method}')
 
     is_ok = perc_ok >= course.ok_threshold_perc
+    if course.short_name == 'dl_autumn_2022':
+        is_ok = course_score_sum >= 5.5
 
     is_ok = is_ok and sum(final_results) == len(final_results)
 
