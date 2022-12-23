@@ -114,7 +114,7 @@ async def get_student_course_results(
             f'https://lk.msu.ru/. В случае обнаружения неточностей, напишите '
             f'нам с помощью этого чат-бота. О проставлении зачетов мы сообщим '
             f'в официальном Telegram-канале курса.'
-            if student_course.is_ok
+            if student_course.is_ok or student_course.is_ok_final
             else tmp[course.short_name]
         ),
     )
