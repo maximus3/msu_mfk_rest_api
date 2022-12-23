@@ -405,13 +405,7 @@ async def get_student_best_submissions(
                 tzinfo=None
             )
             <= contest.deadline
-            else (
-                float(submission['finalScore']) / 2
-                if isinstance(submission['finalScore'], str)
-                and submission['finalScore']
-                and float(submission['finalScore'])
-                else (0.5 if zero_is_ok and submission['verdict'] else 0)
-            ),
+            else 0,
         )
         for submission in runs
     ]
