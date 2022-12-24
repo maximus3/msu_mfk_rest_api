@@ -57,6 +57,8 @@ Service for manage courses using Yandex.Contest
 * `db` - Docker up db
 * `dump` - Dump database from server
 * `dump-local` - Dump database local
+* `restore-local` - Restore database local
+* `restore-server` - Restore database on server
 
 ### Git
 
@@ -100,6 +102,9 @@ Service for manage courses using Yandex.Contest
 * `open` - Open container in docker
 * `docker-migrate` - Migrate db in docker
 * `update` - Update docker app
+* `update-server` - Update docker app on server 
+* `docker-clear-logs` - Clear logs
+* `get-scheduler-logs` - Get scheduler logs
 
 ### Server
 
@@ -109,3 +114,7 @@ Service for manage courses using Yandex.Contest
 
 * `env` - Create .env file with variables
 * `venv` - Create virtual environment, no need in docker
+
+### File
+
+* `file-copy` - Copy file from server
