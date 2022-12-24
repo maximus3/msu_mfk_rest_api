@@ -1,5 +1,5 @@
 """
-Сервис с REST API
+MSU MFK REST API
 """
 __author__ = 'Ivanov Maksim'
 __maintainer__ = __author__

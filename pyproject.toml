@@ -1,7 +1,7 @@
 [tool.poetry]
-name = "Template"
+name = "MSU MFK REST API"
 version = "0.1.0"
-description = "Template"
+description = "REST API Service for MSU MFK"
 authors = []
 
 [tool.poetry.dependencies]
