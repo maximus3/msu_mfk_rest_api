@@ -215,9 +215,12 @@ async def update_sc_results_final(  # pylint: disable=too-many-statements
     if course.short_name == 'dl_autumn_2022':
         is_ok = course_score_sum >= 5.5
 
-    is_ok = is_ok and sum(final_results) == len(final_results)
+    is_ok = is_ok and (sum(final_results) > 0)  # TODO: one final only ok
 
-    if student_course.score < course_score_sum:
+    if (
+        student_course.score < course_score_sum
+    ):  # TODO: results without deadline now,
+        # TODO: do not run update_student_course_results func
         student_course.score = course_score_sum
         session.add(student_course)
     if student_course.contests_ok < contests_ok:
