@@ -216,11 +216,17 @@ async def process_student(  # pylint: disable=too-many-arguments
     is_ok = student_score == contest.score_max
     is_ok_no_deadline = student_score_no_deadline == contest.score_max
     logger.info(
-        'Student: %s, tasks done: %s, score: %s, is ok: %s',
+        'Student results: %s',
+        student_results,
+    )
+    logger.info(
+        'Student: %s, tasks done: %s, score: %s, score_no_deadline: %s, is ok: %s, is ok no deadline: %s',
         student.contest_login,
         student_tasks_done,
         student_score,
+        student_score_no_deadline,
         is_ok,
+        is_ok_no_deadline,
     )
     if contest_levels and contest_levels.count > 0:
         levels_ok: list[Level] = list(
