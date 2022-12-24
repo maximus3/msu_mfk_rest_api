@@ -20,6 +20,7 @@ class ContestResults(BaseModel):
     is_ok_no_deadline: bool
     is_necessary: bool
     is_final: bool
+    name: str
     updated_at: str
     deadline: str
 

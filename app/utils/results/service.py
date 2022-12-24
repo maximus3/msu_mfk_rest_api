@@ -30,6 +30,12 @@ async def get_student_course_results(
     ):
         course_score_max += contest.score_max
 
+        name = f'Лекция {contest.lecture}'
+        if contest.lecture == 999:
+            name = 'Зачет 21.12.2022'
+        if contest.lecture == 9999:
+            name = 'Зачет 25.12.2022'
+
         contests.append(
             ContestResults(
                 link=contest.link,
@@ -59,6 +65,7 @@ async def get_student_course_results(
                 is_ok_no_deadline=student_contest.is_ok_no_deadline,
                 is_necessary=ContestTag.NECESSARY in contest.tags,
                 is_final=ContestTag.FINAL in contest.tags,
+                name=name,
                 updated_at=get_datetime_msk_tz(
                     student_contest.dt_updated
                 ).strftime(
