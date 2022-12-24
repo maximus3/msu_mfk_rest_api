@@ -222,6 +222,14 @@ update: pull dump-local ##@Application Update docker app
 	@make docker
 	@make docker-migrate head
 
+.PHONY: update-server
+update-server: ##@Application Update docker app on server
+	$(eval PORT=$(shell cat deploy/port.txt))
+	$(eval HOST=$(shell cat deploy/host.txt))
+	$(eval USERNAME=$(shell cat deploy/username.txt))
+	ssh -p $(PORT) $(USERNAME)@$(HOST) "cd msu_mfk_rest_api; git pull && make update; exit;"
+	@echo "Server updated"
+
 .PHONY: dump
 dump: ##@Database Dump database from server
 	$(eval FILENAME=backup_$(shell date +%Y%m%d_%H%M%S).sql)
@@ -247,6 +255,45 @@ dump-local: ##@Database Dump database local
 	docker exec postgres_msu_mfk_rest_api rm $(FILENAME)
 	echo "Done"
 
+.PHONY: restore-local
+restore-local: ##@Database Restore database local
+	exit 1;
+	$(eval FILENAME=$(args))
+	$(eval DB_NAME=$(shell cat deploy/db_name.txt))
+	$(eval DB_USERNAME=$(shell cat deploy/db_username.txt))
+
+	echo "Restoring local database from $(FILENAME)"
+	docker cp db/$(FILENAME) postgres_container:$(FILENAME)
+	docker exec postgres_container psql -d $(DB_NAME) -U $(DB_USERNAME) -f $(FILENAME)
+	docker exec postgres_container rm $(FILENAME)
+	echo "Done"
+
+.PHONY: restore-server
+restore-server: ##@Database Restore database on server
+	exit 1;
+	$(eval FILENAME=$(args))
+	$(eval PORT=$(shell cat deploy/port.txt))
+	$(eval HOST=$(shell cat deploy/host.txt))
+	$(eval USERNAME=$(shell cat deploy/username.txt))
+	$(eval DB_NAME=$(shell cat deploy/db_name.txt))
+	$(eval DB_USERNAME=$(shell cat deploy/db_username.txt))
+
+	echo "Restoring database from $(FILENAME)"
+	scp -P $(PORT) db/$(FILENAME) $(USERNAME)@$(HOST):$(FILENAME)
+	ssh -p $(PORT) $(USERNAME)@$(HOST) "docker cp $(FILENAME) postgres_msu_mfk_rest_api:$(FILENAME); docker exec postgres_msu_mfk_rest_api psql -d $(DB_NAME) -U $(DB_USERNAME) -f (FILENAME); docker exec postgres_msu_mfk_rest_api rm $(FILENAME); rm (FILENAME); exit;"
+	echo "Done"
+
+.PHONY: file-copy
+file-copy: ##@File Copy file from server
+	$(eval FILENAME=$(args))
+	$(eval PORT=$(shell cat deploy/port.txt))
+	$(eval HOST=$(shell cat deploy/host.txt))
+	$(eval USERNAME=$(shell cat deploy/username.txt))
+
+	echo "Copying file $(FILENAME) from server"
+	scp -P $(PORT) $(USERNAME)@$(HOST):$(FILENAME) $(FILENAME)
+	echo "Done"
+
 .PHONY: connect
 connect: ##@Server Connect to server
 	$(eval PORT=$(shell cat deploy/port.txt))
@@ -257,6 +304,21 @@ connect: ##@Server Connect to server
 .PHONY: docker-clear-logs
 docker-clear-logs: ##@Application Clear logs
 	echo "" > $(docker inspect --format='{{.LogPath}}' $(args))
+
+.PHONY: get-scheduler-logs
+get-scheduler-logs: ##@Application Get scheduler logs
+	$(eval FILENAME=scheduler_logs_$(shell date +%Y%m%d_%H%M%S).log)
+	$(eval PORT=$(shell cat deploy/port.txt))
+	$(eval HOST=$(shell cat deploy/host.txt))
+	$(eval USERNAME=$(shell cat deploy/username.txt))
+	$(eval DB_NAME=$(shell cat deploy/db_name.txt))
+	$(eval DB_USERNAME=$(shell cat deploy/db_username.txt))
+
+	echo "Get scheduler logs to $(FILENAME)"
+	ssh -p $(PORT) $(USERNAME)@$(HOST) "docker logs scheduler_msu_mfk_rest_api >& /tmp/$(FILENAME);exit;"
+	scp -P $(PORT) $(USERNAME)@$(HOST):/tmp/$(FILENAME) logs/$(FILENAME)
+	ssh -p $(PORT) $(USERNAME)@$(HOST) "rm /tmp/$(FILENAME); exit;"
+	echo "Done"
 
 %::
 	echo $(MESSAGE)
