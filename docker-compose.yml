@@ -18,6 +18,11 @@ services:
 
   scheduler:
     container_name: scheduler_msu_mfk_rest_api
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "5"
     build:
       context: .
       dockerfile: Dockerfile

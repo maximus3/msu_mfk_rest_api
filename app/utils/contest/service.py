@@ -240,6 +240,7 @@ async def extend_submissions(
 
 async def filter_best_submissions_only(
     submissions: list[ContestSubmissionFull],
+    sort_by_final: bool = True,
 ) -> list[ContestSubmissionFull]:
     result = []
     for author_id in set(
@@ -264,7 +265,9 @@ async def filter_best_submissions_only(
                         ),
                         submissions,
                     ),
-                    key=lambda submission: submission.finalScore,
+                    key=lambda submission: submission.finalScore
+                    if sort_by_final
+                    else submission.noDeadlineScore,
                     reverse=True,
                 )[:1]
             )
@@ -410,7 +413,7 @@ async def get_student_best_submissions(
         for submission in runs
     ]
 
-    return await filter_best_submissions_only(results)
+    return await filter_best_submissions_only(results, sort_by_final=False)
 
 
 async def get_or_create_student_contest(

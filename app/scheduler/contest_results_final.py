@@ -215,12 +215,14 @@ async def process_student(  # pylint: disable=too-many-arguments
     )  # TODO: magic constant
     is_ok = student_score == contest.score_max
     is_ok_no_deadline = student_score_no_deadline == contest.score_max
+    # logger.info(
+    #     'Student results: %s',
+    #     student_results,
+    # )
     logger.info(
-        'Student results: %s',
-        student_results,
-    )
-    logger.info(
-        'Student: %s, tasks done: %s, score: %s, score_no_deadline: %s, is ok: %s, is ok no deadline: %s',
+        'Student: %s, tasks done: %s, score: %s, '
+        'score_no_deadline: %s, is ok: %s, '
+        'is ok no deadline: %s',
         student.contest_login,
         student_tasks_done,
         student_score,
