@@ -184,7 +184,10 @@ async def process_student(  # pylint: disable=too-many-arguments
         contest,
         course,
     )
-    if student_contest.is_ok and student_contest.tasks_done == contest.tasks_count:
+    if (
+        student_contest.is_ok
+        and student_contest.tasks_done == contest.tasks_count
+    ):
         return
     if student_contest.score == contest.score_max:
         logger.debug(
