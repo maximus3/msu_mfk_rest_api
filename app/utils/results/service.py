@@ -28,7 +28,9 @@ async def get_student_course_results(
         ),
         key=lambda x: x[0].lecture,
     ):
-        course_score_max += contest.score_max
+        course_score_max += (
+            contest.score_max if ContestTag.FINAL not in contest.tags else 0
+        )
 
         name = f'Лекция {contest.lecture}'
         if contest.lecture == 999:
