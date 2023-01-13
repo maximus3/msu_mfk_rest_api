@@ -163,6 +163,10 @@ async def process_student(  # pylint: disable=too-many-arguments
     session: AsyncSession | None = None,
     logger: logging.Logger | None = None,
 ) -> None:
+    if student_course.is_ok:
+        return
+    if student_course.is_ok_final:
+        return
     if session is None:
         SessionManager().refresh()
         async with SessionManager().create_async_session() as session:
@@ -186,7 +190,7 @@ async def process_student(  # pylint: disable=too-many-arguments
     )
     if (
         student_contest.is_ok
-        and student_contest.tasks_done == contest.tasks_count
+        # and student_contest.tasks_done == contest.tasks_count
     ):
         return
     if student_contest.score == contest.score_max:
