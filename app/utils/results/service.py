@@ -35,6 +35,8 @@ async def get_student_course_results(
             name = 'Зачет 21.12.2022'
         if contest.lecture == 9999:
             name = 'Зачет 25.12.2022'
+        if contest.lecture == 99999:
+            name = 'Зачет 12.01.2023'
 
         contests.append(
             ContestResults(
