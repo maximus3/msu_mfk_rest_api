@@ -2,8 +2,11 @@
 
 import logging
 import time
+import traceback
 import typing as tp
 from pathlib import Path
+
+from app.bot_helper import send_message
 
 
 def get_need_time(total: int, current: int, avg_speed: float) -> str:
@@ -75,7 +78,13 @@ async def tqdm(
         #     print('\r', ' ' * max_len, '\r', sep='', end='')
         #     print(f'\r{text}\r', end=end)
         if send_or_edit_func:
-            message_id = await send_or_edit_func(text, message_id)
+            try:
+                message_id = await send_or_edit_func(text, message_id)
+            except Exception as exc:
+                await send_message(
+                    f'Error while send_or_edit_func (message_id={message_id}):\n'
+                    f': {exc}\n{traceback.format_exc()}'
+                )
         if tmp_filename:
             with open(tmp_filename, 'w', encoding='utf-8') as f:
                 f.write(text)
