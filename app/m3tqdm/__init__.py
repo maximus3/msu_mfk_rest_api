@@ -50,7 +50,7 @@ async def tqdm(
     start_time = time.time()
     max_len = 0
     message_id = None
-    prev_time = start_time
+    prev_time = start_time - 100
     while True:
         need_time = get_need_time(total or 0, current, avg_speed)
         need_time_for_all = get_need_time(total or 0, 0, avg_speed)
@@ -60,8 +60,8 @@ async def tqdm(
             else f'{avg_speed:.2f} it/s'
         )
         text = (
-            f'{name_log}[{current}/{total}]\t{need_time}/'
-            f'{need_time_for_all}\t{avg_data}\t{all_time}'
+            f'{name_log}[{current}/{total}]\t{all_time}/'
+            f'{need_time_for_all}\t{avg_data}\t{need_time}'
         )
         max_len = max(max_len, len(text) + 24)
         if logger:
