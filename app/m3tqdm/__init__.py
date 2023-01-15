@@ -6,6 +6,8 @@ import traceback
 import typing as tp
 from pathlib import Path
 
+from aiogram.utils.exceptions import RetryAfter
+
 from app.bot_helper import send_message
 
 
@@ -48,6 +50,7 @@ async def tqdm(
     start_time = time.time()
     max_len = 0
     message_id = None
+    prev_time = start_time
     while True:
         need_time = get_need_time(total or 0, current, avg_speed)
         need_time_for_all = get_need_time(total or 0, 0, avg_speed)
@@ -78,13 +81,16 @@ async def tqdm(
         #     print('\r', ' ' * max_len, '\r', sep='', end='')
         #     print(f'\r{text}\r', end=end)
         if send_or_edit_func:
-            try:
-                message_id = await send_or_edit_func(text, message_id)
-            except Exception as exc:
-                await send_message(
-                    f'Error while send_or_edit_func (message_id={message_id}):\n'
-                    f': {exc}\n{traceback.format_exc()}'
-                )
+            if time.time() - prev_time > 10:
+                try:
+                    message_id = await send_or_edit_func(text, message_id)
+                except RetryAfter:
+                    pass
+                except Exception as exc:
+                    await send_message(
+                        f'Error while send_or_edit_func (message_id={message_id}):\n'
+                        f': {exc}\n{traceback.format_exc()}'
+                    )
         if tmp_filename:
             with open(tmp_filename, 'w', encoding='utf-8') as f:
                 f.write(text)
