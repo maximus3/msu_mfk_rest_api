@@ -99,11 +99,13 @@ async def tqdm(
         if tmp_filename:
             with open(tmp_filename, 'w', encoding='utf-8') as f:
                 f.write(text)
-        all_time = time.strftime('%X', time.gmtime(time.time() - start_time))
         try:
             current += 1
             yield next(iter_obj)
             avg_speed = current / max(0.001, time.time() - start_time)
+            all_time = time.strftime(
+                '%X', time.gmtime(time.time() - start_time)
+            )
         except StopIteration:
             if not was_send:
                 try:
