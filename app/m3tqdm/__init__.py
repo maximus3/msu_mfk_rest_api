@@ -51,8 +51,7 @@ async def tqdm(
     max_len = 0
     message_id = None
     prev_time = start_time - 100
-    text = ''
-    need_break = False
+    was_send = False
     while True:
         need_time = get_need_time(total or 0, current, avg_speed)
         need_time_for_all = get_need_time(total or 0, 0, avg_speed)
@@ -65,8 +64,6 @@ async def tqdm(
             f'{name_log}[{current}/{total}]\t{all_time}/'
             f'{need_time_for_all}\t{avg_data}\t{need_time}'
         )
-        if need_break:
-            break
         max_len = max(max_len, len(text) + 24)
         if logger:
             logger.info(text)
@@ -89,6 +86,7 @@ async def tqdm(
                 try:
                     prev_time = time.time()
                     message_id = await send_or_edit_func(text, message_id)
+                    was_send = True
                 except RetryAfter:
                     pass
                 except Exception as exc:
@@ -96,6 +94,8 @@ async def tqdm(
                         f'Error while send_or_edit_func (message_id={message_id}):\n'
                         f': {exc}\n{traceback.format_exc()}'
                     )
+            else:
+                was_send = False
         if tmp_filename:
             with open(tmp_filename, 'w', encoding='utf-8') as f:
                 f.write(text)
@@ -105,18 +105,17 @@ async def tqdm(
             yield next(iter_obj)
             avg_speed = current / max(0.001, time.time() - start_time)
         except StopIteration:
-            need_break = True
+            if not was_send:
+                try:
+                    message_id = await send_or_edit_func(text, message_id)
+                except RetryAfter:
+                    pass
+                except Exception as exc:
+                    await send_message(
+                        f'Error while send_or_edit_func (message_id={message_id}):\n'
+                        f': {exc}\n{traceback.format_exc()}'
+                    )
+            break
 
     if tmp_filename:
         tmp_filename.unlink()
-
-    if send_or_edit_func:
-        try:
-            message_id = await send_or_edit_func(text, message_id)
-        except RetryAfter:
-            pass
-        except Exception as exc:
-            await send_message(
-                f'Error while send_or_edit_func (message_id={message_id}):\n'
-                f': {exc}\n{traceback.format_exc()}'
-            )
