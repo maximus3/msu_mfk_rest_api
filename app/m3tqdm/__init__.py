@@ -83,6 +83,7 @@ async def tqdm(
         if send_or_edit_func:
             if time.time() - prev_time > 10:
                 try:
+                    prev_time = time.time()
                     message_id = await send_or_edit_func(text, message_id)
                 except RetryAfter:
                     pass
