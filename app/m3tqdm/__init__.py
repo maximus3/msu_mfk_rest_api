@@ -105,3 +105,14 @@ async def tqdm(
 
     if tmp_filename:
         tmp_filename.unlink()
+
+    if send_or_edit_func:
+        try:
+            message_id = await send_or_edit_func(text, message_id)
+        except RetryAfter:
+            pass
+        except Exception as exc:
+            await send_message(
+                f'Error while send_or_edit_func (message_id={message_id}):\n'
+                f': {exc}\n{traceback.format_exc()}'
+            )
