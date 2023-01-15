@@ -1,6 +1,6 @@
 from .base import BaseModel
 from .contest import Contest
-from .course import Course
+from .course import Course, CourseLevels
 from .department import Department
 from .student import Student, StudentContest, StudentCourse, StudentDepartment
 from .tqdm_logs import TQDMLogs
@@ -11,6 +11,7 @@ __all__ = [
     'BaseModel',
     'User',
     'Course',
+    'CourseLevels',
     'Contest',
     'Student',
     'StudentCourse',
