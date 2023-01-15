@@ -1,4 +1,4 @@
-from aiogram.utils.exceptions import MessageToEditNotFound
+from aiogram.utils.exceptions import MessageNotModified, MessageToEditNotFound
 
 from app.bot_helper import bot
 from app.config import get_settings
@@ -14,6 +14,8 @@ async def send_or_edit(message: str, message_id: str | None = None) -> None:
             )
         except MessageToEditNotFound:
             message_id = None
+        except MessageNotModified:
+            pass
     if not message_id:
         message_id = (
             await bot.bot.send_message(
