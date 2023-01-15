@@ -1,8 +1,8 @@
 """course levels
 
-Revision ID: 8ab6511c3d3e
+Revision ID: c943c4efb352
 Revises: 8a4a8ee1b139
-Create Date: 2023-01-15 09:57:53.774062
+Create Date: 2023-01-15 10:26:13.312244
 
 """
 import sqlalchemy as sa
@@ -11,20 +11,18 @@ from sqlalchemy.dialects import postgresql
 
 
 # revision identifiers, used by Alembic.
-revision = '8ab6511c3d3e'
+revision = 'c943c4efb352'
 down_revision = '8a4a8ee1b139'
 branch_labels = None
 depends_on = None
 
 types = [
+    sa.Enum('contests_ok', 'score_sum', name='level_ok_method'),
     sa.Enum('percent', 'absolute', name='count_method'),
 ]
 
 
 def upgrade() -> None:
-    for type_ in types:
-        type_.create(op.get_bind(), checkfirst=False)
-
     op.create_table(
         'course_levels',
         sa.Column(
@@ -47,8 +45,8 @@ def upgrade() -> None:
         ),
         sa.Column('course_id', postgresql.UUID(as_uuid=True), nullable=False),
         sa.Column(
-            'ok_method',
-            sa.Enum('contests_ok', 'score_sum', name='ok_method'),
+            'level_ok_method',
+            sa.Enum('contests_ok', 'score_sum', name='level_ok_method'),
             server_default='contests_ok',
             nullable=False,
         ),

@@ -30,8 +30,8 @@ class CourseLevels(BaseModel):
         nullable=False,
         index=True,
     )
-    ok_method = sa.Column(
-        sa.Enum('contests_ok', 'score_sum', name='ok_method'),
+    level_ok_method = sa.Column(
+        sa.Enum('contests_ok', 'score_sum', name='level_ok_method'),
         default='contests_ok',
         server_default='contests_ok',
         nullable=False,
