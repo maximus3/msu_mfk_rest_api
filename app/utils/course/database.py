@@ -4,6 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database.models import Course, StudentCourse
+from app.database.models.course import CourseLevels
 
 
 async def get_course(session: AsyncSession, name: str) -> Course | None:
@@ -59,3 +60,10 @@ async def get_student_courses(
         .where(StudentCourse.student_id == student_id)
     )
     return (await session.execute(query)).fetchall()
+
+
+async def get_course_levels(
+    session: AsyncSession, course_id: UUID
+) -> list[CourseLevels]:
+    query = select(CourseLevels).where(CourseLevels.course_id == course_id)
+    return (await session.execute(query)).scalars().all()
