@@ -1,4 +1,4 @@
-"""empty message
+"""course score max
 
 Revision ID: 3844cadad447
 Revises: c943c4efb352
