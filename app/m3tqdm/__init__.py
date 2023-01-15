@@ -51,6 +51,8 @@ async def tqdm(
     max_len = 0
     message_id = None
     prev_time = start_time - 100
+    text = ''
+    need_break = False
     while True:
         need_time = get_need_time(total or 0, current, avg_speed)
         need_time_for_all = get_need_time(total or 0, 0, avg_speed)
@@ -63,6 +65,8 @@ async def tqdm(
             f'{name_log}[{current}/{total}]\t{all_time}/'
             f'{need_time_for_all}\t{avg_data}\t{need_time}'
         )
+        if need_break:
+            break
         max_len = max(max_len, len(text) + 24)
         if logger:
             logger.info(text)
@@ -101,7 +105,7 @@ async def tqdm(
             yield next(iter_obj)
             avg_speed = current / max(0.001, time.time() - start_time)
         except StopIteration:
-            break
+            need_break = True
 
     if tmp_filename:
         tmp_filename.unlink()
