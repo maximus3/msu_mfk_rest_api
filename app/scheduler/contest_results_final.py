@@ -10,6 +10,7 @@ from app.database.connection import SessionManager
 from app.database.models import (
     Contest,
     Course,
+    CourseLevels,
     Department,
     Student,
     StudentContest,
@@ -22,7 +23,7 @@ from app.utils.contest import (
     get_or_create_student_contest,
     get_student_best_submissions,
 )
-from app.utils.course import get_all_courses
+from app.utils.course import get_all_courses, get_course_levels
 from app.utils.scheduler import write_sql_tqdm
 from app.utils.student import get_students_by_course_with_department
 
@@ -73,6 +74,8 @@ async def update_course_results(
         students_sc_departments = await get_students_by_course_with_department(
             session, course.id
         )
+        course_levels = await get_course_levels(session, course_id=course.id)
+        course_levels.sort(key=lambda x: (x.count_method, x.ok_threshold))
     logger = logger or logging.getLogger(__name__)
     is_all_results_ok = True
     contests.sort(key=lambda x: x.lecture)
@@ -90,6 +93,7 @@ async def update_course_results(
             students_sc_departments,
             contest,
             course,
+            course_levels,
             course_score_sum,
             logger=logger,
         )
@@ -102,6 +106,7 @@ async def process_contest(  # pylint: disable=too-many-arguments
     students_sc_departments: list[tuple[Student, StudentCourse, Department]],
     contest: Contest,
     course: Course,
+    course_levels: list[CourseLevels],
     course_score_sum: float,
     logger: logging.Logger | None = None,
     session: AsyncSession | None = None,
@@ -124,6 +129,7 @@ async def process_contest(  # pylint: disable=too-many-arguments
                 department,
                 contest,
                 course,
+                course_levels,
                 contest_levels,
                 course_score_sum,
                 session,
@@ -158,6 +164,7 @@ async def process_student(  # pylint: disable=too-many-arguments
     department: Department,
     contest: Contest,
     course: Course,
+    course_levels: list[CourseLevels],
     contest_levels: Levels | None,
     course_score_sum: float,
     session: AsyncSession | None = None,
@@ -176,6 +183,7 @@ async def process_student(  # pylint: disable=too-many-arguments
                 department,
                 contest,
                 course,
+                course_levels,
                 contest_levels,
                 course_score_sum,
                 session=session,
