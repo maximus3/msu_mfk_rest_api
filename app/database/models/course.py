@@ -11,6 +11,9 @@ class Course(BaseModel):
     channel_link = sa.Column(sa.String)
     chat_link = sa.Column(sa.String)
     lk_link = sa.Column(sa.String)
+    score_max = sa.Column(
+        sa.Float, nullable=False, server_default='0.0', default=0.0
+    )
     ok_method = sa.Column(
         sa.Enum('contests_ok', 'score_sum', name='ok_method'),
         default='contests_ok',
