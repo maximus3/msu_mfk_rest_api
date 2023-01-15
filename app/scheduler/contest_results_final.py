@@ -5,7 +5,7 @@ import traceback
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.bot_helper import send_message
+from app.bot_helper import send_message, send_or_edit
 from app.database.connection import SessionManager
 from app.database.models import (
     Contest,
@@ -38,6 +38,7 @@ async def job() -> None:
         name='contest_results_courses',
         logger=logger,
         sql_write_func=write_sql_tqdm,
+        send_or_edit_func=send_or_edit,
     ):
         logger.info('Course: %s', course)
         try:
@@ -85,6 +86,7 @@ async def update_course_results(
         name='contest_results_contests',
         logger=logger,
         sql_write_func=write_sql_tqdm,
+        send_or_edit_func=send_or_edit,
     ):
         logger.info('Contest: %s', contest)
         course_score_sum += contest.score_max
@@ -121,6 +123,7 @@ async def process_contest(  # pylint: disable=too-many-arguments
         students_sc_departments,
         name='contest_results_students',
         sql_write_func=write_sql_tqdm,
+        send_or_edit_func=send_or_edit,
     ):
         try:
             await process_student(

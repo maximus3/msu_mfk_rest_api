@@ -22,6 +22,11 @@ async def tqdm(
         tp.Coroutine[tp.Any, tp.Any, None],
     ]
     | None = None,
+    send_or_edit_func: tp.Callable[
+        [str, str | None],
+        tp.Coroutine[tp.Any, tp.Any, str | None],
+    ]
+    | None = None,
 ) -> tp.Any:
     logger = logger or logging.getLogger(__name__)
     if name:
@@ -39,6 +44,7 @@ async def tqdm(
     avg_speed = 1.0
     start_time = time.time()
     max_len = 0
+    message_id = None
     while True:
         need_time = get_need_time(total or 0, current, avg_speed)
         need_time_for_all = get_need_time(total or 0, 0, avg_speed)
@@ -68,6 +74,8 @@ async def tqdm(
         # else:
         #     print('\r', ' ' * max_len, '\r', sep='', end='')
         #     print(f'\r{text}\r', end=end)
+        if send_or_edit_func:
+            message_id = await send_or_edit_func(text, message_id)
         if tmp_filename:
             with open(tmp_filename, 'w', encoding='utf-8') as f:
                 f.write(text)

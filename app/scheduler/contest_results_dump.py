@@ -6,7 +6,7 @@ from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
 
-from app.bot_helper import send_message
+from app.bot_helper import send_message, send_or_edit
 from app.bot_helper.send import send_results
 from app.database.connection import SessionManager
 from app.database.models import Course
@@ -46,6 +46,7 @@ async def get_course_results(
             name='contest_results_dump_students',
             logger=logger,
             sql_write_func=write_sql_tqdm,
+            send_or_edit_func=send_or_edit,
         ):
             if not student_course.is_ok:
                 if course.default_update_on:
@@ -128,6 +129,7 @@ async def job() -> None:
         name='contest_results_dump_courses',
         logger=logger,
         sql_write_func=write_sql_tqdm,
+        send_or_edit_func=send_or_edit,
     ):
         logger.info('Course: %s', course)
         try:
