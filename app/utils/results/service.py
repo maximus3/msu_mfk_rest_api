@@ -232,7 +232,9 @@ async def update_sc_results_final(  # pylint: disable=too-many-statements
         student_course.score < course_score_sum
     ):  # TODO: results without deadline now,
         # TODO: do not run update_student_course_results func
-        student_course.score = course_score_sum
+        student_course.score = (
+            course_score_sum  # TODO: ??? why score_no_deadline ???
+        )
         session.add(student_course)
     if student_course.contests_ok < contests_ok:
         student_course.contests_ok = contests_ok
