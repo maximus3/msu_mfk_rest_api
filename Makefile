@@ -303,7 +303,11 @@ connect: ##@Server Connect to server
 
 .PHONY: docker-clear-logs
 docker-clear-logs: ##@Application Clear logs
-	echo "" > $(docker inspect --format='{{.LogPath}}' $(args))
+	sudo sh -c "truncate -s 0 /var/lib/docker/containers/**/*-json.log"
+
+.PHONY: docker-logs-size
+docker-logs-size: ##@Application Get logs size
+	sudo sh -c "du -ch /var/lib/docker/containers/*/*-json.log | grep total"
 
 .PHONY: get-scheduler-logs
 get-scheduler-logs: ##@Application Get scheduler logs
