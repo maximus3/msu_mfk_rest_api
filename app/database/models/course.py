@@ -33,12 +33,14 @@ class CourseLevels(BaseModel):
         nullable=False,
         index=True,
     )
+    level_name = sa.Column(sa.String, nullable=False)
     level_ok_method = sa.Column(
         sa.Enum('contests_ok', 'score_sum', name='level_ok_method'),
         default='contests_ok',
         server_default='contests_ok',
         nullable=False,
     )
+    contest_ok_level_name = sa.Column(sa.String, nullable=True)
     count_method = sa.Column(
         sa.Enum('percent', 'absolute', name='count_method'),
         default='percent',
