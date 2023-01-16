@@ -99,3 +99,26 @@ class StudentContest(BaseModel):
     is_ok_no_deadline = sa.Column(
         sa.Boolean, default=False, nullable=False, server_default='false'
     )
+
+
+class StudentCourseLevels(BaseModel):
+    __tablename__ = 'student_course_levels'
+
+    course_id = sa.Column(
+        sa.ForeignKey('course.id', ondelete='CASCADE'),
+        nullable=False,
+        index=True,
+    )
+    student_id = sa.Column(
+        sa.ForeignKey('student.id', ondelete='CASCADE'),
+        nullable=False,
+        index=True,
+    )
+    course_level_id = sa.Column(
+        sa.ForeignKey('course_levels.id', ondelete='CASCADE'),
+        nullable=False,
+        index=True,
+    )
+    is_ok = sa.Column(
+        sa.Boolean, default=False, server_default='false', nullable=False
+    )
