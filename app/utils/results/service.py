@@ -18,7 +18,6 @@ async def get_student_course_results(
     logger = logging.getLogger(__name__)
 
     contests = []
-    course_score_max = 0
 
     for contest, student_contest in sorted(
         await get_contests_with_relations(
@@ -28,10 +27,6 @@ async def get_student_course_results(
         ),
         key=lambda x: x[0].lecture,
     ):
-        course_score_max += (
-            contest.score_max if ContestTag.FINAL not in contest.tags else 0
-        )
-
         name = f'Лекция {contest.lecture}'
         if contest.lecture == 999:
             name = 'Зачет 21.12.2022'
@@ -112,7 +107,7 @@ async def get_student_course_results(
         name=course.name,
         contests=contests,
         score_sum=student_course.score,
-        score_max=course_score_max,
+        score_max=course.score_max,
         is_ok=student_course.is_ok,
         is_ok_final=student_course.is_ok_final,
         perc_ok=int(perc_ok),
@@ -140,7 +135,6 @@ async def update_student_course_results(  # pylint: disable=too-many-statements
     logger = logging.getLogger(__name__)
 
     course_score_sum = 0
-    course_score_max = 0
     necessary_contests_results = []
 
     for contest, student_contest in await get_contests_with_relations(
@@ -149,7 +143,6 @@ async def update_student_course_results(  # pylint: disable=too-many-statements
         student.id,
     ):
         course_score_sum += student_contest.score
-        course_score_max += contest.score_max
 
         if ContestTag.NECESSARY in contest.tags:
             necessary_contests_results.append(student_contest.is_ok)
@@ -157,7 +150,7 @@ async def update_student_course_results(  # pylint: disable=too-many-statements
     count_necessary_contests = len(necessary_contests_results)
     contests_ok = sum(necessary_contests_results)
     contests_ok_percent = 100 * contests_ok / count_necessary_contests
-    score_percent = 100 * course_score_sum / course_score_max
+    score_percent = 100 * course_score_sum / course.score_max
     if course.ok_method == 'contests_ok':
         perc_ok = contests_ok_percent
     elif course.ok_method == 'score_sum':
@@ -194,7 +187,6 @@ async def update_sc_results_final(  # pylint: disable=too-many-statements
     logger = logging.getLogger(__name__)
 
     course_score_sum = 0
-    course_score_max = 0
     course_score_sum_with_deadline = 0
     contests_results = []
     final_results = []
@@ -210,12 +202,11 @@ async def update_sc_results_final(  # pylint: disable=too-many-statements
             contests_results.append(student_contest.is_ok_no_deadline)
             course_score_sum += student_contest.score_no_deadline
             course_score_sum_with_deadline = student_contest.score
-            course_score_max += contest.score_max
 
     count_contests = len(contests_results)
     contests_ok = sum(contests_results)
     contests_ok_percent = 100 * contests_ok / count_contests
-    score_percent = 100 * course_score_sum / course_score_max
+    score_percent = 100 * course_score_sum / course.score_max
     if course.ok_method == 'contests_ok':
         perc_ok = contests_ok_percent
     elif course.ok_method == 'score_sum':
