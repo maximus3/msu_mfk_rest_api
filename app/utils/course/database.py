@@ -69,7 +69,7 @@ async def get_course_levels(
     return (await session.execute(query)).scalars().all()
 
 
-async def get_or_create_student_course_levels(
+async def get_or_create_student_course_level(
     session: AsyncSession, student_id: UUID, course_id: UUID, level_id: UUID
 ) -> StudentCourseLevels:
     query = (
@@ -86,5 +86,5 @@ async def get_or_create_student_course_levels(
             course_level_id=level_id,
         )
         session.add(student_course_level)
-        await session.commit()
+        await session.flush()
     return student_course_level

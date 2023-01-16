@@ -15,7 +15,7 @@ from app.schemas import CourseResultsCSV
 from app.utils.course import (
     get_all_courses,
     get_course_levels,
-    get_or_create_student_course_levels,
+    get_or_create_student_course_level,
 )
 from app.utils.results import (
     get_student_course_results,
@@ -55,7 +55,7 @@ async def get_course_results(
             send_or_edit_func=send_or_edit,
         ):
             student_course_levels = [
-                await get_or_create_student_course_levels(
+                await get_or_create_student_course_level(
                     session, student.id, course.id, course_level.id
                 )
                 for course_level in course_levels
@@ -145,6 +145,7 @@ async def job() -> None:
     filenames = []
     async for course, course_levels in tqdm(
         zip(courses, levels_by_course),
+        total=len(courses),
         name='contest_results_dump_courses',
         logger=logger,
         sql_write_func=write_sql_tqdm,
