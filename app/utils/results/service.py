@@ -195,6 +195,7 @@ async def update_sc_results_final(  # pylint: disable=too-many-statements
 
     course_score_sum = 0
     course_score_max = 0
+    course_score_sum_with_deadline = 0
     contests_results = []
     final_results = []
 
@@ -208,6 +209,7 @@ async def update_sc_results_final(  # pylint: disable=too-many-statements
         else:
             contests_results.append(student_contest.is_ok_no_deadline)
             course_score_sum += student_contest.score_no_deadline
+            course_score_sum_with_deadline = student_contest.score
             course_score_max += contest.score_max
 
     count_contests = len(contests_results)
@@ -228,13 +230,8 @@ async def update_sc_results_final(  # pylint: disable=too-many-statements
 
     is_ok = is_ok and (sum(final_results) > 0)  # TODO: one final only ok
 
-    if (
-        student_course.score < course_score_sum
-    ):  # TODO: results without deadline now,
-        # TODO: do not run update_student_course_results func
-        student_course.score = (
-            course_score_sum  # TODO: ??? why score_no_deadline ???
-        )
+    if student_course.score != course_score_sum_with_deadline:
+        student_course.score = course_score_sum_with_deadline
         session.add(student_course)
     if student_course.contests_ok < contests_ok:
         student_course.contests_ok = contests_ok

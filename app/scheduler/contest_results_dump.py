@@ -48,16 +48,15 @@ async def get_course_results(
             sql_write_func=write_sql_tqdm,
             send_or_edit_func=send_or_edit,
         ):
-            if not student_course.is_ok:
-                if course.default_update_on:
-                    await update_student_course_results(
-                        student, course, student_course, session=session
-                    )
-                else:
-                    await update_sc_results_final(
-                        student, course, student_course, session=session
-                    )
-                await session.commit()
+            if course.default_update_on:
+                await update_student_course_results(
+                    student, course, student_course, session=session
+                )
+            else:
+                await update_sc_results_final(
+                    student, course, student_course, session=session
+                )
+            await session.commit()
             student_results = await get_student_course_results(
                 student, course, student_course, session=session
             )
