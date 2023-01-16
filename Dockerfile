@@ -22,10 +22,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /opt/app
 
 COPY pyproject.toml poetry.loc[k] /opt/app/
-COPY Makefile Makefile
 
 RUN make venv
 RUN make install-prod
+
+COPY Makefile Makefile
 
 COPY setup.cfg setup.cfg
 COPY alembic.ini alembic.ini
