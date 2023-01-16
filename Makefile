@@ -338,7 +338,7 @@ get-scheduler-logs: ##@Application Get scheduler logs
 
 .PHONY: run-job
 run-job: ##@Application Run scheduler job in docker
-	docker run msu_mfk_rest_api-scheduler make run-job-local $(args)
+	docker-compose run --rm --entrypoint make scheduler run-job-local $(args)
 
 .PHONY: run-job-local
 run-job-local: ##@Application Run scheduler job local
