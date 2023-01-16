@@ -201,7 +201,7 @@ async def update_sc_results_final(  # pylint: disable=too-many-statements
         else:
             contests_results.append(student_contest.is_ok_no_deadline)
             course_score_sum += student_contest.score_no_deadline
-            course_score_sum_with_deadline = student_contest.score
+            course_score_sum_with_deadline += student_contest.score
 
     count_contests = len(contests_results)
     contests_ok = sum(contests_results)
