@@ -240,7 +240,8 @@ async def update_sc_results_final(  # pylint: disable=too-many-statements  # noq
                         pass
                     else:
                         raise ValueError(
-                            f'Unknown level_ok_method: {level.level_ok_method}',
+                            f'Unknown level_ok_method: '
+                            f'{level.level_ok_method}',
                         )
 
     for level, sc_level in zip(course_levels, student_course_levels):

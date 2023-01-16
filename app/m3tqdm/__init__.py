@@ -91,7 +91,8 @@ async def tqdm(  # noqa: C901
                     pass
                 except Exception as exc:
                     await send_message(
-                        f'Error while send_or_edit_func (message_id={message_id}):\n'
+                        f'Error while send_or_edit_func '
+                        f'(message_id={message_id}):\n'
                         f': {exc}\n{traceback.format_exc()}'
                     )
             else:
@@ -114,7 +115,8 @@ async def tqdm(  # noqa: C901
                     pass
                 except Exception as exc:
                     await send_message(
-                        f'Error while send_or_edit_func (message_id={message_id}):\n'
+                        f'Error while send_or_edit_func '
+                        f'(message_id={message_id}):\n'
                         f': {exc}\n{traceback.format_exc()}'
                     )
             break
