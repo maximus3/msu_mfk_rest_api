@@ -313,6 +313,10 @@ docker-logs-size: ##@Application Get logs size
 show-used-space: ##@Ubuntu Show used space on disk
 	du / -aBM 2>/dev/null | sort -nr | head -n 50 | more
 
+.PHONY: show-space
+show-space: ##@Ubuntu Show space on disk
+	df -h
+
 .PHONY: clear-tmp
 clear-tmp: ##@Ubuntu Clear tmp
 	sudo find /tmp -type f -atime +10 -delete
