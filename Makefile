@@ -310,8 +310,12 @@ docker-logs-size: ##@Application Get logs size
 	sudo sh -c "du -ch /var/lib/docker/containers/*/*-json.log | grep total"
 
 .PHONY: show-used-space
-show-used-space: ##@Application Show used space on disk
+show-used-space: ##@Ubuntu Show used space on disk
 	du / -aBM 2>/dev/null | sort -nr | head -n 50 | more
+
+.PHONY: clear-tmp
+clear-tmp: ##@Ubuntu Clear tmp
+	sudo find /tmp -type f -atime +10 -delete
 
 .PHONY: get-scheduler-logs
 get-scheduler-logs: ##@Application Get scheduler logs
