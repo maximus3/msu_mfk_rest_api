@@ -76,7 +76,7 @@ async def get_or_create_student_course_level(
         select(StudentCourseLevels)
         .where(StudentCourseLevels.student_id == student_id)
         .where(StudentCourseLevels.course_id == course_id)
-        .where(StudentCourseLevels.level_id == level_id)
+        .where(StudentCourseLevels.course_level_id == level_id)
     )
     student_course_level = await session.scalar(query)
     if student_course_level is None:
