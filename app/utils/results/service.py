@@ -221,7 +221,7 @@ async def update_sc_results_final(  # pylint: disable=too-many-statements
 
     is_ok = is_ok and (sum(final_results) > 0)  # TODO: one final only ok
 
-    if student_course.score != course_score_sum_with_deadline:
+    if student_course.score < course_score_sum_with_deadline:
         student_course.score = course_score_sum_with_deadline
         session.add(student_course)
     if student_course.contests_ok < contests_ok:
