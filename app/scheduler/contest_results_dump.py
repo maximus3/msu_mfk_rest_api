@@ -9,10 +9,14 @@ from pathlib import Path
 from app.bot_helper import send_message, send_or_edit
 from app.bot_helper.send import send_results
 from app.database.connection import SessionManager
-from app.database.models import Course
+from app.database.models import Course, CourseLevels
 from app.m3tqdm import tqdm
 from app.schemas import CourseResultsCSV
-from app.utils.course import get_all_courses
+from app.utils.course import (
+    get_all_courses,
+    get_course_levels,
+    get_or_create_student_course_levels,
+)
 from app.utils.results import (
     get_student_course_results,
     update_sc_results_final,
@@ -35,7 +39,9 @@ async def save_to_csv(course_results: CourseResultsCSV, filename: str) -> None:
 
 
 async def get_course_results(
-    course: Course, logger: logging.Logger | None = None
+    course: Course,
+    course_levels: list[CourseLevels],
+    logger: logging.Logger | None = None,
 ) -> CourseResultsCSV:
     logger = logger or logging.getLogger(__name__)
     SessionManager().refresh()
@@ -48,13 +54,24 @@ async def get_course_results(
             sql_write_func=write_sql_tqdm,
             send_or_edit_func=send_or_edit,
         ):
+            student_course_levels = [
+                await get_or_create_student_course_levels(
+                    session, student.id, course.id, course_level.id
+                )
+                for course_level in course_levels
+            ]
             if course.default_update_on:
                 await update_student_course_results(
                     student, course, student_course, session=session
                 )
             else:
                 await update_sc_results_final(
-                    student, course, student_course, session=session
+                    student,
+                    course,
+                    course_levels,
+                    student_course,
+                    student_course_levels,
+                    session=session,
                 )
             await session.commit()
             student_results = await get_student_course_results(
@@ -121,10 +138,13 @@ async def job() -> None:
     SessionManager().refresh()
     async with SessionManager().create_async_session() as session:
         courses = await get_all_courses(session)
+        levels_by_course = [
+            await get_course_levels(session, course.id) for course in courses
+        ]
     logger = logging.getLogger(__name__)
     filenames = []
-    async for course in tqdm(
-        courses,
+    async for course, course_levels in tqdm(
+        zip(courses, levels_by_course),
         name='contest_results_dump_courses',
         logger=logger,
         sql_write_func=write_sql_tqdm,
@@ -132,7 +152,9 @@ async def job() -> None:
     ):
         logger.info('Course: %s', course)
         try:
-            course_results = await get_course_results(course, logger=logger)
+            course_results = await get_course_results(
+                course, course_levels, logger=logger
+            )
         except Exception as exc:  # pylint: disable=broad-except
             logger.exception(
                 'Error while getting course results for %s: %s',

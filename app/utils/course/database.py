@@ -3,7 +3,7 @@ from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.database.models import Course, StudentCourse
+from app.database.models import Course, StudentCourse, StudentCourseLevels
 from app.database.models.course import CourseLevels
 
 
@@ -67,3 +67,24 @@ async def get_course_levels(
 ) -> list[CourseLevels]:
     query = select(CourseLevels).where(CourseLevels.course_id == course_id)
     return (await session.execute(query)).scalars().all()
+
+
+async def get_or_create_student_course_levels(
+    session: AsyncSession, student_id: UUID, course_id: UUID, level_id: UUID
+) -> StudentCourseLevels:
+    query = (
+        select(StudentCourseLevels)
+        .where(StudentCourseLevels.student_id == student_id)
+        .where(StudentCourseLevels.course_id == course_id)
+        .where(StudentCourseLevels.level_id == level_id)
+    )
+    student_course_level = await session.scalar(query)
+    if student_course_level is None:
+        student_course_level = StudentCourseLevels(
+            student_id=student_id,
+            course_id=course_id,
+            course_level_id=level_id,
+        )
+        session.add(student_course_level)
+        await session.commit()
+    return student_course_level

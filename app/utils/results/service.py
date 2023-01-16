@@ -2,7 +2,13 @@ import logging
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.database.models import Course, Student, StudentCourse
+from app.database.models import (
+    Course,
+    CourseLevels,
+    Student,
+    StudentCourse,
+    StudentCourseLevels,
+)
 from app.schemas import ContestResults, CourseResults
 from app.schemas.contest import ContestTag
 from app.utils.common import get_datetime_msk_tz
@@ -181,7 +187,9 @@ async def update_student_course_results(  # pylint: disable=too-many-statements
 async def update_sc_results_final(  # pylint: disable=too-many-statements
     student: Student,
     course: Course,
+    course_levels: list[CourseLevels],
     student_course: StudentCourse,
+    student_course_levels: list[StudentCourseLevels],
     session: AsyncSession,
 ) -> None:
     logger = logging.getLogger(__name__)
@@ -190,6 +198,10 @@ async def update_sc_results_final(  # pylint: disable=too-many-statements
     course_score_sum_with_deadline = 0
     contests_results = []
     final_results = []
+
+    levels_result_dict: dict[str, bool] = {
+        level.level_name: True for level in course_levels
+    }
 
     for contest, student_contest in await get_contests_with_relations(
         session,
@@ -202,6 +214,43 @@ async def update_sc_results_final(  # pylint: disable=too-many-statements
             contests_results.append(student_contest.is_ok_no_deadline)
             course_score_sum += student_contest.score_no_deadline
             course_score_sum_with_deadline += student_contest.score
+
+            if ContestTag.NECESSARY in contest.tags:
+                for level in course_levels:
+                    if level.level_ok_method == 'contests_ok':
+                        level_names = [
+                            contest_level['name']
+                            for contest_level in contest.levels
+                        ]
+                        k = level_names.index(level.contest_ok_level_name)
+                        if k > -1:
+                            levels_result_dict[level.level_name] = (
+                                levels_result_dict[level.level_name]
+                                and student_contest.score
+                                >= contest.levels[k]['score_need']
+                            )
+                        else:
+                            levels_result_dict[level.level_name] = False
+                            logger.error(
+                                'Contest %s has no level %s',
+                                contest.name,
+                                level.name,
+                            )
+                    elif level.level_ok_method == 'score_sum':
+                        pass
+                    else:
+                        raise ValueError(
+                            f'Unknown level_ok_method: {level.level_ok_method}',
+                        )
+
+    for level, sc_level in zip(course_levels, student_course_levels):
+        if level.level_ok_method == 'score_sum':
+            levels_result_dict[level.level_name] = (
+                student_course.score >= level.ok_threshold
+            )
+        if sc_level.is_ok != levels_result_dict[level.level_name]:
+            sc_level.is_ok = levels_result_dict[level.level_name]
+            session.add(sc_level)
 
     count_contests = len(contests_results)
     contests_ok = sum(contests_results)
