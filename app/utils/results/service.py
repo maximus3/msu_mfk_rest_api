@@ -218,16 +218,20 @@ async def update_sc_results_final(  # pylint: disable=too-many-statements  # noq
             if ContestTag.NECESSARY in contest.tags:
                 for level in course_levels:
                     if level.level_ok_method == 'contests_ok':
-                        level_names = [
-                            contest_level['name']
-                            for contest_level in contest.levels
-                        ]
+                        level_names = (
+                            [
+                                contest_level['name']
+                                for contest_level in contest.levels['levels']
+                            ]
+                            if contest.levels
+                            else []
+                        )
                         k = level_names.index(level.contest_ok_level_name)
                         if k > -1:
                             levels_result_dict[level.level_name] = (
                                 levels_result_dict[level.level_name]
                                 and student_contest.score
-                                >= contest.levels[k]['score_need']
+                                >= contest.levels['levels'][k]['score_need']
                             )
                         else:
                             levels_result_dict[level.level_name] = False
