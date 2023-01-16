@@ -93,7 +93,7 @@ async def tqdm(  # noqa: C901
                     await send_message(
                         f'Error while send_or_edit_func '
                         f'(message_id={message_id}):\n'
-                        f': {exc}\n{traceback.format_exc()}'
+                        f': <code>{exc}\n{traceback.format_exc().replace("<", "&lt;").replace(">", "&gt;")}</code>'
                     )
             else:
                 was_send = False
@@ -117,7 +117,7 @@ async def tqdm(  # noqa: C901
                     await send_message(
                         f'Error while send_or_edit_func '
                         f'(message_id={message_id}):\n'
-                        f': {exc}\n{traceback.format_exc()}'
+                        f': <code>{exc}\n{traceback.format_exc().replace("<", "&lt;").replace(">", "&gt;")}</code>'
                     )
             break
 

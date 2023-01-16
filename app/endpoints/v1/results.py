@@ -148,7 +148,7 @@ async def fill_results_archive(  # pylint: disable=too-many-statements
                 try:
                     await send_message(
                         f'Error while filling pdf {filename.name}: '
-                        f'{exc}\n{traceback.format_exc()}'
+                        f'<code>{exc}\n{traceback.format_exc().replace("<", "&lt;").replace(">", "&gt;")}</code>'
                     )
                 except Exception as send_exc:  # pylint: disable=broad-except
                     logger.exception(

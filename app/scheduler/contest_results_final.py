@@ -52,7 +52,7 @@ async def job() -> None:
             try:
                 await send_message(
                     f'Error while updating course results for {course.name}'
-                    f': <code>{exc}\n{traceback.format_exc()}</code>'
+                    f': <code>{exc}\n{traceback.format_exc().replace("<", "&lt;").replace(">", "&gt;")}</code>'
                 )
             except Exception as send_exc:  # pylint: disable=broad-except
                 logger.exception(
@@ -153,7 +153,7 @@ async def process_contest(  # pylint: disable=too-many-arguments
                     f'for course {course.name}, '
                     f'contest {contest.yandex_contest_id}, '
                     f'student {student.contest_login}: '
-                    f'{exc}\n<code>{traceback.format_exc()}</code>'
+                    f'<code>{exc}\n{traceback.format_exc().replace("<", "&lt;").replace(">", "&gt;")}</code>'
                 )
             except Exception as send_exc:  # pylint: disable=broad-except
                 logger.exception(

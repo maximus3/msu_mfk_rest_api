@@ -6,7 +6,7 @@ async def send_message(message: str, level: str = 'error') -> None:
     while len(message) > 0:
         await bot.bot.send_message(
             chat_id=get_settings().TG_ERROR_CHAT_ID,
-            text=message[:4000].replace('<', '&lt;').replace('>', '&gt;'),
+            text=message[:4000],
             disable_notification=level != 'error',
             parse_mode='HTML',
         )
