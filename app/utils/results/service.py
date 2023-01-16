@@ -184,7 +184,7 @@ async def update_student_course_results(  # pylint: disable=too-many-statements
         session.add(student_course)
 
 
-async def update_sc_results_final(  # pylint: disable=too-many-statements
+async def update_sc_results_final(  # pylint: disable=too-many-statements  # noqa: C901
     student: Student,
     course: Course,
     course_levels: list[CourseLevels],

@@ -15,7 +15,7 @@ def get_need_time(total: int, current: int, avg_speed: float) -> str:
     return time.strftime('%X', time.gmtime((total - current) / avg_speed))
 
 
-async def tqdm(
+async def tqdm(  # noqa: C901
     iterable: tp.Any,
     total: int | None = None,
     # end='',

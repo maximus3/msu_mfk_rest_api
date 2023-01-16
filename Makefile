@@ -34,7 +34,7 @@ MESSAGE = "Done"
 endif
 
 TEST = $(POETRY_RUN) pytest --verbosity=2 --showlocals --log-level=DEBUG
-CODE = app tests
+CODE = app tools tests
 
 HELP_FUN = \
 	%help; while(<>){push@{$$help{$$2//'options'}},[$$1,$$3] \
@@ -335,6 +335,11 @@ get-scheduler-logs: ##@Application Get scheduler logs
 	scp -P $(PORT) $(USERNAME)@$(HOST):/tmp/$(FILENAME) logs/$(FILENAME)
 	ssh -p $(PORT) $(USERNAME)@$(HOST) "rm /tmp/$(FILENAME); exit;"
 	echo "Done"
+
+.PHONY: run-job
+run-job: ##@Application Run scheduler job
+	$(eval JOB_NAME=$(args))
+	$(VENV_BIN)/python -m tools runjob $(JOB_NAME)
 
 %::
 	echo $(MESSAGE)
