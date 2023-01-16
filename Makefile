@@ -337,7 +337,11 @@ get-scheduler-logs: ##@Application Get scheduler logs
 	echo "Done"
 
 .PHONY: run-job
-run-job: ##@Application Run scheduler job
+run-job: ##@Application Run scheduler job in docker
+	docker exec scheduler make run-job $(args)
+
+.PHONY: run-job-local
+run-job-local: ##@Application Run scheduler job local
 	$(eval JOB_NAME=$(args))
 	$(VENV_BIN)/python -m tools runjob $(JOB_NAME)
 
