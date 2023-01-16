@@ -33,6 +33,7 @@ COPY log.ini log.ini
 
 COPY app app
 COPY static static
+COPY tools tools
 
 ENTRYPOINT []
 CMD ["make", "up"]
