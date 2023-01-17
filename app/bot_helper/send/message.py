@@ -11,3 +11,10 @@ async def send_message(message: str, level: str = 'error') -> None:
             parse_mode='HTML',
         )
         message = message[4000:]
+
+
+async def send_traceback_message(
+    message: str, code: str, level: str = 'error'
+) -> None:
+    message = f'{message}\n\n<code>{code.replace("<", "&lt;").replace(">", "&gt;")}</code>'
+    return await send_message(message, level)
