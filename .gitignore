@@ -117,7 +117,6 @@ db/*
 !db/README.md
 
 deploy/*
-!deploy/*.sh
 !deploy/README.md
 
 logs/*

@@ -355,5 +355,16 @@ add-ssh-key-to-server: ##@Server Add ssh key to server
 	ssh-copy-id -i ~/.ssh/id_rsa.pub -p $(PORT) $(USERNAME)@$(HOST)
 	echo "Done"
 
+.PHOMY: generate-deploy-key
+generate-deploy-key: ##@Deploy Generate deploy key
+	$(eval PORT=$(shell cat deploy/port.txt))
+	$(eval HOST=$(shell cat deploy/host.txt))
+	$(eval USERNAME=$(shell cat deploy/username.txt))
+
+	test -e deploy/id_rsa && (echo "Deploy key already exists, remove deploy/id_rsa to generate new one" && exit 1)
+	echo "Generating deploy key"
+	ssh-keygen -t rsa -b 4096 -C "$(USERNAME)@$(HOST)" -q -N "" -f deploy/id_rsa
+	ssh-copy-id -i deploy/id_rsa.pub -p $(PORT) $(USERNAME)@$(HOST)
+
 %::
 	echo $(MESSAGE)

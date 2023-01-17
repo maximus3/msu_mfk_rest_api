@@ -3,19 +3,18 @@
 ## 1. Generate files
 
 ```bash
-echo YOUR_HOSTNAME > host.txt
-echo YOUR_USERNAME > username.txt
-echo YOUR_PORT > port.txt
+echo YOUR_HOSTNAME > deploy/host.txt
+echo YOUR_USERNAME > deploy/username.txt
+echo YOUR_PORT > deploy/port.txt
 ```
 
 ## 2. Generate files
 
 ```bash
-chmod +x generate.sh
-./generate.sh
+make generate-deploy-key
 ```
 
-## 3. Add Github/Gitlab Secrets
+## 3. Add GitHub/Gitlab Secrets
 
 - `.env` to `ENV`
 - `host.txt` to `SSH_ADRESS`
