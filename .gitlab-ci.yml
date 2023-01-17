@@ -10,12 +10,8 @@ cache:
     - .venv/
 
 before_script:
-  - python -V
-  - python -m venv .venv
-  - source .venv/bin/activate
-  - python -m pip install --upgrade pip
-  - python -m pip install poetry
-  - poetry install
+  - make venv
+  - make install
 
 stages:
   - lint
@@ -24,11 +20,7 @@ stages:
 lint:
   stage: lint
   script:
-    - flake8 --jobs 4 --statistics --show-source $CODE
-    - pylint --jobs 4 $CODE
-    - mypy $CODE
-    - black --line-length 79 --target-version py39 --skip-string-normalization --check $CODE
-    - pytest --dead-fixtures --dup-fixtures
+    - make lint
 
 test:
   stage: test
@@ -41,4 +33,4 @@ test:
   services:
     - name: postgres:14.5
   script:
-    - pytest --verbosity=2 --showlocals --log-level=DEBUG --cov
+    - make test-mp
