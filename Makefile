@@ -345,5 +345,15 @@ run-job-local: ##@Application Run scheduler job local
 	$(eval JOB_NAME=$(args))
 	$(VENV_BIN)/python -m tools runjob $(JOB_NAME)
 
+.PHONY: add-ssh-key-to-server
+add-ssh-key-to-server: ##@Server Add ssh key to server
+	$(eval PORT=$(shell cat deploy/port.txt))
+	$(eval HOST=$(shell cat deploy/host.txt))
+	$(eval USERNAME=$(shell cat deploy/username.txt))
+
+	echo "Add ssh key to server"
+	ssh-copy-id -i ~/.ssh/id_rsa.pub -p $(PORT) $(USERNAME)@$(HOST)
+	echo "Done"
+
 %::
 	echo $(MESSAGE)
