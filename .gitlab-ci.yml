@@ -2,7 +2,7 @@ image: python:3.10
 
 variables:
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
-  CODE: "app tests"
+  CODE: "app tests tools"
 
 cache:
   paths:
@@ -20,6 +20,7 @@ stages:
 lint:
   stage: lint
   script:
+    - make env
     - make lint
 
 test:
@@ -33,4 +34,5 @@ test:
   services:
     - name: postgres:14.5
   script:
+    - make env
     - make test-mp
