@@ -9,7 +9,7 @@ from app.database.models import (
     StudentCourse,
     StudentCourseLevels,
 )
-from app.schemas import ContestResults, CourseResults
+from app.schemas import ContestResults, CourseLevelResults, CourseResults
 from app.schemas.contest import ContestTag
 from app.utils.common import get_datetime_msk_tz
 from app.utils.contest import get_contests_with_relations
@@ -18,7 +18,9 @@ from app.utils.contest import get_contests_with_relations
 async def get_student_course_results(
     student: Student,
     course: Course,
+    course_levels: list[CourseLevels],
     student_course: StudentCourse,
+    student_course_levels: list[StudentCourseLevels],
     session: AsyncSession,
 ) -> CourseResults:
     logger = logging.getLogger(__name__)
@@ -129,6 +131,13 @@ async def get_student_course_results(
             if student_course.is_ok or student_course.is_ok_final
             else tmp[course.short_name]
         ),
+        course_levels=[
+            CourseLevelResults(
+                name=level.level_name,
+                is_ok=sc_level.is_ok,
+            )
+            for level, sc_level in zip(course_levels, student_course_levels)
+        ],
     )
 
 

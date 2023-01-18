@@ -46,8 +46,13 @@ async def get_all_results(
         )
     return StudentResults(
         courses=[
-            await get_student_course_results(
-                student, course, student_course, session
+            await get_student_course_results(  # TODO
+                student,
+                course,
+                course_levels,
+                student_course,
+                student_course_levels,
+                session,
             )
             for course, student_course in await get_student_courses(
                 session, student.id
@@ -148,7 +153,9 @@ async def fill_results_archive(  # pylint: disable=too-many-statements
                 try:
                     await send_message(
                         f'Error while filling pdf {filename.name}: '
-                        f'<code>{exc}\n{traceback.format_exc().replace("<", "&lt;").replace(">", "&gt;")}</code>'
+                        f'<code>{exc}\n'
+                        f'{traceback.format_exc().replace("<", "&lt;").replace(">", "&gt;")}'
+                        f'</code>'
                     )
                 except Exception as send_exc:  # pylint: disable=broad-except
                     logger.exception(

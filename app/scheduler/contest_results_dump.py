@@ -75,7 +75,12 @@ async def get_course_results(
                 )
             await session.commit()
             student_results = await get_student_course_results(
-                student, course, student_course, session=session
+                student,
+                course,
+                course_levels,
+                student_course,
+                student_course_levels,
+                session=session,
             )
             students_departments_results.append(
                 (student, department, student_results)
@@ -126,6 +131,12 @@ async def get_course_results(
                             f'lecture_{contest_results.lecture}_'
                             f'level_{level.name}'
                         )
+        for course_level in student_results.course_levels:
+            course_results.results[student.contest_login][
+                f'level_{course_level.name}'
+            ] = course_level.is_ok
+            if keys_add:
+                course_results.keys.append(f'level_{course_level.name}')
         keys_add = False
 
     course_results.keys.append('score_sum')

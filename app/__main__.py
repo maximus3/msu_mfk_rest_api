@@ -24,12 +24,13 @@ async def exception_handler(
     ]
     for key, value in request.items():
         message_list.append(f'\t- {key}: {value}')
+    exc_text = traceback.format_exc().replace('<', '&lt;').replace('>', '&gt;')
     message_list.extend(
         [
             '',
             f'EXCEPTION: <code>{exc}',
             '',
-            f'{traceback.format_exc().replace("<", "&lt;").replace(">", "&gt;")}</code>',
+            f'{exc_text}</code>',
         ]
     )
     await send_message(

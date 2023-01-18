@@ -10,7 +10,12 @@ from .course.course import CourseBase, CourseResponse
 from .course.results import CourseResultsCSV
 from .department.department import DepartmentBase, DepartmentResponse
 from .register.register import RegisterRequest, RegisterResponse
-from .results.results import ContestResults, CourseResults, StudentResults
+from .results.results import (
+    ContestResults,
+    CourseLevelResults,
+    CourseResults,
+    StudentResults,
+)
 from .status.database import DatabaseStatus
 
 
@@ -39,4 +44,5 @@ __all__ = [
     'ContestCreateRequest',
     'YandexContestInfo',
     'ContestInfoResponse',
+    'CourseLevelResults',
 ]

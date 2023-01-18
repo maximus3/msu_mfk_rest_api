@@ -25,6 +25,13 @@ class ContestResults(BaseModel):
     deadline: str
 
 
+class CourseLevelResults(BaseModel):
+    """Course Level Results"""
+
+    name: str
+    is_ok: bool
+
+
 class CourseResults(BaseModel):
     name: str
     contests: list[ContestResults]
@@ -34,6 +41,7 @@ class CourseResults(BaseModel):
     is_ok_final: bool
     perc_ok: int
     str_need: str
+    course_levels: list[CourseLevelResults]
 
 
 class StudentResults(BaseModel):
