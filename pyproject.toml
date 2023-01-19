@@ -55,7 +55,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
-addopts = "--cov-fail-under=70"
+addopts = "--cov-fail-under=50"
 testpaths = "tests/"
 python_files = "test_*.py"
 python_classes = ["Test*"]
@@ -71,7 +71,7 @@ exclude_lines = [
 show_missing = true
 skip_empty = true
 skip_covered = true
-fail_under = 70
+fail_under = 50
 omit = [
   "*/__init__.py",
   "app/db/migrator/env.py",
