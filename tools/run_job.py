@@ -4,7 +4,7 @@ import logging
 from app.scheduler import list_of_jobs
 
 
-def main(job_name):
+def main(job_name: str) -> None:
     logger = logging.getLogger(__name__)
     jobs = list(
         filter(lambda job_info: job_info['name'] == job_name, list_of_jobs)

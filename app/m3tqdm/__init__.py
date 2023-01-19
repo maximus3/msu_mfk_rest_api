@@ -15,7 +15,7 @@ def get_need_time(total: int, current: int, avg_speed: float) -> str:
     return time.strftime('%X', time.gmtime((total - current) / avg_speed))
 
 
-async def tqdm(  # noqa: C901
+async def tqdm(  # noqa: C901  # pylint: disable=too-many-branches
     iterable: tp.Any,
     total: int | None = None,
     # end='',
@@ -52,7 +52,7 @@ async def tqdm(  # noqa: C901
     message_id = None
     prev_time = start_time - 100
     was_send = False
-    while True:
+    while True:  # pylint: disable=too-many-nested-blocks
         need_time = get_need_time(total or 0, current, avg_speed)
         need_time_for_all = get_need_time(total or 0, 0, avg_speed)
         avg_data = (
@@ -89,7 +89,7 @@ async def tqdm(  # noqa: C901
                     was_send = True
                 except RetryAfter:
                     pass
-                except Exception as exc:
+                except Exception as exc:  # pylint: disable=broad-except
                     await send_traceback_message(
                         f'Error while send_or_edit_func '
                         f'(message_id={message_id}): {exc}',
@@ -108,12 +108,12 @@ async def tqdm(  # noqa: C901
                 '%X', time.gmtime(time.time() - start_time)
             )
         except StopIteration:
-            if not was_send:
+            if not was_send and send_or_edit_func:
                 try:
                     message_id = await send_or_edit_func(text, message_id)
                 except RetryAfter:
                     pass
-                except Exception as exc:
+                except Exception as exc:  # pylint: disable=broad-except
                     await send_traceback_message(
                         f'Error while send_or_edit_func '
                         f'(message_id={message_id}): {exc}',

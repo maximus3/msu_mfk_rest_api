@@ -4,7 +4,7 @@ from app.bot_helper import bot
 from app.config import get_settings
 
 
-async def send_or_edit(message: str, message_id: str | None = None) -> None:
+async def send_or_edit(message: str, message_id: str | None = None) -> str:
     if message_id:
         try:
             await bot.bot.edit_message_text(
@@ -24,4 +24,4 @@ async def send_or_edit(message: str, message_id: str | None = None) -> None:
                 disable_notification=True,
             )
         ).message_id
-    return message_id
+    return message_id  # type: ignore  # TODO

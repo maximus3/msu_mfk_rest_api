@@ -175,7 +175,8 @@ async def job() -> None:
             )
             try:
                 await send_traceback_message(
-                    f'Error while getting course results for {course.name}: {exc}',
+                    f'Error while getting course '
+                    f'results for {course.name}: {exc}',
                     code=traceback.format_exc(),
                 )
             except Exception as send_exc:  # pylint: disable=broad-except

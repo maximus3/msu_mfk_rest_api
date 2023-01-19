@@ -1,3 +1,5 @@
+# pylint: disable=too-many-lines
+
 import logging
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -15,7 +17,7 @@ from app.utils.common import get_datetime_msk_tz
 from app.utils.contest import get_contests_with_relations
 
 
-async def get_student_course_results(
+async def get_student_course_results(  # pylint: disable=too-many-arguments
     student: Student,
     course: Course,
     course_levels: list[CourseLevels],
@@ -193,7 +195,7 @@ async def update_student_course_results(  # pylint: disable=too-many-statements
         session.add(student_course)
 
 
-async def update_sc_results_final(  # pylint: disable=too-many-statements  # noqa: C901
+async def update_sc_results_final(  # pylint: disable=too-many-statements,too-many-arguments,too-many-branches  # noqa: C901
     student: Student,
     course: Course,
     course_levels: list[CourseLevels],
@@ -212,7 +214,10 @@ async def update_sc_results_final(  # pylint: disable=too-many-statements  # noq
         level.level_name: True for level in course_levels
     }
 
-    for contest, student_contest in await get_contests_with_relations(
+    for (  # pylint: disable=too-many-nested-blocks
+        contest,
+        student_contest,
+    ) in await get_contests_with_relations(
         session,
         course.id,
         student.id,

@@ -51,7 +51,8 @@ async def job() -> None:
             )
             try:
                 await send_traceback_message(
-                    f'Error while updating course results for {course.name}: {exc}',
+                    f'Error while updating course '
+                    f'results for {course.name}: {exc}',
                     code=traceback.format_exc(),
                 )
             except Exception as send_exc:  # pylint: disable=broad-except
@@ -148,14 +149,12 @@ async def process_contest(  # pylint: disable=too-many-arguments
                 exc_info=exc,
             )
             try:
-                await send_message(
-                    f'Error while updating course results '
+                await send_traceback_message(
+                    'Error while updating course results '
                     f'for course {course.name}, '
                     f'contest {contest.yandex_contest_id}, '
-                    f'student {student.contest_login}: '
-                    f'<code>{exc}\n'
-                    f'{traceback.format_exc().replace("<", "&lt;").replace(">", "&gt;")}'
-                    f'</code>'
+                    f'student {student.contest_login}: {exc}',
+                    code=traceback.format_exc(),
                 )
             except Exception as send_exc:  # pylint: disable=broad-except
                 logger.exception(
