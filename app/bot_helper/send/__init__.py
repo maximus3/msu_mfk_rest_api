@@ -1,3 +1,4 @@
+# pylint: disable=duplicate-code
 from .db_dump import send_db_dump
 from .message import send_message, send_traceback_message
 from .ping_status import send_ping_status
