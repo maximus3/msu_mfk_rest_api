@@ -6,7 +6,7 @@ from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
 
-from app.bot_helper import send_message, send_or_edit
+from app.bot_helper import send_or_edit, send_traceback_message
 from app.bot_helper.send import send_results
 from app.database.connection import SessionManager
 from app.database.models import Course, CourseLevels
@@ -174,9 +174,9 @@ async def job() -> None:
                 exc,
             )
             try:
-                await send_message(
-                    f'Error while getting course results for {course.name}'
-                    f': <code>{exc}\n{traceback.format_exc().replace("<", "&lt;").replace(">", "&gt;")}</code>'
+                await send_traceback_message(
+                    f'Error while getting course results for {course.name}: {exc}',
+                    code=traceback.format_exc(),
                 )
             except Exception as send_exc:  # pylint: disable=broad-except
                 logger.exception(

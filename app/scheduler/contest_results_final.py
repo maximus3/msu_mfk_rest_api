@@ -5,7 +5,7 @@ import traceback
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.bot_helper import send_message, send_or_edit
+from app.bot_helper import send_message, send_or_edit, send_traceback_message
 from app.database.connection import SessionManager
 from app.database.models import (
     Contest,
@@ -50,11 +50,9 @@ async def job() -> None:
                 exc,
             )
             try:
-                await send_message(
-                    f'Error while updating course results for {course.name}'
-                    f': <code>{exc}\n'
-                    f'{traceback.format_exc().replace("<", "&lt;").replace(">", "&gt;")}'
-                    f'</code>'
+                await send_traceback_message(
+                    f'Error while updating course results for {course.name}: {exc}',
+                    code=traceback.format_exc(),
                 )
             except Exception as send_exc:  # pylint: disable=broad-except
                 logger.exception(
