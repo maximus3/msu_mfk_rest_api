@@ -1,11 +1,5 @@
 name: Main CI
 
-on:
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
-
 jobs:
   check:
 
@@ -63,6 +57,7 @@ jobs:
 
     runs-on: ubuntu-latest
     needs: [ check ]
+    if: ${{ github.ref == 'refs/heads/main' }}
     steps:
     - uses: actions/checkout@v3
     
