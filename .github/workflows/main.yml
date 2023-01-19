@@ -37,6 +37,7 @@ jobs:
     #----------------------------------------------
     - name: Install Poetry and dependencies
       run: |
+        make env
         make venv
         make install
     #----------------------------------------------
@@ -54,7 +55,6 @@ jobs:
       
     - name: Run tests
       run: |
-        make env
         printf "APP_HOST=localhost\n" >> .env
         make db
         sudo make test-mp
