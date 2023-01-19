@@ -16,5 +16,9 @@ async def send_message(message: str, level: str = 'error') -> None:
 async def send_traceback_message(
     message: str, code: str, level: str = 'error'
 ) -> None:
-    message = f'{message}\n\n<code>{code.replace("<", "&lt;").replace(">", "&gt;")}</code>'
+    message = (
+        f'{message}\n\n<code>'
+        f'{code.replace("<", "&lt;").replace(">", "&gt;")}'
+        f'</code>'
+    )
     return await send_message(message, level)

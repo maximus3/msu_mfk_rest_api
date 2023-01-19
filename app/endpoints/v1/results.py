@@ -8,12 +8,18 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile, status
 from fastapi.responses import FileResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.bot_helper import send_message
+from app.bot_helper import send_traceback_message
 from app.database.connection import SessionManager
 from app.database.models import User
 from app.schemas import StudentResults
 from app.utils.common import fill_pdf
-from app.utils.course import get_course_by_short_name, get_student_courses
+from app.utils.course import (
+    get_all_courses,
+    get_course_by_short_name,
+    get_course_levels,
+    get_or_create_student_course_level,
+    get_student_courses,
+)
 from app.utils.results import get_student_course_results
 from app.utils.student import get_student
 from app.utils.user import get_current_user
@@ -44,14 +50,24 @@ async def get_all_results(
             status_code=status.HTTP_404_NOT_FOUND,
             detail='Student not found',
         )
+    all_courses = await get_all_courses(session)
+    levels_by_course = {
+        course.id: await get_course_levels(session, course.id)
+        for course in all_courses
+    }
     return StudentResults(
         courses=[
-            await get_student_course_results(  # TODO
+            await get_student_course_results(
                 student,
                 course,
-                course_levels,
+                levels_by_course[course.id],
                 student_course,
-                student_course_levels,
+                [
+                    await get_or_create_student_course_level(
+                        session, student.id, course.id, course_level.id
+                    )
+                    for course_level in levels_by_course[course.id]
+                ],
                 session,
             )
             for course, student_course in await get_student_courses(
@@ -151,11 +167,9 @@ async def fill_results_archive(  # pylint: disable=too-many-statements
             except Exception as exc:  # pylint: disable=broad-except
                 logger.exception('Error while filling pdf', exc_info=exc)
                 try:
-                    await send_message(
-                        f'Error while filling pdf {filename.name}: '
-                        f'<code>{exc}\n'
-                        f'{traceback.format_exc().replace("<", "&lt;").replace(">", "&gt;")}'
-                        f'</code>'
+                    await send_traceback_message(
+                        f'Error while filling pdf {filename.name}: {exc}',
+                        code=traceback.format_exc(),
                     )
                 except Exception as send_exc:  # pylint: disable=broad-except
                     logger.exception(

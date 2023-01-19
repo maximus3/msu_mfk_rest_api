@@ -8,7 +8,7 @@ from pathlib import Path
 
 from aiogram.utils.exceptions import RetryAfter
 
-from app.bot_helper import send_message
+from app.bot_helper import send_traceback_message
 
 
 def get_need_time(total: int, current: int, avg_speed: float) -> str:
@@ -90,12 +90,10 @@ async def tqdm(  # noqa: C901
                 except RetryAfter:
                     pass
                 except Exception as exc:
-                    await send_message(
+                    await send_traceback_message(
                         f'Error while send_or_edit_func '
-                        f'(message_id={message_id}):\n'
-                        f': <code>{exc}\n'
-                        f'{traceback.format_exc().replace("<", "&lt;").replace(">", "&gt;")}'
-                        f'</code>'
+                        f'(message_id={message_id}): {exc}',
+                        code=traceback.format_exc(),
                     )
             else:
                 was_send = False
@@ -116,12 +114,10 @@ async def tqdm(  # noqa: C901
                 except RetryAfter:
                     pass
                 except Exception as exc:
-                    await send_message(
+                    await send_traceback_message(
                         f'Error while send_or_edit_func '
-                        f'(message_id={message_id}):\n'
-                        f': <code>{exc}\n'
-                        f'{traceback.format_exc().replace("<", "&lt;").replace(">", "&gt;")}'
-                        f'</code>'
+                        f'(message_id={message_id}): {exc}',
+                        code=traceback.format_exc(),
                     )
             break
 
