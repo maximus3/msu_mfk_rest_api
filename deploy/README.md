@@ -17,7 +17,7 @@ make generate-deploy-key
 ## 3. Add GitHub/Gitlab Secrets
 
 - `.env` to `ENV`
-- `host.txt` to `SSH_ADRESS`
+- `host.txt` to `SSH_ADDRESS`
 - `port.txt` to `SSH_PORT`
 - `username.txt` to `SSH_USERNAME`
 - `id_rsa` to `SSH_KEY`
