@@ -1,20 +1,27 @@
 stages:
   - build
   - check
+#  - publish
+  - deploy
+
 
 variables:
   TAG_LATEST: $CI_REGISTRY_IMAGE/$CI_COMMIT_REF_NAME:latest
   TAG_COMMIT: $CI_REGISTRY_IMAGE/$CI_COMMIT_REF_NAME:$CI_COMMIT_SHORT_SHA
   PYTHON_IMAGE: python:3.10
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
-  CODE: "app tests tools"
+  REPO_NAME: $CI_PROJECT_NAME
+  REPO_URL: $CI_PROJECT_URL
+  REPO_BRANCH: $CI_COMMIT_REF_NAME
+  CODE_FOLDER: $REPO_NAME-$REPO_BRANCH
+
 
 build:
   image: $PYTHON_IMAGE
   stage: build
   artifacts:
     paths:
-      - .cache/pip
+#      - .cache/pip
       - .venv/
       - .env
   script:
@@ -22,11 +29,13 @@ build:
     - make venv
     - make install
 
+
 lint:
   image: $PYTHON_IMAGE
   stage: check
   script:
     - make lint
+
 
 test:
   image: $PYTHON_IMAGE
@@ -43,3 +52,48 @@ test:
     - printf "POSTGRES_HOST=postgres\n" >> .env
   script:
     - make test-mp
+
+
+#publish:
+#  image: docker:20.10.16
+#  stage: publish
+#  tags:
+#    - docker
+#  variables:
+#    DOCKER_HOST: tcp://docker:2375
+#    DOCKER_TLS_CERTDIR: ""
+#  services:
+#    - name: docker:20.10.16-dind
+#      command: ["--tls=false"]
+#  script:
+#    - docker build -t $TAG_COMMIT -t $TAG_LATEST .
+#    - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY
+#    - docker push $TAG_COMMIT
+#    - docker push $TAG_LATEST
+#  only:
+#    - master
+
+
+deploy:
+  image: ubuntu:20.04
+  stage: deploy
+  before_script:
+    - apt-get update && apt-get install openssh-client -y
+    - mkdir -p ~/.ssh
+    - cat $SSH_KEY > ~/.ssh/deploy_key
+    - chmod 600 ~/.ssh/deploy_key
+    - ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -p $SSH_PORT $SSH_USERNAME@$SSH_ADDRESS "echo "Ping" && exit"
+  script:
+    - echo "$CI_DEPLOY_USER $CI_DEPLOY_PASSWORD"
+    - ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -p $SSH_PORT $SSH_USERNAME@$SSH_ADDRESS "
+        [ -e $CODE_FOLDER ] || (git clone https://$CI_DEPLOY_USER:$CI_DEPLOY_PASSWORD@$CI_SERVER_HOST/$CI_PROJECT_NAMESPACE/$REPO_NAME.git $CODE_FOLDER && 
+        cd $CODE_FOLDER && git checkout $REPO_BRANCH && git pull) && exit"
+
+    - scp -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -P $SSH_PORT $ENV $SSH_USERNAME@$SSH_ADDRESS:/home/$SSH_USERNAME/$CODE_FOLDER/.env
+    - ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -p $SSH_PORT $SSH_USERNAME@$SSH_ADDRESS "
+        cd $CODE_FOLDER && 
+        git pull &&
+        make update &&
+        exit"
+  only:
+    - master
