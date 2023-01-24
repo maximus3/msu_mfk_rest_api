@@ -17,7 +17,8 @@ async def send_traceback_message(
     message: str, code: str, level: str = 'error'
 ) -> None:
     message = (
-        f'{message}\n\n<code>'
+        f'{message.replace("<", "&lt;").replace(">", "&gt;")}\n\n'
+        f'<code>'
         f'{code.replace("<", "&lt;").replace(">", "&gt;")}'
         f'</code>'
     )
