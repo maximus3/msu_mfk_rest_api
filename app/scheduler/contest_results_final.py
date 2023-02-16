@@ -23,7 +23,7 @@ from app.utils.contest import (
     get_or_create_student_contest,
     get_student_best_submissions,
 )
-from app.utils.course import get_all_courses, get_course_levels
+from app.utils.course import get_all_active_courses, get_course_levels
 from app.utils.scheduler import write_sql_tqdm
 from app.utils.student import get_students_by_course_with_department
 
@@ -31,7 +31,7 @@ from app.utils.student import get_students_by_course_with_department
 async def job() -> None:
     SessionManager().refresh()
     async with SessionManager().create_async_session() as session:
-        courses = await get_all_courses(session)
+        courses = await get_all_active_courses(session)
     logger = logging.getLogger(__name__)
     async for course in tqdm(
         courses,

@@ -26,7 +26,7 @@ from app.utils.contest import (
     get_student_contest_relation,
 )
 from app.utils.contest.database import get_ok_author_ids
-from app.utils.course import get_all_courses
+from app.utils.course import get_all_active_courses
 from app.utils.scheduler import write_sql_tqdm
 from app.utils.student import get_students_by_course_with_department
 
@@ -301,7 +301,7 @@ async def update_course_results(
 async def job() -> None:
     SessionManager().refresh()
     async with SessionManager().create_async_session() as session:
-        courses = await get_all_courses(session)
+        courses = await get_all_active_courses(session)
     logger = logging.getLogger(__name__)
     async for course in tqdm(
         courses,

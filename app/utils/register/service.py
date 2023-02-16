@@ -24,6 +24,8 @@ async def register_student_on_course(
     course = await get_course(session, data.course)
     if course is None:
         return DatabaseStatus.NOT_FOUND, 'Course not found'
+    if not course.is_open_registration or course.is_archive:
+        return DatabaseStatus.ERROR, 'Registration is closed'
     if await is_student_registered_on_course(session, student.id, course.id):
         return (
             DatabaseStatus.ALREADY_EXISTS,

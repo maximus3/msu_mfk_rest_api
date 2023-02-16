@@ -37,4 +37,12 @@ async def register(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=message,
         )
+    if (
+        result_status == DatabaseStatus.ERROR
+        and message == 'Registration is closed'
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=message,
+        )
     raise HTTPException(status_code=500, detail=message)

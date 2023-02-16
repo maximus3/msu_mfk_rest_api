@@ -185,6 +185,30 @@ async def created_two_courses(session):  # type: ignore
 
 
 @pytest.fixture
+async def created_two_courses_with_archive(session):  # type: ignore
+    models = CourseFactory.create_batch(2)
+    models[0].is_archive = True
+    session.add_all(models)
+    await session.commit()
+    await asyncio.gather(*[session.refresh(model) for model in models])
+
+    yield models
+
+
+@pytest.fixture
+async def created_two_courses_with_closed_registration(
+    session,
+):  # type: ignore
+    models = CourseFactory.create_batch(2)
+    models[0].is_open_registration = False
+    session.add_all(models)
+    await session.commit()
+    await asyncio.gather(*[session.refresh(model) for model in models])
+
+    yield models
+
+
+@pytest.fixture
 async def created_four_contests_for_two_courses(session, created_two_courses):
     models_1 = ContestFactory.create_batch(
         2, course_id=created_two_courses[0].id
