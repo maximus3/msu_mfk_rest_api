@@ -13,7 +13,7 @@ from app.database.models import Course, CourseLevels
 from app.m3tqdm import tqdm
 from app.schemas import CourseResultsCSV
 from app.utils.course import (
-    get_all_courses,
+    get_all_active_courses,
     get_course_levels,
     get_or_create_student_course_level,
 )
@@ -148,7 +148,7 @@ async def get_course_results(
 async def job() -> None:
     SessionManager().refresh()
     async with SessionManager().create_async_session() as session:
-        courses = await get_all_courses(session)
+        courses = await get_all_active_courses(session)
         levels_by_course = [
             await get_course_levels(session, course.id) for course in courses
         ]

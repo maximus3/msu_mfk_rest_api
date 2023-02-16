@@ -29,6 +29,8 @@ class CourseFactory(Factory):
     channel_link = fuzzy.FuzzyText(length=10, prefix='https://')
     chat_link = fuzzy.FuzzyText(length=10, prefix='https://')
     lk_link = fuzzy.FuzzyText(length=10, prefix='https://')
+    is_open_registration = True
+    is_archive = False
 
 
 class DepartmentFactory(Factory):

@@ -14,7 +14,7 @@ from app.database.models import User
 from app.schemas import StudentResults
 from app.utils.common import fill_pdf
 from app.utils.course import (
-    get_all_courses,
+    get_all_active_courses,
     get_course_by_short_name,
     get_course_levels,
     get_or_create_student_course_level,
@@ -50,7 +50,7 @@ async def get_all_results(
             status_code=status.HTTP_404_NOT_FOUND,
             detail='Student not found',
         )
-    all_courses = await get_all_courses(session)
+    all_courses = await get_all_active_courses(session)
     levels_by_course = {
         course.id: await get_course_levels(session, course.id)
         for course in all_courses

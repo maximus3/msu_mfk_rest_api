@@ -23,6 +23,20 @@ class Course(BaseModel):
     default_update_on = sa.Column(
         sa.Boolean, default=True, nullable=False, server_default='true'
     )
+    is_open_registration = sa.Column(
+        sa.Boolean,
+        default=False,
+        nullable=False,
+        server_default='false',
+        doc='Is registration on this course open',
+    )
+    is_archive = sa.Column(
+        sa.Boolean,
+        default=False,
+        nullable=False,
+        server_default='false',
+        doc='Is course in archive (not show in api)',
+    )
 
 
 class CourseLevels(BaseModel):

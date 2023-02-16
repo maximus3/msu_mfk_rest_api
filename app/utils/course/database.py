@@ -19,8 +19,17 @@ async def get_course_by_short_name(
     return await session.scalar(query)
 
 
-async def get_all_courses(session: AsyncSession) -> list[Course]:
-    query = select(Course)
+async def get_all_active_courses(session: AsyncSession) -> list[Course]:
+    query = select(Course).where(~Course.is_archive)
+    return (await session.execute(query)).scalars().all()
+
+
+async def get_all_courses_with_open_registration(
+    session: AsyncSession,
+) -> list[Course]:
+    query = select(Course).where(
+        Course.is_open_registration, ~Course.is_archive
+    )
     return (await session.execute(query)).scalars().all()
 
 
@@ -58,6 +67,7 @@ async def get_student_courses(
         select(Course, StudentCourse)
         .where(Course.id == StudentCourse.course_id)
         .where(StudentCourse.student_id == student_id)
+        .where(~Course.is_archive)
     )
     return (await session.execute(query)).fetchall()
 

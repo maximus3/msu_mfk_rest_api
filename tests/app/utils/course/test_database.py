@@ -27,24 +27,91 @@ class TestGetCourseHandler:
         assert course_model == created_course
 
 
-class TestGetAllCoursesHandler:
-    async def test_get_all_courses_no_courses(self, session):
-        assert await course.get_all_courses(session=session) == []
+class TestGetAllActiveCoursesHandler:
+    async def test_no_courses(self, session):
+        assert await course.get_all_active_courses(session=session) == []
 
-    async def test_get_all_courses_ok(self, session, created_course):
-        courses = await course.get_all_courses(session=session)
+    async def test_ok(self, session, created_course):
+        courses = await course.get_all_active_courses(session=session)
         assert courses
         assert len(courses) == 1
         assert courses[0] == created_course
 
-    async def test_get_all_courses_ok_multiple(
-        self, session, created_two_courses
-    ):
-        courses = await course.get_all_courses(session=session)
+    async def test_ok_multiple(self, session, created_two_courses):
+        courses = await course.get_all_active_courses(session=session)
         assert courses
         assert len(courses) == 2
         assert sorted(courses, key=lambda x: x.name) == sorted(
             created_two_courses, key=lambda x: x.name
+        )
+
+    async def test_ok_multiple_archive(
+        self, session, created_two_courses_with_archive
+    ):
+        courses = await course.get_all_active_courses(session=session)
+        assert courses
+        assert len(courses) == 1
+        assert courses[0].name == created_two_courses_with_archive[1].name
+
+    async def test_ok_multiple_closed_registration(
+        self, session, created_two_courses_with_closed_registration
+    ):
+        courses = await course.get_all_active_courses(session=session)
+        assert courses
+        assert len(courses) == 2
+        assert sorted(courses, key=lambda x: x.name) == sorted(
+            created_two_courses_with_closed_registration, key=lambda x: x.name
+        )
+
+
+class TestGetAllCoursesWithOpenRegistrationHandler:
+    async def test_no_courses(self, session):
+        assert (
+            await course.get_all_courses_with_open_registration(
+                session=session
+            )
+            == []
+        )
+
+    async def test_ok(self, session, created_course):
+        courses = await course.get_all_courses_with_open_registration(
+            session=session
+        )
+        assert courses
+        assert len(courses) == 1
+        assert courses[0] == created_course
+
+    async def test_ok_multiple(self, session, created_two_courses):
+        courses = await course.get_all_courses_with_open_registration(
+            session=session
+        )
+        assert courses
+        assert len(courses) == 2
+        assert sorted(courses, key=lambda x: x.name) == sorted(
+            created_two_courses, key=lambda x: x.name
+        )
+
+    async def test_ok_multiple_archive(
+        self, session, created_two_courses_with_archive
+    ):
+        courses = await course.get_all_courses_with_open_registration(
+            session=session
+        )
+        assert courses
+        assert len(courses) == 1
+        assert courses[0].name == created_two_courses_with_archive[1].name
+
+    async def test_ok_multiple_closed_registration(
+        self, session, created_two_courses_with_closed_registration
+    ):
+        courses = await course.get_all_courses_with_open_registration(
+            session=session
+        )
+        assert courses
+        assert len(courses) == 1
+        assert (
+            courses[0].name
+            == created_two_courses_with_closed_registration[1].name
         )
 
 

@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.database.connection import SessionManager
 from app.database.models import Contest, Course, Student
 from app.utils.contest import add_student_to_contest, get_contests
-from app.utils.course import get_all_courses
+from app.utils.course import get_all_active_courses
 from app.utils.student import get_students_by_course_with_no_contest
 
 
@@ -81,7 +81,7 @@ async def job(
         async with SessionManager().create_async_session() as session:
             return await job(session=session)
     logger = logging.getLogger(__name__)
-    courses = await get_all_courses(session)
+    courses = await get_all_active_courses(session)
     for course in courses:
         logger.info('Course: %s', course)
         await check_students_for_contest_registration(session, course, logger)
