@@ -1,16 +1,33 @@
+from aiogram.utils.exceptions import CantParseEntities
+
 from app.bot_helper import bot
 from app.config import get_settings
 
 
 async def send_message(message: str, level: str = 'error') -> None:
     while len(message) > 0:
-        await bot.bot.send_message(
-            chat_id=get_settings().TG_ERROR_CHAT_ID,
-            text=message[:4000],
-            disable_notification=level != 'error',
-            parse_mode='HTML',
-        )
-        message = message[4000:]
+        try:
+            await bot.bot.send_message(
+                chat_id=get_settings().TG_ERROR_CHAT_ID,
+                text=message[:4000],
+                disable_notification=level != 'error',
+                parse_mode='HTML',
+            )
+            message = message[4000:]
+        except CantParseEntities as e:
+            if (
+                str(e) == 'Can\'t parse entities: can\'t find end '
+                'tag corresponding to start tag code'
+            ):
+                await bot.bot.send_message(
+                    chat_id=get_settings().TG_ERROR_CHAT_ID,
+                    text=message[:4000] + '</code>',
+                    disable_notification=level != 'error',
+                    parse_mode='HTML',
+                )
+                message = '<code>' + message[4000:]
+            else:
+                raise e
 
 
 async def send_traceback_message(
