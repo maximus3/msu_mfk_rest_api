@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile, status
 from fastapi.responses import FileResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.bot_helper import send_traceback_message
+from app.bot_helper import send
 from app.database.connection import SessionManager
 from app.database.models import User
 from app.schemas import StudentResults
@@ -167,7 +167,7 @@ async def fill_results_archive(  # pylint: disable=too-many-statements
             except Exception as exc:  # pylint: disable=broad-except
                 logger.exception('Error while filling pdf', exc_info=exc)
                 try:
-                    await send_traceback_message(
+                    await send.send_traceback_message(
                         f'Error while filling pdf {filename.name}: {exc}',
                         code=traceback.format_exc(),
                     )

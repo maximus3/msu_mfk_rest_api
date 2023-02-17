@@ -5,7 +5,7 @@ import traceback
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.bot_helper import send_message, send_or_edit, send_traceback_message
+from app.bot_helper import send
 from app.database.connection import SessionManager
 from app.database.models import (
     Contest,
@@ -38,7 +38,7 @@ async def job() -> None:
         name='contest_results_courses',
         logger=logger,
         sql_write_func=write_sql_tqdm,
-        send_or_edit_func=send_or_edit,
+        send_or_edit_func=send.send_or_edit,
     ):
         logger.info('Course: %s', course)
         try:
@@ -50,7 +50,7 @@ async def job() -> None:
                 exc,
             )
             try:
-                await send_traceback_message(
+                await send.send_traceback_message(
                     f'Error while updating course '
                     f'results for {course.name}: {exc}',
                     code=traceback.format_exc(),
@@ -61,7 +61,7 @@ async def job() -> None:
                 )
             continue
 
-    await send_message(
+    await send.send_message(
         'Results updated',
         level='info',
     )
@@ -87,7 +87,7 @@ async def update_course_results(
         name='contest_results_contests',
         logger=logger,
         sql_write_func=write_sql_tqdm,
-        send_or_edit_func=send_or_edit,
+        send_or_edit_func=send.send_or_edit,
     ):
         logger.info('Contest: %s', contest)
         course_score_sum += contest.score_max
@@ -124,7 +124,7 @@ async def process_contest(  # pylint: disable=too-many-arguments
         students_sc_departments,
         name='contest_results_students',
         sql_write_func=write_sql_tqdm,
-        send_or_edit_func=send_or_edit,
+        send_or_edit_func=send.send_or_edit,
     ):
         try:
             await process_student(
@@ -149,7 +149,7 @@ async def process_contest(  # pylint: disable=too-many-arguments
                 exc_info=exc,
             )
             try:
-                await send_traceback_message(
+                await send.send_traceback_message(
                     'Error while updating course results '
                     f'for course {course.name}, '
                     f'contest {contest.yandex_contest_id}, '

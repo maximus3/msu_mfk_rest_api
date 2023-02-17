@@ -4,7 +4,7 @@ from fastapi.requests import Request
 from fastapi.responses import JSONResponse
 from uvicorn import run
 
-from app.bot_helper import send_traceback_message
+from app.bot_helper import send
 from app.config import get_settings
 from app.creator import get_app
 from app.utils.common import get_hostname
@@ -30,7 +30,7 @@ async def exception_handler(
             f'EXCEPTION: {exc}',
         ]
     )
-    await send_traceback_message(
+    await send.send_traceback_message(
         '\n'.join(message_list), code=traceback.format_exc()
     )
     return JSONResponse(

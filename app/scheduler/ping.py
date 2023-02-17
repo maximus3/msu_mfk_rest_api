@@ -4,7 +4,7 @@ from itertools import product
 
 from httpx import AsyncClient
 
-from app.bot_helper import send_ping_status
+from app.bot_helper import send
 from app.config import get_settings
 from app.endpoints.v1 import prefix
 
@@ -56,7 +56,7 @@ async def job() -> None:
                 )
 
     try:
-        await send_ping_status(result)
+        await send.send_ping_status(result)
     except Exception as e:
         logger.error('Failed to send ping status: %s', e)
         raise e

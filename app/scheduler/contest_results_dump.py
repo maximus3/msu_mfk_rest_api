@@ -6,7 +6,7 @@ from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
 
-from app.bot_helper import send_or_edit, send_traceback_message
+from app.bot_helper import send
 from app.bot_helper.send import send_results
 from app.database.connection import SessionManager
 from app.database.models import Course, CourseLevels
@@ -52,7 +52,7 @@ async def get_course_results(
             name='contest_results_dump_students',
             logger=logger,
             sql_write_func=write_sql_tqdm,
-            send_or_edit_func=send_or_edit,
+            send_or_edit_func=send.send_or_edit,
         ):
             student_course_levels = [
                 await get_or_create_student_course_level(
@@ -160,7 +160,7 @@ async def job() -> None:
         name='contest_results_dump_courses',
         logger=logger,
         sql_write_func=write_sql_tqdm,
-        send_or_edit_func=send_or_edit,
+        send_or_edit_func=send.send_or_edit,
     ):
         logger.info('Course: %s', course)
         try:
@@ -174,7 +174,7 @@ async def job() -> None:
                 exc,
             )
             try:
-                await send_traceback_message(
+                await send.send_traceback_message(
                     f'Error while getting course '
                     f'results for {course.name}: {exc}',
                     code=traceback.format_exc(),

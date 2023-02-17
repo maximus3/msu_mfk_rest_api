@@ -5,7 +5,7 @@ from pathlib import Path
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.bot_helper import send_db_dump
+from app.bot_helper import send
 from app.config import DefaultSettings, get_settings
 from app.database.connection import SessionManager
 
@@ -84,7 +84,7 @@ async def job(filename: str | None = None) -> None:
                 if table_name == 'user':
                     table_name = '"user"'
                 await dump_table(f, table_name, settings)
-        await send_db_dump(filename)
+        await send.send_db_dump(filename)
     except Exception as e:
         logger.exception('Error while dumping db: %s', e)
         raise e
