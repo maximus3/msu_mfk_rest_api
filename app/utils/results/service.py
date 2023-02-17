@@ -24,6 +24,7 @@ async def get_student_course_results(  # pylint: disable=too-many-arguments
     student_course: StudentCourse,
     student_course_levels: list[StudentCourseLevels],
     session: AsyncSession,
+    log_obj_id: str,
 ) -> CourseResults:
     logger = logging.getLogger(__name__)
 
@@ -91,7 +92,7 @@ async def get_student_course_results(  # pylint: disable=too-many-arguments
     elif course.ok_method == 'score_sum':
         perc_ok = student_course.score_percent
     else:
-        logger.error('Unknown ok_method: %s', course.ok_method)
+        logger.error('Unknown ok_method: %s', course.ok_method, extra={'log_obj_id': log_obj_id})
         raise ValueError(f'Unknown ok_method: {course.ok_method}')
 
     tmp = {
@@ -112,6 +113,7 @@ async def get_student_course_results(  # pylint: disable=too-many-arguments
         'студент должен набрать 12 баллов без учета дедлайна) '
         'и решить итоговый контест на 9 баллов и выше.',
     }
+    logger.info('Student %s has course result', student.id, extra={'log_obj_id': log_obj_id})
 
     return CourseResults(
         name=course.name,

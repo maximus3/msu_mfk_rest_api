@@ -7,6 +7,7 @@ from pathlib import Path
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, status
 from fastapi.responses import FileResponse
 from sqlalchemy.ext.asyncio import AsyncSession
+from starlette.requests import Request
 
 from app.bot_helper import send
 from app.database.connection import SessionManager
@@ -37,6 +38,7 @@ api_router = APIRouter(
     status_code=status.HTTP_200_OK,
 )
 async def get_all_results(
+    request: Request,
     student_login: str,
     _: User = Depends(get_current_user),
     session: AsyncSession = Depends(SessionManager().get_async_session),
@@ -44,6 +46,8 @@ async def get_all_results(
     """
     Get student results for a specific course.
     """
+    logger = logging.getLogger(__name__)
+    logger.info('Test', log_obj_id=request['request_id'])
     student = await get_student(session, student_login)
     if student is None:
         raise HTTPException(
@@ -69,6 +73,7 @@ async def get_all_results(
                     for course_level in levels_by_course[course.id]
                 ],
                 session,
+                request['request_id']
             )
             for course, student_course in await get_student_courses(
                 session, student.id
