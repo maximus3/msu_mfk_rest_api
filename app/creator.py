@@ -53,6 +53,17 @@ class UniqueIDMiddleware(BaseHTTPMiddleware):
                 },
                 'uuid': request['request_id'],
             }
+            response.headers['log_id'] = request['request_id']
+            if response.headers.get('log_contest_login'):
+                request_info_dict.update(
+                    {
+                        'student': {
+                            'contest_login': response.headers[
+                                'log_contest_login'
+                            ]
+                        }
+                    }
+                )
             with loguru.logger.contextualize(**request_info_dict):
                 loguru.logger.info(
                     '{request[client]} - "{request[method]} {request[path]} '
