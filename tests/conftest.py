@@ -118,7 +118,7 @@ async def client(  # type: ignore
     """
     Returns a client that can be used to interact with the application.
     """
-    app = get_app()
+    app = get_app(set_up_logger=False)
     yield AsyncClient(app=app, base_url='http://test')
 
 
