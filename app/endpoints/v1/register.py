@@ -42,9 +42,7 @@ async def register(
     )
     if result_status == DatabaseStatus.OK:
         return JSONResponse(
-            RegisterResponse(
-                contest_login=data.contest_login
-            ).dict(),
+            RegisterResponse(contest_login=data.contest_login).dict(),
             headers=headers,
         )
     if result_status == DatabaseStatus.ALREADY_EXISTS:
