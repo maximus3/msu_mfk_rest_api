@@ -1,5 +1,7 @@
+import loguru
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
+from starlette.requests import Request
 
 from app.database.connection import SessionManager
 from app.database.models import User
@@ -20,11 +22,15 @@ api_router = APIRouter(
     status_code=status.HTTP_201_CREATED,
 )
 async def register(
+    request: Request,
     data: RegisterRequest,
     _: User = Depends(get_current_user),
     session: AsyncSession = Depends(SessionManager().get_async_session),
 ) -> RegisterResponse:
-    result_status, message = await register_student_on_course(session, data)
+    logger = loguru.logger.bind(uuid=request['request_id'])
+    result_status, message = await register_student_on_course(
+        session, data, logger=logger
+    )
     if result_status == DatabaseStatus.OK:
         return RegisterResponse(contest_login=data.contest_login)
     if result_status == DatabaseStatus.ALREADY_EXISTS:

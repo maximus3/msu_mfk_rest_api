@@ -20,6 +20,13 @@ async def get_student(
     return await session.scalar(query)
 
 
+async def get_student_by_token(
+    session: AsyncSession, token: str
+) -> Student | None:
+    query = select(Student).where(Student.token == token)
+    return await session.scalar(query)
+
+
 async def get_students_by_course(
     session: AsyncSession, course_id: UUID
 ) -> list[Student]:
