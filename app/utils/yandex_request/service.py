@@ -1,6 +1,5 @@
-import logging
-
 import httpx
+import loguru
 from httpx import AsyncClient, Response
 
 from app.config import get_settings
@@ -8,16 +7,16 @@ from app.config import get_settings
 
 async def make_request_to_yandex_contest_api(
     endpoint: str,
+    logger: 'loguru.Logger',
     method: str = 'GET',
     timeout: int | None = None,
     retry_count: int = 1,
 ) -> Response:
-    logger = logging.getLogger(__name__)
     settings = get_settings()
     while retry_count > 0:
         async with AsyncClient() as client:
             logger.debug(
-                'Making request to Yandex Contest API: %s %s (timeout: %s)',
+                'Making request to Yandex Contest API: {} {} (timeout: {})',
                 method,
                 f'{settings.YANDEX_CONTEST_API_URL}{endpoint}',
                 timeout,
@@ -54,7 +53,7 @@ async def make_request_to_yandex_contest_api(
     if retry_count == 0:
         raise httpx.ReadTimeout('Request to Yandex Contest API timed out')
     logger.debug(
-        'Yandex API request [%s]: %s %s.',
+        'Yandex API request [{}]: {} {}.',
         response.status_code,
         method,
         f'{settings.YANDEX_CONTEST_API_URL}{endpoint}',

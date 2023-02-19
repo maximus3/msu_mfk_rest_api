@@ -33,14 +33,6 @@ jobs:
       with:
         python-version: '3.10'
     #----------------------------------------------
-    #  -----  install & configure poetry  -----
-    #----------------------------------------------
-    - name: Install Poetry and dependencies
-      run: |
-        make env
-        make venv
-        make install
-    #----------------------------------------------
     #       load cached venv if cache exists
     #----------------------------------------------
     - name: Load cached venv
@@ -49,6 +41,14 @@ jobs:
       with:
         path: .venv
         key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('poetry.lock') }}
+    #----------------------------------------------
+    #  -----  install & configure poetry  -----
+    #----------------------------------------------
+    - name: Install Poetry and dependencies
+      run: |
+        make env
+        make venv
+        make install
 
     - name: Run lint
       run: make lint

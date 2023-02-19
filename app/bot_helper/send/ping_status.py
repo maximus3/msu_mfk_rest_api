@@ -1,3 +1,4 @@
+from app import constants
 from app.bot_helper import bot
 from app.config import get_settings
 from app.utils.common import get_datetime_msk_tz
@@ -10,7 +11,7 @@ async def send_ping_status(result: dict[str, dict[str, str]]) -> None:
     all_ok = True
     message = (
         f'Ping status (last update: '
-        f'{get_datetime_msk_tz().strftime("%Y-%m-%d %H:%M:%S")}):\n'
+        f'{get_datetime_msk_tz().strftime(constants.dt_format)}):\n'
     )
     for host, endpoints in result.items():
         message += f'\n{host}:\n'

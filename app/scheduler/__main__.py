@@ -1,8 +1,7 @@
 import asyncio
-import logging
 from datetime import datetime
 
-from aiomisc.log import basic_config
+import loguru
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from app.config import get_settings
@@ -21,19 +20,12 @@ def get_scheduler() -> AsyncIOScheduler:
 
 if __name__ == '__main__':
     settings = get_settings()
-    basic_config(
-        format=settings.LOGGING_FORMAT,
-        level=logging.DEBUG if settings.DEBUG else logging.INFO,
-        filename='scheduler.log',
-        buffered=True,
-        log_format='color',
-    )
-    logger = logging.getLogger(__name__)
     scheduler = get_scheduler()
     for job in scheduler.get_jobs():
         job.modify(next_run_time=datetime.now())
     scheduler.start()
     try:
+        loguru.logger.info('Starting scheduler')
         asyncio.get_event_loop().run_forever()
     except (KeyboardInterrupt, SystemExit):
-        logger.info('Scheduler stopped')
+        loguru.logger.info('Scheduler stopped')

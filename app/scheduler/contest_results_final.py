@@ -1,11 +1,12 @@
 # pylint: disable=too-many-lines,duplicate-code
 
-import logging
 import traceback
+import uuid
 
+import loguru
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.bot_helper import send_message, send_or_edit, send_traceback_message
+from app.bot_helper import send
 from app.database.connection import SessionManager
 from app.database.models import (
     Contest,
@@ -32,43 +33,44 @@ async def job() -> None:
     SessionManager().refresh()
     async with SessionManager().create_async_session() as session:
         courses = await get_all_active_courses(session)
-    logger = logging.getLogger(__name__)
+    logger = loguru.logger.bind(uuid=uuid.uuid4().hex)
     async for course in tqdm(
         courses,
         name='contest_results_courses',
         logger=logger,
         sql_write_func=write_sql_tqdm,
-        send_or_edit_func=send_or_edit,
+        send_or_edit_func=send.send_or_edit,
     ):
-        logger.info('Course: %s', course)
+        logger.info('Course: {}', course)
         try:
             await update_course_results(course, logger)
         except Exception as exc:  # pylint: disable=broad-except
             logger.exception(
-                'Error while updating course results for %s: %s',
+                'Error while updating course results for {}: {}',
                 course.name,
                 exc,
             )
             try:
-                await send_traceback_message(
+                await send.send_traceback_message(
                     f'Error while updating course '
                     f'results for {course.name}: {exc}',
                     code=traceback.format_exc(),
                 )
             except Exception as send_exc:  # pylint: disable=broad-except
                 logger.exception(
-                    'Error while sending error message: %s', send_exc
+                    'Error while sending error message: {}', send_exc
                 )
             continue
 
-    await send_message(
+    await send.send_message(
         'Results updated',
         level='info',
     )
 
 
 async def update_course_results(
-    course: Course, logger: logging.Logger | None = None
+    course: Course,
+    logger: 'loguru.Logger',
 ) -> None:
     SessionManager().refresh()
     async with SessionManager().create_async_session() as session:
@@ -78,7 +80,6 @@ async def update_course_results(
         )
         course_levels = await get_course_levels(session, course_id=course.id)
         course_levels.sort(key=lambda x: (x.count_method, x.ok_threshold))
-    logger = logger or logging.getLogger(__name__)
     is_all_results_ok = True
     contests.sort(key=lambda x: x.lecture)
     course_score_sum = 0
@@ -87,9 +88,9 @@ async def update_course_results(
         name='contest_results_contests',
         logger=logger,
         sql_write_func=write_sql_tqdm,
-        send_or_edit_func=send_or_edit,
+        send_or_edit_func=send.send_or_edit,
     ):
-        logger.info('Contest: %s', contest)
+        logger.info('Contest: {}', contest)
         course_score_sum += contest.score_max
 
         await process_contest(
@@ -111,10 +112,9 @@ async def process_contest(  # pylint: disable=too-many-arguments
     course: Course,
     course_levels: list[CourseLevels],
     course_score_sum: float,
-    logger: logging.Logger | None = None,
+    logger: 'loguru.Logger',
     session: AsyncSession | None = None,
 ) -> None:
-    logger = logger or logging.getLogger(__name__)
     contest_levels = Levels(**contest.levels) if contest.levels else None
     if contest_levels:
         contest_levels.levels = sorted(
@@ -124,7 +124,7 @@ async def process_contest(  # pylint: disable=too-many-arguments
         students_sc_departments,
         name='contest_results_students',
         sql_write_func=write_sql_tqdm,
-        send_or_edit_func=send_or_edit,
+        send_or_edit_func=send.send_or_edit,
     ):
         try:
             await process_student(
@@ -136,20 +136,20 @@ async def process_contest(  # pylint: disable=too-many-arguments
                 course_levels,
                 contest_levels,
                 course_score_sum,
-                session,
-                logger,
+                logger=logger,
+                session=session,
             )
         except Exception as exc:  # pylint: disable=broad-except
             logger.exception(
                 'Error while updating course results for '
-                'course %s, contest %s, student %s: %s',
+                'course {}, contest {}, student {}: {}',
                 course.name,
                 contest.yandex_contest_id,
                 student.contest_login,
                 exc_info=exc,
             )
             try:
-                await send_traceback_message(
+                await send.send_traceback_message(
                     'Error while updating course results '
                     f'for course {course.name}, '
                     f'contest {contest.yandex_contest_id}, '
@@ -158,7 +158,7 @@ async def process_contest(  # pylint: disable=too-many-arguments
                 )
             except Exception as send_exc:  # pylint: disable=broad-except
                 logger.exception(
-                    'Error while sending error message: %s', send_exc
+                    'Error while sending error message: {}', send_exc
                 )
 
 
@@ -171,8 +171,8 @@ async def process_student(  # pylint: disable=too-many-arguments
     course_levels: list[CourseLevels],
     contest_levels: Levels | None,
     course_score_sum: float,
+    logger: 'loguru.Logger',
     session: AsyncSession | None = None,
-    logger: logging.Logger | None = None,
 ) -> None:
     if session is None:
         SessionManager().refresh()
@@ -189,12 +189,12 @@ async def process_student(  # pylint: disable=too-many-arguments
                 session=session,
                 logger=logger,
             )
-    logger = logger or logging.getLogger(__name__)
     student_contest = await get_or_create_student_contest(
         session,
         student,
         contest,
         course,
+        logger=logger,
     )
     if (
         student_contest.is_ok
@@ -203,7 +203,7 @@ async def process_student(  # pylint: disable=too-many-arguments
         return
     if student_contest.score == contest.score_max:
         logger.debug(
-            'Student %s has already max score in contest %s',
+            'Student {} has already max score in contest {}',
             student.contest_login,
             contest.id,
         )
@@ -212,7 +212,8 @@ async def process_student(  # pylint: disable=too-many-arguments
         contest,
         student,
         student_contest,
-        course.short_name
+        logger=logger,
+        zero_is_ok=course.short_name
         in ['ml_autumn_2022', 'da_autumn_2022'],  # TODO: magic constant
     )
     student_tasks_done = len(student_results)
@@ -227,13 +228,13 @@ async def process_student(  # pylint: disable=too-many-arguments
     is_ok = student_score == contest.score_max
     is_ok_no_deadline = student_score_no_deadline == contest.score_max
     # logger.info(
-    #     'Student results: %s',
+    #     'Student results: {}',
     #     student_results,
     # )
     logger.info(
-        'Student: %s, tasks done: %s, score: %s, '
-        'score_no_deadline: %s, is ok: %s, '
-        'is ok no deadline: %s',
+        'Student: {}, tasks done: {}, score: {}, '
+        'score_no_deadline: {}, is ok: {}, '
+        'is ok no deadline: {}',
         student.contest_login,
         student_tasks_done,
         student_score,
@@ -269,8 +270,8 @@ async def process_student(  # pylint: disable=too-many-arguments
         student_score_no_deadline,
         is_ok,
         is_ok_no_deadline,
-        session,
-        logger,
+        logger=logger,
+        session=session,
     )
 
 
@@ -283,8 +284,8 @@ async def update_student_contest_relation(  # pylint: disable=too-many-arguments
     student_score_no_deadline: float,
     is_ok: bool,
     is_ok_no_deadline: bool,
+    logger: 'loguru.Logger',
     session: AsyncSession | None = None,
-    logger: logging.Logger | None = None,
 ) -> None:
     if session is None:
         SessionManager().refresh()
@@ -300,7 +301,6 @@ async def update_student_contest_relation(  # pylint: disable=too-many-arguments
                 session,
                 logger,
             )
-    logger = logger or logging.getLogger(__name__)
     changes = False
     if student_contest.tasks_done < student_tasks_done:
         student_contest.tasks_done = student_tasks_done
@@ -324,7 +324,7 @@ async def update_student_contest_relation(  # pylint: disable=too-many-arguments
         changes = True
     if not changes:
         logger.info(
-            'Student %s has no changes in contest %s',
+            'Student {} has no changes in contest {}',
             student.contest_login,
             contest.id,
         )

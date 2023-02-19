@@ -30,8 +30,10 @@ class DefaultSettings(BaseSettings):
     POSTGRES_PASSWORD: str = Field('pgpswd', env='POSTGRES_PASSWORD')
 
     LOGGING_FORMAT = (
-        '%(filename)s %(funcName)s [LINE:%(lineno)d]# '
-        '%(levelname)-8s [%(asctime)s] %(name)s: %(message)s'
+        '%(filename)s %(funcName)s [%(thread)d] '
+        '[LINE:%(lineno)d]# %(levelname)-8s '
+        '[%(asctime)s.%(msecs)03d] %(name)s: '
+        '%(message)s'
     )
     LOGGING_APP_FILE = 'logfile.log'
 

@@ -1,14 +1,16 @@
 import datetime as dt
-import logging
 import shutil
 import traceback
 from pathlib import Path
 
+import loguru
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, status
 from fastapi.responses import FileResponse
 from sqlalchemy.ext.asyncio import AsyncSession
+from starlette.requests import Request
 
-from app.bot_helper import send_traceback_message
+from app import constants
+from app.bot_helper import send
 from app.database.connection import SessionManager
 from app.database.models import User
 from app.schemas import StudentResults
@@ -37,6 +39,7 @@ api_router = APIRouter(
     status_code=status.HTTP_200_OK,
 )
 async def get_all_results(
+    request: Request,
     student_login: str,
     _: User = Depends(get_current_user),
     session: AsyncSession = Depends(SessionManager().get_async_session),
@@ -69,6 +72,7 @@ async def get_all_results(
                     for course_level in levels_by_course[course.id]
                 ],
                 session,
+                request['request_id'],
             )
             for course, student_course in await get_student_courses(
                 session, student.id
@@ -117,11 +121,14 @@ async def fill_results(
     status_code=status.HTTP_200_OK,
 )
 async def fill_results_archive(  # pylint: disable=too-many-statements
+    request: Request,
     file_archive: UploadFile,
     course_short_name: str,
     _: User = Depends(get_current_user),
     session: AsyncSession = Depends(SessionManager().get_async_session),
 ) -> FileResponse:
+    logger = loguru.logger.bind(uuid=request['request_id'])
+
     if not file_archive.filename.endswith('.zip'):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -133,8 +140,6 @@ async def fill_results_archive(  # pylint: disable=too-many-statements
             status_code=status.HTTP_404_NOT_FOUND,
             detail='Course not found',
         )
-
-    logger = logging.getLogger(__name__)
 
     tmp_path = Path('temp')
     if tmp_path.exists():
@@ -155,7 +160,7 @@ async def fill_results_archive(  # pylint: disable=too-many-statements
     # fill all pdfs in temp folder
     for filename in tmp_path.iterdir():
         if filename.suffix == '.pdf':
-            logger.info('Filling %s', filename)
+            logger.info('Filling {}', filename)
             try:
                 await fill_pdf(
                     filename,
@@ -167,7 +172,7 @@ async def fill_results_archive(  # pylint: disable=too-many-statements
             except Exception as exc:  # pylint: disable=broad-except
                 logger.exception('Error while filling pdf', exc_info=exc)
                 try:
-                    await send_traceback_message(
+                    await send.send_traceback_message(
                         f'Error while filling pdf {filename.name}: {exc}',
                         code=traceback.format_exc(),
                     )
@@ -178,7 +183,7 @@ async def fill_results_archive(  # pylint: disable=too-many-statements
 
     shutil.make_archive(
         f'{course_short_name}_'
-        f'{dt.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}',
+        f'{dt.datetime.now().strftime(constants.dt_format_filename)}',
         'zip',
         results_path,
     )
@@ -186,8 +191,8 @@ async def fill_results_archive(  # pylint: disable=too-many-statements
     shutil.rmtree(results_path)
     return FileResponse(
         f'{course_short_name}_'
-        f'{dt.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.zip',
+        f'{dt.datetime.now().strftime(constants.dt_format_filename)}.zip',
         media_type='application/octet-stream',
         filename=f'{course_short_name}_'
-        f'{dt.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.zip',
+        f'{dt.datetime.now().strftime(constants.dt_format_filename)}.zip',
     )

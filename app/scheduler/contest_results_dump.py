@@ -1,12 +1,15 @@
 # pylint: disable=too-many-statements
 
-import logging
 import traceback
+import uuid
 from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
 
-from app.bot_helper import send_or_edit, send_traceback_message
+import loguru
+
+from app import constants
+from app.bot_helper import send
 from app.bot_helper.send import send_results
 from app.database.connection import SessionManager
 from app.database.models import Course, CourseLevels
@@ -41,9 +44,8 @@ async def save_to_csv(course_results: CourseResultsCSV, filename: str) -> None:
 async def get_course_results(
     course: Course,
     course_levels: list[CourseLevels],
-    logger: logging.Logger | None = None,
+    logger: 'loguru.Logger',
 ) -> CourseResultsCSV:
-    logger = logger or logging.getLogger(__name__)
     SessionManager().refresh()
     async with SessionManager().create_async_session() as session:
         students_departments_results = []
@@ -52,7 +54,7 @@ async def get_course_results(
             name='contest_results_dump_students',
             logger=logger,
             sql_write_func=write_sql_tqdm,
-            send_or_edit_func=send_or_edit,
+            send_or_edit_func=send.send_or_edit,
         ):
             student_course_levels = [
                 await get_or_create_student_course_level(
@@ -62,7 +64,11 @@ async def get_course_results(
             ]
             if course.default_update_on:
                 await update_student_course_results(
-                    student, course, student_course, session=session
+                    student,
+                    course,
+                    student_course,
+                    logger=logger,
+                    session=session,
                 )
             else:
                 await update_sc_results_final(
@@ -71,6 +77,7 @@ async def get_course_results(
                     course_levels,
                     student_course,
                     student_course_levels,
+                    logger=logger,
                     session=session,
                 )
             await session.commit()
@@ -80,6 +87,7 @@ async def get_course_results(
                 course_levels,
                 student_course,
                 student_course_levels,
+                logger=logger,
                 session=session,
             )
             students_departments_results.append(
@@ -152,7 +160,7 @@ async def job() -> None:
         levels_by_course = [
             await get_course_levels(session, course.id) for course in courses
         ]
-    logger = logging.getLogger(__name__)
+    logger = loguru.logger.bind(uuid=uuid.uuid4().hex)
     filenames = []
     async for course, course_levels in tqdm(
         zip(courses, levels_by_course),
@@ -160,33 +168,33 @@ async def job() -> None:
         name='contest_results_dump_courses',
         logger=logger,
         sql_write_func=write_sql_tqdm,
-        send_or_edit_func=send_or_edit,
+        send_or_edit_func=send.send_or_edit,
     ):
-        logger.info('Course: %s', course)
+        logger.info('Course: {}', course)
         try:
             course_results = await get_course_results(
                 course, course_levels, logger=logger
             )
         except Exception as exc:  # pylint: disable=broad-except
             logger.exception(
-                'Error while getting course results for %s: %s',
+                'Error while getting course results for {}: {}',
                 course.name,
                 exc,
             )
             try:
-                await send_traceback_message(
+                await send.send_traceback_message(
                     f'Error while getting course '
                     f'results for {course.name}: {exc}',
                     code=traceback.format_exc(),
                 )
             except Exception as send_exc:  # pylint: disable=broad-except
                 logger.exception(
-                    'Error while sending error message: %s', send_exc
+                    'Error while sending error message: {}', send_exc
                 )
             continue
         filename = (
             f'results_{course.short_name}_'
-            f'{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.csv'
+            f'{datetime.now().strftime(constants.dt_format_filename)}.csv'
         )
         await save_to_csv(course_results, filename)
         filenames.append(filename)
@@ -194,7 +202,7 @@ async def job() -> None:
     try:
         await send_results(filenames)
     except Exception as e:
-        logger.error('Error while sending results: %s', e)
+        logger.error('Error while sending results: {}', e)
         raise e
     finally:
         for filename in filenames:

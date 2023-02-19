@@ -1,9 +1,9 @@
 # pylint: disable=too-many-lines
 
-import logging
 from datetime import datetime, timedelta
 
 import httpx
+import loguru
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database.models import Contest, Course, Student, StudentContest
@@ -28,15 +28,16 @@ async def add_student_to_contest(
     session: AsyncSession,
     contest: Contest,
     student: Student,
+    logger: 'loguru.Logger',
 ) -> tuple[bool, str | None]:
     """
     Add student to Yandex contest.
     """
-    logger = logging.getLogger(__name__)
 
     response = await make_request_to_yandex_contest_api(
         f'contests/{contest.yandex_contest_id}/participants'
         f'?login={student.contest_login}',
+        logger=logger,
         method='POST',
     )
 
@@ -46,7 +47,7 @@ async def add_student_to_contest(
             return False, message
         case 409:
             logger.warning(
-                'Student "%s" already registered on contest "%s"',
+                'Student "{}" already registered on contest "{}"',
                 student.contest_login,
                 contest.yandex_contest_id,
             )
@@ -61,13 +62,13 @@ async def add_student_to_contest(
             return False, message
         case 201:
             logger.info(
-                'Student "%s" successfully added to contest "%s"',
+                'Student "{}" successfully added to contest "{}"',
                 student.contest_login,
                 contest.yandex_contest_id,
             )
         case 200:
             logger.warning(
-                'Student "%s" already registered on contest "%s" (code 200)',
+                'Student "{}" already registered on contest "{}" (code 200)',
                 student.contest_login,
                 contest.yandex_contest_id,
             )
@@ -79,7 +80,7 @@ async def add_student_to_contest(
         session, student.id, contest.id, contest.course_id, int(response.text)
     )
     logger.info(
-        'Student "%s" successfully added to contest "%s" in database',
+        'Student "{}" successfully added to contest "{}" in database',
         student.contest_login,
         contest.yandex_contest_id,
     )
@@ -88,9 +89,11 @@ async def add_student_to_contest(
 
 async def get_problems(
     yandex_contest_id: int,
+    logger: 'loguru.Logger',
 ) -> list[ContestProblem]:
     response = await make_request_to_yandex_contest_api(
-        f'contests/{yandex_contest_id}/problems'
+        f'contests/{yandex_contest_id}/problems',
+        logger=logger,
     )
     return sorted(
         [ContestProblem(**problem) for problem in response.json()['problems']],
@@ -100,9 +103,11 @@ async def get_problems(
 
 async def get_participants_login_to_id(
     yandex_contest_id: int,
+    logger: 'loguru.Logger',
 ) -> dict[str, int]:
     response = await make_request_to_yandex_contest_api(
-        f'contests/{yandex_contest_id}/participants'
+        f'contests/{yandex_contest_id}/participants',
+        logger=logger,
     )
     return {
         participant['login']: participant['id']
@@ -131,10 +136,10 @@ async def extend_submissions(
     submissions: dict[int, ContestSubmission],
     contest: Contest,
     ok_authors_ids: set[int],
+    logger: 'loguru.Logger',
     zero_is_ok: bool = False,
 ) -> tuple[list[ContestSubmissionFull], bool]:
     ok_authors_ids = ok_authors_ids or set()
-    logger = logging.getLogger(__name__)
     url = f'contests/{contest.yandex_contest_id}/submissions/multiple?'
     batch_size = 100
     results: list[ContestSubmissionFull] = []
@@ -146,8 +151,8 @@ async def extend_submissions(
         )
     )
     logger.info(
-        'Getting submissions for contest "%s" '
-        'with %s not ok authors submissions',
+        'Getting submissions for contest "{}" '
+        'with {} not ok authors submissions',
         contest.yandex_contest_id,
         len(submission_values),
     )
@@ -166,10 +171,10 @@ async def extend_submissions(
                 ],
             )
         )
-        logger.info('Getting submissions %s-%s', i, i + batch_size)
+        logger.info('Getting submissions {}-{}', i, i + batch_size)
         try:
             response = await make_request_to_yandex_contest_api(
-                batch_url, timeout=60, retry_count=5
+                batch_url, timeout=60, retry_count=5, logger=logger
             )
         except httpx.ReadTimeout:
             logger.error('Timeout error')
@@ -177,8 +182,8 @@ async def extend_submissions(
             continue
         if response.status_code != 200:
             logger.error(
-                'Error while getting submissions %s-%s. '
-                'Status code: %s. Response: %s',
+                'Error while getting submissions {}-{}. '
+                'Status code: {}. Response: {}',
                 i,
                 i + batch_size,
                 response.status_code,
@@ -276,11 +281,11 @@ async def filter_best_submissions_only(
 
 async def get_best_submissions(
     contest: Contest,
+    logger: 'loguru.Logger',
     zero_is_ok: bool = False,
     ok_authors_ids: set[int] | None = None,
 ) -> tuple[list[ContestSubmissionFull], bool]:
     ok_authors_ids = ok_authors_ids or set()
-    logger = logging.getLogger(__name__)
     url = (
         f'contests/{contest.yandex_contest_id}/submissions'
         f'?page={{}}&pageSize={{}}'
@@ -290,13 +295,13 @@ async def get_best_submissions(
     result_dict: dict[int, ContestSubmission] = {}
 
     response = await make_request_to_yandex_contest_api(
-        url.format(page, page_size)
+        url.format(page, page_size), logger=logger
     )
     data = response.json()
     count = data['count']
     count_done = 0
     logger.info(
-        'Contest %s has %s submissions', contest.yandex_contest_id, count
+        'Contest {} has {} submissions', contest.yandex_contest_id, count
     )
     while count_done < count:
         await _add_results(data['submissions'], result_dict)
@@ -305,11 +310,15 @@ async def get_best_submissions(
             break
         page += 1
         response = await make_request_to_yandex_contest_api(
-            url.format(page, page_size)
+            url.format(page, page_size), logger=logger
         )
         data = response.json()
     extended_results, is_all_results = await extend_submissions(
-        result_dict, contest, ok_authors_ids, zero_is_ok
+        result_dict,
+        contest,
+        ok_authors_ids,
+        logger=logger,
+        zero_is_ok=zero_is_ok,
     )
     return await filter_best_submissions_only(extended_results), is_all_results
 
@@ -317,9 +326,11 @@ async def get_best_submissions(
 async def get_author_id(
     login: str,
     yandex_contest_id: int,
+    logger: 'loguru.Logger',
 ) -> int:
     response = await make_request_to_yandex_contest_api(
         f'contests/{yandex_contest_id}/participants' f'?login={login}',
+        logger=logger,
         method='POST',
     )
     return int(response.text)
@@ -327,9 +338,11 @@ async def get_author_id(
 
 async def get_contest_info(
     yandex_contest_id: int,
+    logger: 'loguru.Logger',
 ) -> YandexContestInfo:
     response_contest = await make_request_to_yandex_contest_api(
-        f'contests/{yandex_contest_id}'
+        f'contests/{yandex_contest_id}',
+        logger=logger,
     )
     data = response_contest.json()
     deadline = get_datetime_msk_tz(data['startTime']) + timedelta(
@@ -337,7 +350,8 @@ async def get_contest_info(
     )
     duration = data['duration']
     resopnse_task = await make_request_to_yandex_contest_api(
-        f'contests/{yandex_contest_id}/problems'
+        f'contests/{yandex_contest_id}/problems',
+        logger=logger,
     )
     data = resopnse_task.json()
     tasks_count = len(data['problems'])
@@ -352,19 +366,19 @@ async def get_student_best_submissions(
     contest: Contest,
     student: Student,
     student_contest: StudentContest,
+    logger: 'loguru.Logger',
     zero_is_ok: bool = False,
 ) -> list[ContestSubmissionFull]:
-    logger = logging.getLogger(__name__)
     url = (
         f'contests/{contest.yandex_contest_id}/participants/'
         f'{student_contest.author_id}/stats'
     )
 
-    response = await make_request_to_yandex_contest_api(url)
+    response = await make_request_to_yandex_contest_api(url, logger=logger)
     if response.status_code != 200:
         logger.error(
-            'Error while getting results for student %s (id=%s)'
-            'Status code: %s. Response: %s',
+            'Error while getting results for student {} (id={})'
+            'Status code: {}. Response: {}',
             student.contest_login,
             student_contest.author_id,
             response.status_code,
@@ -374,7 +388,7 @@ async def get_student_best_submissions(
     runs = data['runs']
 
     logger.info(
-        'Got %s submissions for contest "%s" with author %s (id=%s)',
+        'Got {} submissions for contest "{}" with author {} (id={})',
         len(runs),
         contest.yandex_contest_id,
         student.contest_login,
@@ -421,6 +435,7 @@ async def get_or_create_student_contest(
     student: Student,
     contest: Contest,
     course: Course,
+    logger: 'loguru.Logger',
 ) -> StudentContest:
     sc = await get_student_contest_relation(session, student.id, contest.id)
     if sc is None:
@@ -430,7 +445,7 @@ async def get_or_create_student_contest(
             contest.id,
             course.id,
             await get_author_id(
-                student.contest_login, contest.yandex_contest_id
+                student.contest_login, contest.yandex_contest_id, logger=logger
             ),
         )
     return sc
