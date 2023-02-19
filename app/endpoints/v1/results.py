@@ -86,7 +86,7 @@ async def get_all_results(
                 )
             ],
             fio=student.fio,
-        ),
+        ).dict(),
         headers=headers,
     )
 
