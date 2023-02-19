@@ -34,11 +34,6 @@ from tests.factory_lib import (
 from tests.utils import make_alembic_config
 
 
-# @pytest.fixture(autouse=True)
-# def loguru_remove_handlers():
-#     loguru.logger.remove()  # TODO
-
-
 @pytest.fixture(scope='session')
 def event_loop():
     """
