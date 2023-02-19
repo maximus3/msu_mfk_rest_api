@@ -1,5 +1,4 @@
 import logging
-import sys
 import typing as tp
 import uuid
 
@@ -53,6 +52,17 @@ class UniqueIDMiddleware(BaseHTTPMiddleware):
                 },
                 'uuid': request['request_id'],
             }
+            response.headers['log_id'] = request['request_id']
+            if response.headers.get('log_contest_login'):
+                request_info_dict.update(
+                    {
+                        'student': {
+                            'contest_login': response.headers[
+                                'log_contest_login'
+                            ]
+                        }
+                    }
+                )
             with loguru.logger.contextualize(**request_info_dict):
                 loguru.logger.info(
                     '{request[client]} - "{request[method]} {request[path]} '
@@ -111,15 +121,5 @@ def get_app() -> FastAPI:
     bind_routes(application, settings)
     add_pagination(application)
     application.state.settings = settings
-
-    loguru.logger.remove()
-    loguru.logger.add(sink=sys.stderr, serialize=True, enqueue=True)
-    loguru.logger.add(
-        settings.LOGGING_APP_FILE,
-        rotation='500 MB',
-        serialize=True,
-        enqueue=True,
-    )
-    logging.getLogger('sqlalchemy.engine').setLevel('INFO')
 
     return application

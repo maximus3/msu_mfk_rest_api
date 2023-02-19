@@ -24,4 +24,4 @@ def fixture_mock_logging_file():
 @pytest.fixture
 def mock_logging_file_exists(mock_logging_file):
     with open(mock_logging_file, 'w', encoding='utf-8') as f:
-        f.write('test')
+        f.write('{"test": "test"}')

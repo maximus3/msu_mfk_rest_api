@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile, status
 from fastapi.responses import FileResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.requests import Request
+from starlette.responses import JSONResponse
 
 from app import constants
 from app.bot_helper import send
@@ -35,7 +36,6 @@ api_router = APIRouter(
 
 @api_router.get(
     '/all/{student_login}',
-    response_model=StudentResults,
     status_code=status.HTTP_200_OK,
 )
 async def get_all_results(
@@ -43,42 +43,50 @@ async def get_all_results(
     student_login: str,
     _: User = Depends(get_current_user),
     session: AsyncSession = Depends(SessionManager().get_async_session),
-) -> StudentResults:
+) -> JSONResponse:
     """
     Get student results for a specific course.
     """
+    logger = loguru.logger.bind(
+        uuid=request['request_id'], student={'contest_login': student_login}
+    )
+    headers = {'log_contest_login': student_login}
     student = await get_student(session, student_login)
     if student is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail='Student not found',
+            headers=headers,
         )
     all_courses = await get_all_active_courses(session)
     levels_by_course = {
         course.id: await get_course_levels(session, course.id)
         for course in all_courses
     }
-    return StudentResults(
-        courses=[
-            await get_student_course_results(
-                student,
-                course,
-                levels_by_course[course.id],
-                student_course,
-                [
-                    await get_or_create_student_course_level(
-                        session, student.id, course.id, course_level.id
-                    )
-                    for course_level in levels_by_course[course.id]
-                ],
-                session,
-                request['request_id'],
-            )
-            for course, student_course in await get_student_courses(
-                session, student.id
-            )
-        ],
-        fio=student.fio,
+    return JSONResponse(
+        StudentResults(
+            courses=[
+                await get_student_course_results(
+                    student,
+                    course,
+                    levels_by_course[course.id],
+                    student_course,
+                    [
+                        await get_or_create_student_course_level(
+                            session, student.id, course.id, course_level.id
+                        )
+                        for course_level in levels_by_course[course.id]
+                    ],
+                    logger,
+                    session,
+                )
+                for course, student_course in await get_student_courses(
+                    session, student.id
+                )
+            ],
+            fio=student.fio,
+        ).dict(),
+        headers=headers,
     )
 
 

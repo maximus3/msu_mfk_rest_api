@@ -22,8 +22,8 @@ async def get_student_course_results(  # pylint: disable=too-many-arguments
     course_levels: list[CourseLevels],
     student_course: StudentCourse,
     student_course_levels: list[StudentCourseLevels],
-    session: AsyncSession,
     logger: 'loguru.Logger',
+    session: AsyncSession,
 ) -> CourseResults:
     contests = []
 
