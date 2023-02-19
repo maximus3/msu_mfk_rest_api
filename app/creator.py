@@ -92,7 +92,7 @@ class InterceptHandler(logging.Handler):
         )
 
 
-def configure_logger(settings: DefaultSettings):
+def configure_logger(settings: DefaultSettings) -> None:
     loguru.logger.remove()
     loguru.logger.add(sink=sys.stderr, serialize=True, enqueue=True)
     loguru.logger.add(
@@ -104,7 +104,7 @@ def configure_logger(settings: DefaultSettings):
     logging.getLogger('sqlalchemy.engine').setLevel('INFO')
 
 
-def get_app(set_up_logger=True) -> FastAPI:
+def get_app(set_up_logger: bool = True) -> FastAPI:
     """
     Creates application and all dependable objects.
     """
