@@ -19,7 +19,6 @@ api_router = APIRouter(
 
 @api_router.post(
     '',
-    response_model=RegisterResponse,
     status_code=status.HTTP_201_CREATED,
 )
 async def register(
@@ -44,6 +43,7 @@ async def register(
         return JSONResponse(
             RegisterResponse(contest_login=data.contest_login).dict(),
             headers=headers,
+            status_code=201,
         )
     if result_status == DatabaseStatus.ALREADY_EXISTS:
         raise HTTPException(

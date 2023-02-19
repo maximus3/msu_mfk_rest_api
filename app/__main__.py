@@ -1,5 +1,8 @@
+import logging
+import sys
 import traceback
 
+import loguru
 from fastapi.requests import Request
 from fastapi.responses import JSONResponse
 from uvicorn import run
@@ -41,6 +44,17 @@ async def exception_handler(
 
 if __name__ == '__main__':  # pragma: no cover
     settings_for_application = get_settings()
+
+    loguru.logger.remove()
+    loguru.logger.add(sink=sys.stderr, serialize=True, enqueue=True)
+    loguru.logger.add(
+        settings_for_application.LOGGING_APP_FILE,
+        rotation='500 MB',
+        serialize=True,
+        enqueue=True,
+    )
+    logging.getLogger('sqlalchemy.engine').setLevel('INFO')
+
     run(
         'app.__main__:app',
         host=get_hostname(settings_for_application.APP_HOST),

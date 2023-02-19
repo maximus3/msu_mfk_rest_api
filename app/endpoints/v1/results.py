@@ -36,7 +36,6 @@ api_router = APIRouter(
 
 @api_router.get(
     '/all/{student_login}',
-    response_model=StudentResults,
     status_code=status.HTTP_200_OK,
 )
 async def get_all_results(
