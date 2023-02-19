@@ -49,4 +49,5 @@ if __name__ == '__main__':  # pragma: no cover
         reload_dirs=['app', 'tests'],
         log_level='debug' if settings_for_application.DEBUG else 'info',
         log_config='log.ini',
+        access_log=False,
     )
