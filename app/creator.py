@@ -1,4 +1,5 @@
 import logging
+import sys
 import typing as tp
 import uuid
 
@@ -91,7 +92,19 @@ class InterceptHandler(logging.Handler):
         )
 
 
-def get_app() -> FastAPI:
+def configure_logger(settings: DefaultSettings):
+    loguru.logger.remove()
+    loguru.logger.add(sink=sys.stderr, serialize=True, enqueue=True)
+    loguru.logger.add(
+        settings.LOGGING_APP_FILE,
+        rotation='500 MB',
+        serialize=True,
+        enqueue=True,
+    )
+    logging.getLogger('sqlalchemy.engine').setLevel('INFO')
+
+
+def get_app(set_up_logger=True) -> FastAPI:
     """
     Creates application and all dependable objects.
     """
@@ -121,5 +134,8 @@ def get_app() -> FastAPI:
     bind_routes(application, settings)
     add_pagination(application)
     application.state.settings = settings
+
+    if set_up_logger:
+        configure_logger(settings)
 
     return application
