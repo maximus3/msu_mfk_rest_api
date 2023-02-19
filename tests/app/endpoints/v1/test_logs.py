@@ -21,12 +21,12 @@ class TestGetHandler:
     ):
         response = await client.get(url=self.get_url(), headers=user_headers)
         assert response.status_code == status.HTTP_200_OK, response.json()
-        assert response.text == {"items":[],"count":0}
+        assert response.text == {'items': [], 'count': 0}
 
     async def test_get(self, client, user_headers, mock_logging_file_exists):
         response = await client.get(url=self.get_url(), headers=user_headers)
         assert response.status_code == status.HTTP_200_OK, response.json()
-        assert response.text == {"test": "test"}
+        assert response.text == {'test': 'test'}
 
     async def test_get_cp1252(self, client, user_headers, mock_logging_file):
         with open(mock_logging_file, 'w', encoding='cp1252') as f:
@@ -34,4 +34,4 @@ class TestGetHandler:
 
         response = await client.get(url=self.get_url(), headers=user_headers)
         assert response.status_code == status.HTTP_200_OK, response.json()
-        assert response.text == {"test": "test"}
+        assert response.text == {'test': 'test'}
