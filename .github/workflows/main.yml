@@ -91,5 +91,4 @@ jobs:
         git pull;
         echo \"${{ secrets.ENV }}\" > .env;
         make update;
-        docker system prune --all --force;
         exit"
