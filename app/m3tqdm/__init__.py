@@ -1,11 +1,11 @@
 # pylint: disable=too-many-arguments,too-many-statements
 
-import logging
 import time
 import traceback
 import typing as tp
 from pathlib import Path
 
+import loguru
 from aiogram.utils.exceptions import RetryAfter
 
 from app.bot_helper import send
@@ -20,7 +20,7 @@ async def tqdm(  # noqa: C901  # pylint: disable=too-many-branches
     total: int | None = None,
     # end='',
     name: str = '',
-    logger: logging.Logger | None = None,
+    logger: tp.Optional['loguru.Logger'] = None,
     tmp_filename: Path | None = None,
     sql_write_func: tp.Callable[
         [str, int, int | None, str, str, str, str],
@@ -33,7 +33,7 @@ async def tqdm(  # noqa: C901  # pylint: disable=too-many-branches
     ]
     | None = None,
 ) -> tp.Any:
-    logger = logger or logging.getLogger(__name__)
+    logger = logger or loguru.logger
     if name:
         name_log = '>>' + name + '\t'
     else:

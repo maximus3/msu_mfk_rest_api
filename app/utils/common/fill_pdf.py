@@ -1,9 +1,9 @@
 import dataclasses
 import io
-import logging
 from pathlib import Path
 from uuid import UUID
 
+import loguru
 from PyPDF2 import PdfFileReader, PdfFileWriter, PdfReader
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfbase import pdfmetrics
@@ -68,9 +68,10 @@ def visitor_body(  # pylint: disable=too-many-arguments,too-many-nested-blocks
                         list_of_students[key].append([y, font_size, text])
 
 
-async def fill_pdf(  # pylint: disable=too-many-statements
+async def fill_pdf(  # pylint: disable=too-many-statements,too-many-arguments
     filename: str | Path,
     course_id: UUID,
+    logger: 'loguru.Logger',
     session: AsyncSession | None = None,
     result_filename: str = 'result.pdf',
     result_path: str | Path = './tmp',
@@ -79,13 +80,11 @@ async def fill_pdf(  # pylint: disable=too-many-statements
         async with SessionManager().create_async_session() as session:
             return await fill_pdf(filename, course_id, session)
 
-    logger = logging.getLogger(__name__)
-
     reader = PdfReader(filename)
     writer = PdfFileWriter()
 
     num_pages = reader.getNumPages()
-    logger.info('filename have %s pages', num_pages)
+    logger.info('filename have {} pages', num_pages)
 
     for page_num in range(num_pages):
 
@@ -127,11 +126,10 @@ async def fill_pdf(  # pylint: disable=too-many-statements
             y = list_of_students['num'][i][0]
             x = params_text['mark'][1].x  # type: ignore
             if await get_student_course_is_ok(
-                # pylint: disable=line-too-long
                 session,
                 course_id,
-                list_of_students['fio'][i][2]  # type: ignore
-                # pylint: enable=line-too-long
+                list_of_students['fio'][i][2],  # type: ignore
+                logger=logger,
             ):
                 can.drawString(x, y, 'Зачет')
             # else:
@@ -147,8 +145,11 @@ async def fill_pdf(  # pylint: disable=too-many-statements
             page.mergePage(new_pdf_page.getPage(0))
         writer.addPage(page)
 
+    # formatted_dt = dt.datetime.now().strftime(
+    #     constants.dt_format_filename
+    # )
     # result_filename = (
-    #     f'result_{dt.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.pdf'
+    #     f'result_{formatted_dt}.pdf'
     # )
 
     path = Path(result_path)

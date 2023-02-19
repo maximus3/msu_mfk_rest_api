@@ -1,10 +1,12 @@
-import logging
 import typing as tp
+import uuid
 from datetime import datetime
 from pathlib import Path
 
+import loguru
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app import constants
 from app.bot_helper import send
 from app.config import DefaultSettings, get_settings
 from app.database.connection import SessionManager
@@ -58,7 +60,7 @@ async def dump_table(
             if rd is None:
                 row_data.append('NULL')
             elif isinstance(rd, datetime):
-                row_data.append(f"'{rd.strftime('%Y-%m-%d %H:%M:%S')}'")
+                row_data.append(f"'{rd.strftime(constants.dt_format)}'")
             else:
                 row_data.append(repr(rd))
         f.write(f'{insert_prefix} ({", ".join(row_data)});\n')
@@ -66,14 +68,12 @@ async def dump_table(
 
 async def job(filename: str | None = None) -> None:
     settings = get_settings()
-    logger = logging.getLogger(__name__)
+    logger = loguru.logger.bind(uuid=uuid.uuid4().hex)
 
-    filename = (
-        filename
-        or f'db_dump_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.sql'
-    )
+    formatted_dt = datetime.now().strftime(constants.dt_format_filename)
+    filename = filename or f'db_dump_{formatted_dt}.sql'
 
-    logging.info('Starting db dump to %s', filename)
+    logger.info('Starting db dump to {}', filename)
     try:
         with open(
             filename,
@@ -86,7 +86,7 @@ async def job(filename: str | None = None) -> None:
                 await dump_table(f, table_name, settings)
         await send.send_db_dump(filename)
     except Exception as e:
-        logger.exception('Error while dumping db: %s', e)
+        logger.exception('Error while dumping db: {}', e)
         raise e
     finally:
         Path(filename).unlink()

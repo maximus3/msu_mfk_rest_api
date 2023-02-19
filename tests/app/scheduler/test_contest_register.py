@@ -1,5 +1,6 @@
 # pylint: disable=duplicate-code,too-many-arguments,unused-argument,too-many-nested-blocks
 
+import loguru
 import pytest
 from sqlalchemy import select
 
@@ -43,7 +44,10 @@ class TestRegisterStudentHandler(BaseHandler):
             is None
         )
         result_check = await contest_register.register_student(
-            session, created_contest, created_student
+            session,
+            created_contest,
+            created_student,
+            logger=loguru.logger,
         )
         relation_created = await self.check_relation(
             created_student, created_contest, session
@@ -115,7 +119,9 @@ class TestCheckStudentsForContestRegistrationHandler(BaseHandler):
                     is None
                 )
         await contest_register.check_students_for_contest_registration(
-            session, created_course
+            session,
+            created_course,
+            logger=loguru.logger,
         )
         for contest_model in created_two_contests:
             for student_model in created_two_students_with_course:
@@ -160,7 +166,7 @@ class TestCheckStudentsForContestRegistrationHandler(BaseHandler):
             [None, None, None, None],
         )
         await contest_register.check_students_for_contest_registration(
-            session, created_two_courses[0]
+            session, created_two_courses[0], logger=loguru.logger
         )
         await self.assert_four_relations(
             session,
@@ -169,7 +175,7 @@ class TestCheckStudentsForContestRegistrationHandler(BaseHandler):
             [would_register, None, None, None],
         )
         await contest_register.check_students_for_contest_registration(
-            session, created_two_courses[1]
+            session, created_two_courses[1], logger=loguru.logger
         )
         await self.assert_four_relations(
             session,
@@ -206,7 +212,7 @@ class TestCheckStudentsForContestRegistrationHandler(BaseHandler):
             True,
         )
         await contest_register.check_students_for_contest_registration(
-            session, created_two_courses[0]
+            session, created_two_courses[0], logger=loguru.logger
         )
         await self.assert_four_relations(
             session,
@@ -216,7 +222,7 @@ class TestCheckStudentsForContestRegistrationHandler(BaseHandler):
             True,
         )
         await contest_register.check_students_for_contest_registration(
-            session, created_two_courses[1]
+            session, created_two_courses[1], logger=loguru.logger
         )
         await self.assert_four_relations(
             session,

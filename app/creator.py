@@ -1,10 +1,11 @@
 import logging
 import sys
+import typing as tp
 import uuid
 
+import loguru
 from fastapi import FastAPI
 from fastapi_pagination import add_pagination
-from loguru import logger
 from starlette.middleware import Middleware
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
@@ -26,11 +27,11 @@ def bind_routes(application: FastAPI, setting: DefaultSettings) -> None:
 class UniqueIDMiddleware(BaseHTTPMiddleware):
     def __init__(
         self,
-        app,
+        app: FastAPI,
     ):
         super().__init__(app)
 
-    async def dispatch(self, request: Request, call_next):
+    async def dispatch(self, request: Request, call_next: tp.Any) -> Response:
         # do something with the request object, for example
         request.scope['request_id'] = uuid.uuid4().hex
         # process the request and get the response
@@ -49,31 +50,33 @@ class UniqueIDMiddleware(BaseHTTPMiddleware):
                     'path': utils.get_path_with_query_string(request.scope),
                     'status_code': response.status_code,
                     'client': utils.get_client_addr(request.scope),
-                }
+                },
+                'uuid': request['request_id'],
             }
-            with logger.contextualize(**request_info_dict):
-                logger.info(
-                    '{request[client]} - "{request[method]} {request[path]} HTTP/{request[http_version]}" {request[status_code]}',
+            with loguru.logger.contextualize(**request_info_dict):
+                loguru.logger.info(
+                    '{request[client]} - "{request[method]} {request[path]} '
+                    'HTTP/{request[http_version]}" {request[status_code]}',
                     request=request_info_dict['request'],
                 )
         return response
 
 
 class InterceptHandler(logging.Handler):
-    def emit(self, record):
+    def emit(self, record: logging.LogRecord) -> None:
         # Get corresponding Loguru level if it exists
         try:
-            level = logger.level(record.levelname).name
+            level = loguru.logger.level(record.levelname).name
         except ValueError:
-            level = record.levelno
+            level = record.levelno  # type: ignore
 
         # Find caller from where originated the logged message
         frame, depth = logging.currentframe(), 2
-        while frame.f_code.co_filename == logging.__file__:
-            frame = frame.f_back
+        while frame.f_code.co_filename == logging.__file__:  # type: ignore
+            frame = frame.f_back  # type: ignore
             depth += 1
 
-        logger.opt(depth=depth, exception=record.exc_info).log(
+        loguru.logger.opt(depth=depth, exception=record.exc_info).log(
             level, record.getMessage(), extra={}
         )
 
@@ -109,8 +112,14 @@ def get_app() -> FastAPI:
     add_pagination(application)
     application.state.settings = settings
 
-    logger.remove()
-    logger.add(sink=sys.stderr, serialize=True, enqueue=True)
+    loguru.logger.remove()
+    loguru.logger.add(sink=sys.stderr, serialize=True, enqueue=True)
+    loguru.logger.add(
+        settings.LOGGING_APP_FILE,
+        rotation='500 MB',
+        serialize=True,
+        enqueue=True,
+    )
     logging.getLogger('sqlalchemy.engine').setLevel('INFO')
 
     return application

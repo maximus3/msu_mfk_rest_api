@@ -1,5 +1,5 @@
 # pylint: disable=unused-argument
-
+import loguru
 import pytest
 from sqlalchemy import select
 
@@ -41,7 +41,7 @@ class TestAddStudentToContest:
             is None
         )
         assert await contest.add_student_to_contest(
-            session, potential_contest, created_student
+            session, potential_contest, created_student, logger=loguru.logger
         ) == (
             False,
             f'Contest {potential_contest.yandex_contest_id} not found',
@@ -72,7 +72,7 @@ class TestAddStudentToContest:
             is None
         )
         assert await contest.add_student_to_contest(
-            session, created_contest, created_student
+            session, created_contest, created_student, logger=loguru.logger
         ) == (True, None)
         assert (
             await self.check_relation(
@@ -100,7 +100,7 @@ class TestAddStudentToContest:
             is None
         )
         assert await contest.add_student_to_contest(
-            session, created_contest, created_student
+            session, created_contest, created_student, logger=loguru.logger
         ) == (True, None)
         assert (
             await self.check_relation(
@@ -128,7 +128,7 @@ class TestAddStudentToContest:
             is None
         )
         assert await contest.add_student_to_contest(
-            session, created_contest, created_student
+            session, created_contest, created_student, logger=loguru.logger
         ) == (True, None)
         assert (
             await self.check_relation(
@@ -156,7 +156,7 @@ class TestAddStudentToContest:
             is None
         )
         assert await contest.add_student_to_contest(
-            session, created_contest, created_student
+            session, created_contest, created_student, logger=loguru.logger
         ) == (False, 'Yandex API key is invalid. Please check it in .env file')
         assert (
             await self.check_relation(
@@ -184,7 +184,7 @@ class TestAddStudentToContest:
             is None
         )
         assert await contest.add_student_to_contest(
-            session, created_contest, created_student
+            session, created_contest, created_student, logger=loguru.logger
         ) == (
             False,
             'Yandex API key does not have access to the contest '
@@ -216,7 +216,7 @@ class TestAddStudentToContest:
             is None
         )
         assert await contest.add_student_to_contest(
-            session, created_contest, created_student
+            session, created_contest, created_student, logger=loguru.logger
         ) == (False, 'Unknown error. Status code: 500')
         assert (
             await self.check_relation(

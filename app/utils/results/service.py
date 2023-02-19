@@ -1,9 +1,8 @@
 # pylint: disable=too-many-lines
-
-import logging
-
+import loguru
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app import constants
 from app.database.models import (
     Course,
     CourseLevels,
@@ -24,10 +23,8 @@ async def get_student_course_results(  # pylint: disable=too-many-arguments
     student_course: StudentCourse,
     student_course_levels: list[StudentCourseLevels],
     session: AsyncSession,
-    log_obj_id: str,
+    logger: 'loguru.Logger',
 ) -> CourseResults:
-    logger = logging.getLogger(__name__)
-
     contests = []
 
     for contest, student_contest in sorted(
@@ -79,10 +76,10 @@ async def get_student_course_results(  # pylint: disable=too-many-arguments
                 updated_at=get_datetime_msk_tz(
                     student_contest.dt_updated
                 ).strftime(
-                    '%Y-%m-%d %H:%M:%S',
+                    constants.dt_format,
                 ),
                 deadline=get_datetime_msk_tz(contest.deadline).strftime(
-                    '%Y-%m-%d %H:%M:%S',
+                    constants.dt_format,
                 ),
             )
         )
@@ -93,9 +90,8 @@ async def get_student_course_results(  # pylint: disable=too-many-arguments
         perc_ok = student_course.score_percent
     else:
         logger.error(
-            'Unknown ok_method: %s',
+            'Unknown ok_method: {}',
             course.ok_method,
-            extra={'log_obj_id': log_obj_id},
         )
         raise ValueError(f'Unknown ok_method: {course.ok_method}')
 
@@ -118,9 +114,8 @@ async def get_student_course_results(  # pylint: disable=too-many-arguments
         'и решить итоговый контест на 9 баллов и выше.',
     }
     logger.info(
-        'Student %s has course result',
+        'Student {} has course result',
         student.id,
-        extra={'log_obj_id': log_obj_id},
     )
 
     return CourseResults(
@@ -157,10 +152,9 @@ async def update_student_course_results(  # pylint: disable=too-many-statements
     student: Student,
     course: Course,
     student_course: StudentCourse,
+    logger: 'loguru.Logger',
     session: AsyncSession,
 ) -> None:
-    logger = logging.getLogger(__name__)
-
     course_score_sum = 0
     necessary_contests_results = []
 
@@ -183,7 +177,7 @@ async def update_student_course_results(  # pylint: disable=too-many-statements
     elif course.ok_method == 'score_sum':
         perc_ok = score_percent
     else:
-        logger.error('Unknown ok_method: %s', course.ok_method)
+        logger.error('Unknown ok_method: {}', course.ok_method)
         raise ValueError(f'Unknown ok_method: {course.ok_method}')
 
     is_ok = perc_ok >= course.ok_threshold_perc
@@ -211,10 +205,9 @@ async def update_sc_results_final(  # pylint: disable=too-many-statements,too-ma
     course_levels: list[CourseLevels],
     student_course: StudentCourse,
     student_course_levels: list[StudentCourseLevels],
+    logger: 'loguru.Logger',
     session: AsyncSession,
 ) -> None:
-    logger = logging.getLogger(__name__)
-
     course_score_sum = 0
     course_score_sum_with_deadline = 0
     contests_results = []
@@ -260,7 +253,7 @@ async def update_sc_results_final(  # pylint: disable=too-many-statements,too-ma
                         else:
                             levels_result_dict[level.level_name] = False
                             logger.error(
-                                'Contest %s has no level %s',
+                                'Contest {} has no level {}',
                                 contest.name,
                                 level.name,
                             )
@@ -290,7 +283,7 @@ async def update_sc_results_final(  # pylint: disable=too-many-statements,too-ma
     elif course.ok_method == 'score_sum':
         perc_ok = score_percent
     else:
-        logger.error('Unknown ok_method: %s', course.ok_method)
+        logger.error('Unknown ok_method: {}', course.ok_method)
         raise ValueError(f'Unknown ok_method: {course.ok_method}')
 
     is_ok = perc_ok >= course.ok_threshold_perc

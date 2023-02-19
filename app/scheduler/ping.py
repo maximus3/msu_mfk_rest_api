@@ -1,7 +1,8 @@
-import logging
+import uuid
 from collections import defaultdict
 from itertools import product
 
+import loguru
 from httpx import AsyncClient
 
 from app.bot_helper import send
@@ -11,7 +12,7 @@ from app.endpoints.v1 import prefix
 
 async def job() -> None:
     settings = get_settings()
-    logger = logging.getLogger(__name__)
+    logger = loguru.logger.bind(uuid=uuid.uuid4().hex)
 
     base_url = f'http://{{}}{settings.PATH_PREFIX}{prefix}/health_check/{{}}'
     hosts = [
@@ -28,8 +29,8 @@ async def job() -> None:
                 response = await client.get(base_url.format(host, endpoint))
                 if response.status_code != 200:
                     logger.error(
-                        'Health check "%s" on %s failed '
-                        'with status code %s',
+                        'Health check "{}" on {} failed '
+                        'with status code {}',
                         host,
                         endpoint,
                         response.status_code,
@@ -39,12 +40,12 @@ async def job() -> None:
                     ] = f'Failed (status code: {response.status_code})'
                     continue
                 logger.info(
-                    'Health check "%s" on %s is successful', host, endpoint
+                    'Health check "{}" on {} is successful', host, endpoint
                 )
                 result[host][endpoint] = 'Successful'
             except Exception as e:  # pylint: disable=broad-except
                 logger.error(
-                    'Health check "%s" on %s failed (url "%s"): %s',
+                    'Health check "{}" on {} failed (url "{}"): {}',
                     host,
                     endpoint,
                     base_url.format(host, endpoint),
@@ -58,7 +59,7 @@ async def job() -> None:
     try:
         await send.send_ping_status(result)
     except Exception as e:
-        logger.error('Failed to send ping status: %s', e)
+        logger.error('Failed to send ping status: {}', e)
         raise e
 
 

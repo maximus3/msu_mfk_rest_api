@@ -1,5 +1,7 @@
+import loguru
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
+from starlette.requests import Request
 
 from app.database.connection import SessionManager
 from app.database.models import Contest, User
@@ -25,10 +27,12 @@ api_router = APIRouter(
     status_code=status.HTTP_201_CREATED,
 )
 async def create(
+    request: Request,
     contest_request: ContestCreateRequest,
     _: User = Depends(get_current_user),
     session: AsyncSession = Depends(SessionManager().get_async_session),
 ) -> ContestInfoResponse:
+    logger = loguru.logger.bind(uuid=request['request_id'])
     course = await get_course_by_short_name(
         session, contest_request.course_short_name
     )
@@ -45,7 +49,9 @@ async def create(
             status_code=status.HTTP_409_CONFLICT,
             detail='Contest already exists',
         )
-    contest_info = await get_contest_info(contest_request.yandex_contest_id)
+    contest_info = await get_contest_info(
+        contest_request.yandex_contest_id, logger=logger
+    )
     contest = Contest(
         yandex_contest_id=contest_request.yandex_contest_id,
         lecture=contest_request.lecture,

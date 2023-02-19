@@ -1,8 +1,8 @@
 import asyncio
 from datetime import datetime
 
+import loguru
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from loguru import logger
 
 from app.config import get_settings
 from app.scheduler import list_of_jobs
@@ -25,7 +25,7 @@ if __name__ == '__main__':
         job.modify(next_run_time=datetime.now())
     scheduler.start()
     try:
-        logger.info('Starting scheduler')
+        loguru.logger.info('Starting scheduler')
         asyncio.get_event_loop().run_forever()
     except (KeyboardInterrupt, SystemExit):
-        logger.info('Scheduler stopped')
+        loguru.logger.info('Scheduler stopped')
