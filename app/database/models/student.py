@@ -101,43 +101,43 @@ class StudentContest(BaseModel):
     )
 
 
-# class StudentTask(BaseModel):
-#     """
-#     Relation between Student and Task.
-#
-#     Many-to-many relation.
-#     """
-#
-#     __tablename__ = 'student_task'
-#
-#     course_id = sa.Column(
-#         sa.ForeignKey('course.id', ondelete='CASCADE'),
-#         nullable=False,
-#         index=True,
-#     )
-#     contest_id = sa.Column(
-#         sa.ForeignKey('contest.id', ondelete='CASCADE'),
-#         nullable=False,
-#         index=True,
-#     )
-#     task_id = sa.Column(
-#         sa.ForeignKey('task.id', ondelete='CASCADE'),
-#         nullable=False,
-#         index=True,
-#     )
-#     student_id = sa.Column(
-#         sa.ForeignKey('student.id', ondelete='CASCADE'),
-#         nullable=False,
-#         index=True,
-#     )
-#     author_id = sa.Column(sa.Integer, nullable=True)
-#     run_id = sa.Column(sa.Integer, nullable=True)
-#     verdict = sa.Column(sa.String, nullable=False)
-#     final_score = sa.Column(sa.Float, nullable=False)
-#     no_deadline_score = sa.Column(sa.Float, nullable=False)
-#     submission_link = sa.Column(sa.String, nullable=False)
-#     time_from_start = sa.Column(sa.Integer, nullable=True)
-#     submission_time = sa.Column(sa.DateTime, nullable=False)
+class StudentTask(BaseModel):
+    """
+    Relation between Student and Task.
+
+    Many-to-many relation.
+    """
+
+    __tablename__ = 'student_task'
+
+    course_id = sa.Column(
+        sa.ForeignKey('course.id', ondelete='CASCADE'),
+        nullable=False,
+        index=True,
+    )
+    contest_id = sa.Column(
+        sa.ForeignKey('contest.id', ondelete='CASCADE'),
+        nullable=False,
+        index=True,
+    )
+    task_id = sa.Column(
+        sa.ForeignKey('task.id', ondelete='CASCADE'),
+        nullable=False,
+        index=True,
+    )
+    student_id = sa.Column(
+        sa.ForeignKey('student.id', ondelete='CASCADE'),
+        nullable=False,
+        index=True,
+    )
+    author_id = sa.Column(sa.Integer, nullable=False)
+    run_id = sa.Column(sa.Integer, nullable=False)
+    verdict = sa.Column(sa.String, nullable=False)
+    final_score = sa.Column(sa.Float, nullable=False)
+    no_deadline_score = sa.Column(sa.Float, nullable=False)
+    submission_link = sa.Column(sa.String, nullable=False)
+    time_from_start = sa.Column(sa.Integer, nullable=False)
+    submission_time = sa.Column(sa.DateTime, nullable=False)
 
 
 class StudentCourseLevels(BaseModel):
