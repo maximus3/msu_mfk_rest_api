@@ -30,3 +30,40 @@ class Contest(BaseModel):
         default=[],
         server_default='{}',
     )
+
+
+class ContestLevels(BaseModel):
+    __tablename__ = 'contest_levels'
+
+    course_id = sa.Column(
+        sa.ForeignKey('course.id', ondelete='CASCADE'),
+        nullable=False,
+        index=True,
+    )
+    contest_id = sa.Column(
+        sa.ForeignKey('contest.id', ondelete='CASCADE'),
+        nullable=False,
+        index=True,
+    )
+    level_name = sa.Column(sa.String, nullable=False)
+    level_ok_method = sa.Column(
+        sa.Enum('tasks_count', 'score_sum', name='contest_level_ok_method'),
+        default='tasks_count',
+        server_default='tasks_count',
+        nullable=False,
+    )
+    count_method = sa.Column(
+        sa.Enum('percent', 'absolute', name='contest_level_count_method'),
+        default='percent',
+        server_default='percent',
+        nullable=False,
+    )
+    ok_threshold = sa.Column(
+        sa.Float, default=100, server_default='100', nullable=False
+    )
+    include_after_deadline = sa.Column(
+        sa.Boolean,
+        default=False,
+        server_default='false',
+        nullable=False,
+    )
