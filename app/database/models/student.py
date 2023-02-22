@@ -1,4 +1,5 @@
 import sqlalchemy as sa
+from sqlalchemy.dialects.postgresql import UUID
 
 from .base import BaseModel
 
@@ -139,7 +140,7 @@ class StudentTask(BaseModel):
         server_default='false',
     )
     best_submission_id = sa.Column(
-        sa.ForeignKey('submission.id', ondelete='CASCADE'),
+        UUID(as_uuid=True),
         nullable=True,
     )
 
