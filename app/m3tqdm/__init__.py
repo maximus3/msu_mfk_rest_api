@@ -33,7 +33,6 @@ async def tqdm(  # noqa: C901  # pylint: disable=too-many-branches
     ]
     | None = None,
 ) -> tp.Any:
-    logger = logger or loguru.logger
     if name:
         name_log = '>>' + name + '\t'
     else:

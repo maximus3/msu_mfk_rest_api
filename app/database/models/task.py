@@ -24,3 +24,12 @@ class Task(BaseModel):
         sa.String,
         nullable=False,
     )
+    is_zero_ok = sa.Column(
+        sa.Boolean,
+        nullable=False,
+        default=False,
+        server_default='false',
+    )
+    score_max = sa.Column(
+        sa.Float, nullable=False, server_default='0.0', default=0.0
+    )

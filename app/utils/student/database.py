@@ -94,3 +94,27 @@ async def get_student_by_fio(
 ) -> Student | None:
     query = select(Student).where(func.lower(Student.fio) == fio.lower())
     return await session.scalar(query)
+
+
+async def get_or_create_all_student_models(
+    session: AsyncSession,
+    course_id: UUID,
+    contest_id: UUID,
+    author_id: int,
+) -> tuple[Student, StudentCourse, StudentContest]:
+    student_contest: StudentContest = await session.scalar(
+        select(StudentContest)
+        .where(StudentContest.contest_id == contest_id)
+        .where(StudentContest.course_id == course_id)
+        .where(StudentContest.author_id == author_id)
+    )
+    student: Student = await session.scalar(
+        select(Student).where(Student.id == student_contest.student_id)
+    )
+    student_course: StudentCourse = await session.scalar(
+        select(StudentCourse)
+        .where(StudentCourse.course_id == course_id)
+        .where(StudentCourse.student_id == student.id)
+    )
+
+    return student, student_course, student_contest

@@ -130,14 +130,18 @@ class StudentTask(BaseModel):
         nullable=False,
         index=True,
     )
-    author_id = sa.Column(sa.Integer, nullable=False)
-    run_id = sa.Column(sa.Integer, nullable=False)
-    verdict = sa.Column(sa.String, nullable=False)
     final_score = sa.Column(sa.Float, nullable=False)
     no_deadline_score = sa.Column(sa.Float, nullable=False)
-    submission_link = sa.Column(sa.String, nullable=False)
-    time_from_start = sa.Column(sa.Integer, nullable=False)
-    submission_time = sa.Column(sa.DateTime, nullable=False)
+    is_done = sa.Column(
+        sa.Boolean,
+        nullable=False,
+        default=False,
+        server_default='false',
+    )
+    best_submission_id = sa.Column(
+        sa.ForeignKey('submission.id', ondelete='CASCADE'),
+        nullable=True,
+    )
 
 
 class StudentCourseLevels(BaseModel):

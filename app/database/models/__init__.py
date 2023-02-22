@@ -11,6 +11,7 @@ from .student import (
     StudentDepartment,
     StudentTask,
 )
+from .submission import Submission
 from .task import Task
 from .tqdm_logs import TQDMLogs
 from .user import User
@@ -30,6 +31,7 @@ __all__ = [
     'StudentCourseLevels',
     'StudentDepartment',
     'StudentTask',
+    'Submission',
     'Task',
     'TQDMLogs',
     'User',
