@@ -449,3 +449,152 @@ async def get_or_create_student_contest(
             ),
         )
     return sc
+
+
+async def get_new_submissions(
+    contest: Contest,
+    last_updated_submission: int,
+    logger: 'loguru.Logger',
+) -> list[ContestSubmissionFull]:
+    url = (
+        f'contests/{contest.yandex_contest_id}/submissions'
+        f'?page={{}}&pageSize={{}}'
+    )
+    page = 1
+    page_size = 100
+    result_dict: dict[int, ContestSubmission] = {}
+
+    response = await make_request_to_yandex_contest_api(
+        url.format(page, page_size), logger=logger
+    )
+    data = response.json()
+    all_submissions_count = data['count']
+    logger.info(
+        'Contest {} has {} submissions',
+        contest.yandex_contest_id,
+        all_submissions_count,
+    )
+
+    while len(result_dict) != all_submissions_count:
+        new_values = dict(
+            map(
+                lambda submission: (
+                    int(submission['id']),
+                    ContestSubmission(**submission),
+                ),
+                filter(
+                    lambda submission: not last_updated_submission
+                    or int(submission['id']) > last_updated_submission,
+                    data['submissions'],
+                ),
+            )
+        )
+        result_dict.update(new_values)
+        if len(new_values) < len(data['submissions']):
+            break
+        page += 1
+        response = await make_request_to_yandex_contest_api(
+            url.format(page, page_size), logger=logger
+        )
+        data = response.json()
+    return await make_full_submissions(
+        result_dict,
+        contest,
+        logger=logger,
+    )
+
+
+async def make_full_submissions(
+    submissions: dict[int, ContestSubmission],
+    contest: Contest,
+    logger: 'loguru.Logger',
+) -> list[ContestSubmissionFull]:
+    url = f'contests/{contest.yandex_contest_id}/submissions/multiple?'
+    batch_size = 100
+    results: list[ContestSubmissionFull] = []
+    submission_values = sorted(
+        list(
+            submissions.values(),
+        ),
+        key=lambda x: x.id,
+    )
+    logger.info(
+        'Getting submissions for contest "{}" ' 'for {} submissions',
+        contest.yandex_contest_id,
+        len(submission_values),
+    )
+    async for i in tqdm(
+        range(0, len(submission_values), batch_size),
+        name='make_full_submissions',
+        total=(len(submission_values) + batch_size - 1) // batch_size,
+    ):
+        batch_url = url + '&'.join(
+            map(
+                lambda run_id: f'runIds={run_id}',
+                [
+                    submission_id
+                    for submission_id in submission_values[i : i + batch_size]
+                ],
+            )
+        )
+        first_id, last_id = (
+            submission_values[i],
+            submission_values[i + batch_size]
+            if i + batch_size < len(submission_values)
+            else submission_values[-1],
+        )
+        logger.info(
+            'Getting submissions ids {}-{} (index {}-{})',
+            first_id,
+            last_id,
+            i,
+            i + batch_size,
+        )
+        try:
+            response = await make_request_to_yandex_contest_api(
+                batch_url, timeout=60, retry_count=5, logger=logger
+            )
+        except httpx.ReadTimeout:
+            logger.error(
+                'Timeout error for submissions ids {}-{} (index {}-{})',
+                first_id,
+                last_id,
+                i,
+                i + batch_size,
+            )
+            continue
+        if response.status_code != 200:
+            logger.error(
+                'Error while getting submissions {}-{} (index {}-{}). '
+                'Status code: {}. Response: {}',
+                first_id,
+                last_id,
+                i,
+                i + batch_size,
+                response.status_code,
+                response.text,
+            )
+            continue
+        results.extend(
+            ContestSubmissionFull(
+                id=submission['runId'],
+                authorId=submissions[submission['runId']].authorId,
+                problemId=submission['problemId'],
+                problemAlias=submission['problemAlias'],
+                verdict=submission['verdict'],
+                login=submission['participantInfo']['login'],
+                timeFromStart=submission['timeFromStart'],
+                submissionTime=datetime.fromisoformat(
+                    submission['submissionTime'].replace(tzinfo=None)
+                ),
+                finalScore=(
+                    float(submission['finalScore'])
+                    if isinstance(submission['finalScore'], str)
+                    and submission['finalScore']
+                    and float(submission['finalScore'])
+                    else 0
+                ),
+            )
+            for submission in response.json()
+        )
+    return results

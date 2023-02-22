@@ -1,3 +1,5 @@
+import datetime as dt
+
 from pydantic import BaseModel
 
 
@@ -11,6 +13,6 @@ class ContestSubmission(BaseModel):
 
 class ContestSubmissionFull(ContestSubmission):
     finalScore: float
-    noDeadlineScore: float
     login: str
     timeFromStart: int
+    submissionTime: dt.datetime

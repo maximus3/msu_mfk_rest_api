@@ -1,5 +1,6 @@
 from .database import (
     create_student,
+    get_or_create_all_student_models,
     get_student,
     get_student_by_fio,
     get_student_by_token,
@@ -19,4 +20,5 @@ __all__ = [
     'get_students_by_course_with_no_contest',
     'get_student_by_fio',
     'get_student_course_is_ok',
+    'get_or_create_all_student_models',
 ]
