@@ -13,6 +13,7 @@ from app.schemas import (
     ContestSubmissionFull,
     YandexContestInfo,
 )
+from app.schemas import contest as contest_schemas
 from app.utils.common import get_datetime_msk_tz
 from app.utils.yandex_request import make_request_to_yandex_contest_api
 
@@ -121,6 +122,14 @@ async def get_contest_info(
         deadline=deadline,
         tasks_count=tasks_count,
         duration=duration,
+        tasks=[
+            contest_schemas.Task(
+                yandex_task_id=problem['id'],
+                name=problem['name'],
+                alias=problem['alias'],
+            )
+            for problem in data['problems']
+        ],
     )
 
 

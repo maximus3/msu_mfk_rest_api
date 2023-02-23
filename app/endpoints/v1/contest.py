@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.requests import Request
 
+from app.database import models
 from app.database.connection import SessionManager
 from app.database.models import Contest, User
 from app.schemas import ContestCreateRequest, ContestInfoResponse
@@ -66,7 +67,22 @@ async def create(
         deadline=contest_info.deadline,
         tasks_count=contest_info.tasks_count,
     )
+    course.score_max += contest_request.score_max
+    course.contest_count += 1
     session.add(contest)
+    session.add(course)
+    await session.flush()
+    for task in contest_info.tasks:
+        session.add(
+            models.Task(
+                contest_id=contest.id,
+                yandex_task_id=task.yandex_task_id,
+                name=task.name,
+                alias=task.alias,
+                is_zero_ok=False,  # TODO: need change in db next
+                score_max=0,
+            )
+        )
     await session.commit()
     return ContestInfoResponse(
         course_short_name=course.short_name,
