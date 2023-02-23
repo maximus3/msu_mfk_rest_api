@@ -67,6 +67,10 @@ async def update_course_results(
                 session, course.id
             )
         )
+        course_levels = await course_utils.get_course_levels(
+            session, course.id
+        )  # TODO: add types FINAL, NECESSARY contests for levels
+        course_levels.sort(key=lambda x: (x.count_method, x.ok_threshold))
     contests.sort(key=lambda x: x.lecture)
     course_score_sum = sum(contest.score_max for contest in contests)
     if course.score_max != course_score_sum:
@@ -102,13 +106,19 @@ async def update_course_results(
                 )
                 or -1
             )
+            contest_levels = await contest_utils.get_contest_levels(
+                session, contest.id
+            )
+            contest_levels.sort(key=lambda x: (x.count_method, x.ok_threshold))
         submissions = await contest_utils.get_new_submissions(
             contest, last_updated_submission, logger=logger
         )
         submissions.sort(key=lambda x: x.id)
         await process_submissions(
             course,
+            course_levels,
             contest,
+            contest_levels,
             submissions,
             base_logger=logger,
         )
@@ -172,9 +182,11 @@ async def check_student_contest_relations(
             session.add(student_contest)
 
 
-async def process_submissions(
+async def process_submissions(  # pylint: disable=too-many-arguments
     course: models.Course,
+    course_levels: list[models.CourseLevels],
     contest: models.Contest,
+    contest_levels: list[models.ContestLevels],
     submissions: list[contest_schemas.ContestSubmissionFull],
     base_logger: 'loguru.Logger',
 ) -> None:
@@ -190,7 +202,9 @@ async def process_submissions(
             )
         await process_submission(
             course,
+            course_levels,
             contest,
+            contest_levels,
             task,
             submission,
             base_logger=base_logger,
@@ -199,7 +213,9 @@ async def process_submissions(
 
 async def process_submission(  # noqa: C901 # pylint: disable=too-many-arguments,too-many-branches,too-many-statements # TODO
     course: models.Course,
+    course_levels: list[models.CourseLevels],
     contest: models.Contest,
+    contest_levels: list[models.ContestLevels],
     task: models.Task,
     submission: contest_schemas.ContestSubmissionFull,
     base_logger: 'loguru.Logger',
@@ -210,7 +226,9 @@ async def process_submission(  # noqa: C901 # pylint: disable=too-many-arguments
         async with SessionManager().create_async_session() as session:
             return await process_submission(
                 course,
+                course_levels,
                 contest,
+                contest_levels,
                 task,
                 submission,
                 base_logger=base_logger,
@@ -296,10 +314,6 @@ async def process_submission(  # noqa: C901 # pylint: disable=too-many-arguments
         )  # TODO: magic constant
         student_contest.tasks_done += is_done_diff
 
-        contest_levels = await contest_utils.get_contest_levels(
-            session, contest.id
-        )  # TODO: get in upper function
-        contest_levels.sort(key=lambda x: (x.count_method, x.ok_threshold))
         student_contest_levels = [
             await contest_utils.get_or_create_student_contest_level(
                 session, student.id, course.id, contest.id, level.id
@@ -422,10 +436,6 @@ async def process_submission(  # noqa: C901 # pylint: disable=too-many-arguments
             100 * student_course.contests_ok / course.contest_count
         )
 
-        course_levels = await course_utils.get_course_levels(
-            session, course.id  # TODO: get in upper function
-        )  # TODO: add types FINAL, NECESSARY contests for levels
-        course_levels.sort(key=lambda x: (x.count_method, x.ok_threshold))
         student_course_levels = [
             await course_utils.get_or_create_student_course_level(
                 session, student.id, course.id, level.id
