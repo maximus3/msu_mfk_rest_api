@@ -9,13 +9,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.database.models import Contest, Course, Student, StudentContest
 from app.m3tqdm import tqdm
 from app.schemas import (
-    ContestProblem,
     ContestSubmission,
     ContestSubmissionFull,
     YandexContestInfo,
 )
 from app.utils.common import get_datetime_msk_tz
-from app.utils.scheduler import write_sql_tqdm
 from app.utils.yandex_request import make_request_to_yandex_contest_api
 
 from .database import (
@@ -87,162 +85,6 @@ async def add_student_to_contest(
     return True, None
 
 
-async def get_problems(
-    yandex_contest_id: int,
-    logger: 'loguru.Logger',
-) -> list[ContestProblem]:
-    response = await make_request_to_yandex_contest_api(
-        f'contests/{yandex_contest_id}/problems',
-        logger=logger,
-    )
-    return sorted(
-        [ContestProblem(**problem) for problem in response.json()['problems']],
-        key=lambda problem: problem.alias,
-    )
-
-
-async def get_participants_login_to_id(
-    yandex_contest_id: int,
-    logger: 'loguru.Logger',
-) -> dict[str, int]:
-    response = await make_request_to_yandex_contest_api(
-        f'contests/{yandex_contest_id}/participants',
-        logger=logger,
-    )
-    return {
-        participant['login']: participant['id']
-        for participant in response.json()
-    }
-
-
-async def _add_results(
-    data: list[dict[str, str]],
-    result_list: dict[int, ContestSubmission],
-) -> None:
-    result_list.update(
-        dict(
-            map(
-                lambda submission: (
-                    int(submission['id']),
-                    ContestSubmission(**submission),
-                ),
-                filter(lambda submission: submission['verdict'] == 'OK', data),
-            )
-        )
-    )
-
-
-async def extend_submissions(
-    submissions: dict[int, ContestSubmission],
-    contest: Contest,
-    ok_authors_ids: set[int],
-    logger: 'loguru.Logger',
-    zero_is_ok: bool = False,
-) -> tuple[list[ContestSubmissionFull], bool]:
-    ok_authors_ids = ok_authors_ids or set()
-    url = f'contests/{contest.yandex_contest_id}/submissions/multiple?'
-    batch_size = 100
-    results: list[ContestSubmissionFull] = []
-    is_all_results = True
-    submission_values = list(
-        filter(
-            lambda submission: submission.authorId not in ok_authors_ids,
-            submissions.values(),
-        )
-    )
-    logger.info(
-        'Getting submissions for contest "{}" '
-        'with {} not ok authors submissions',
-        contest.yandex_contest_id,
-        len(submission_values),
-    )
-    async for i in tqdm(
-        range(0, len(submission_values), batch_size),
-        name='extend_submissions',
-        total=(len(submission_values) + batch_size - 1) // batch_size,
-        sql_write_func=write_sql_tqdm,
-    ):
-        batch_url = url + '&'.join(
-            map(
-                lambda run_id: f'runIds={run_id}',
-                [
-                    submission.id
-                    for submission in submission_values[i : i + batch_size]
-                ],
-            )
-        )
-        logger.info('Getting submissions {}-{}', i, i + batch_size)
-        try:
-            response = await make_request_to_yandex_contest_api(
-                batch_url, timeout=60, retry_count=5, logger=logger
-            )
-        except httpx.ReadTimeout:
-            logger.error('Timeout error')
-            is_all_results = False
-            continue
-        if response.status_code != 200:
-            logger.error(
-                'Error while getting submissions {}-{}. '
-                'Status code: {}. Response: {}',
-                i,
-                i + batch_size,
-                response.status_code,
-                response.text,
-            )
-            is_all_results = False
-            continue
-        results.extend(
-            ContestSubmissionFull(
-                id=submission['runId'],
-                authorId=submissions[submission['runId']].authorId,
-                problemId=submission['problemId'],
-                problemAlias=submission['problemAlias'],
-                verdict=submission['verdict'],
-                login=submission['participantInfo']['login'],
-                timeFromStart=submission['timeFromStart'],
-                noDeadlineScore=(
-                    float(submission['finalScore'])
-                    if isinstance(submission['finalScore'], str)
-                    and submission['finalScore']
-                    and float(submission['finalScore'])
-                    else (
-                        1
-                        if zero_is_ok and submission['verdict'] == 'OK'
-                        else 0
-                    )
-                ),
-                finalScore=(
-                    float(submission['finalScore'])
-                    if isinstance(submission['finalScore'], str)
-                    and submission['finalScore']
-                    and float(submission['finalScore'])
-                    else (
-                        1
-                        if zero_is_ok and submission['verdict'] == 'OK'
-                        else 0
-                    )
-                )
-                if datetime.fromisoformat(
-                    submission['submissionTime']
-                ).replace(tzinfo=None)
-                <= contest.deadline
-                else (
-                    float(submission['finalScore']) / 2
-                    if isinstance(submission['finalScore'], str)
-                    and submission['finalScore']
-                    and float(submission['finalScore'])
-                    else (
-                        0.5
-                        if zero_is_ok and submission['verdict'] == 'OK'
-                        else 0
-                    )
-                ),
-            )
-            for submission in response.json()
-        )
-    return results, is_all_results
-
-
 async def filter_best_submissions_only(
     submissions: list[ContestSubmissionFull],
     sort_by_final: bool = True,
@@ -277,50 +119,6 @@ async def filter_best_submissions_only(
                 )[:1]
             )
     return result
-
-
-async def get_best_submissions(
-    contest: Contest,
-    logger: 'loguru.Logger',
-    zero_is_ok: bool = False,
-    ok_authors_ids: set[int] | None = None,
-) -> tuple[list[ContestSubmissionFull], bool]:
-    ok_authors_ids = ok_authors_ids or set()
-    url = (
-        f'contests/{contest.yandex_contest_id}/submissions'
-        f'?page={{}}&pageSize={{}}'
-    )
-    page = 1
-    page_size = 100
-    result_dict: dict[int, ContestSubmission] = {}
-
-    response = await make_request_to_yandex_contest_api(
-        url.format(page, page_size), logger=logger
-    )
-    data = response.json()
-    count = data['count']
-    count_done = 0
-    logger.info(
-        'Contest {} has {} submissions', contest.yandex_contest_id, count
-    )
-    while count_done < count:
-        await _add_results(data['submissions'], result_dict)
-        count_done += len(data['submissions'])
-        if count_done == count:
-            break
-        page += 1
-        response = await make_request_to_yandex_contest_api(
-            url.format(page, page_size), logger=logger
-        )
-        data = response.json()
-    extended_results, is_all_results = await extend_submissions(
-        result_dict,
-        contest,
-        ok_authors_ids,
-        logger=logger,
-        zero_is_ok=zero_is_ok,
-    )
-    return await filter_best_submissions_only(extended_results), is_all_results
 
 
 async def get_author_id(

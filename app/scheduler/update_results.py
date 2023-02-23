@@ -281,7 +281,9 @@ async def process_submission(  # noqa: C901 # pylint: disable=too-many-arguments
         student_task.is_done = student_task.is_done or is_done_submission
 
         student_contest.score = round(student_contest.score + score_diff, 4)
-        student_contest.score_no_deadline = round(student_contest.score_no_deadline + no_deadline_score_diff, 4)
+        student_contest.score_no_deadline = round(
+            student_contest.score_no_deadline + no_deadline_score_diff, 4
+        )  # TODO: magic constant
         student_contest.tasks_done += is_done_diff
 
         contest_levels = await contest_utils.get_contest_levels(
