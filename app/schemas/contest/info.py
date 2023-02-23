@@ -5,10 +5,17 @@ from pydantic import BaseModel
 from .levels import Levels
 
 
+class Task(BaseModel):
+    yandex_task_id: str
+    name: str
+    alias: str
+
+
 class YandexContestInfo(BaseModel):
     deadline: datetime
     tasks_count: int
     duration: int
+    tasks: list[Task]
 
 
 class ContestInfoResponse(BaseModel):
