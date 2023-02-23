@@ -109,7 +109,7 @@ db: ##@Database Docker up db
 .PHONY: test
 test: ##@Testing Runs pytest with coverage
 	$(POETRY_RUN) pytest tests/app/endpoints/v1/test_ping.py::TestHealthCheckHandler::test_ping_database
-	$(TEST) --cov
+	$(TEST) $(args) --cov
 
 .PHONY: test-fast
 test-fast: ##@Testing Runs pytest with exitfirst
