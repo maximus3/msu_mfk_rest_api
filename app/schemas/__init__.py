@@ -4,7 +4,6 @@ from .auth.user import User as UserSchema
 from .contest.create import ContestCreateRequest
 from .contest.info import ContestInfoResponse, YandexContestInfo
 from .contest.levels import Level, Levels
-from .contest.problem import ContestProblem
 from .contest.submission import ContestSubmission, ContestSubmissionFull
 from .course.course import CourseBase, CourseResponse
 from .course.results import CourseResultsCSV
@@ -32,7 +31,6 @@ __all__ = [
     'CourseBase',
     'DepartmentResponse',
     'DepartmentBase',
-    'ContestProblem',
     'ContestSubmission',
     'ContestSubmissionFull',
     'CourseResultsCSV',
