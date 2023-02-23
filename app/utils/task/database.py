@@ -6,18 +6,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import models
 
 
-async def get_last_updated_submission(
-    session: AsyncSession, contest_id: UUID
-) -> int | None:
-    query = (
-        select(models.StudentTask)
-        .where(models.StudentTask.contest_id == contest_id)
-        .order_by(models.StudentTask.run_id.desc())
-        .limit(1)
-    )
-    return await session.scalar(query)
-
-
 async def get_task(
     session: AsyncSession, contest_id: UUID, yandex_task_id: str
 ) -> models.Task | None:

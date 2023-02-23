@@ -15,6 +15,7 @@ from app.schemas import scheduler as scheduler_schemas
 
 TABLE_NAMES = [
     'alembic_version',
+    'contest_levels',
     'department',
     'course',
     'course_levels',
@@ -24,6 +25,10 @@ TABLE_NAMES = [
     'student_course',
     'student_course_levels',
     'student_contest',
+    'student_contest_levels',
+    'student_task',
+    'submission',
+    'task',
     'user',
     'tqdm_logs',
 ]

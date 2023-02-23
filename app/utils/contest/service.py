@@ -85,42 +85,6 @@ async def add_student_to_contest(
     return True, None
 
 
-async def filter_best_submissions_only(
-    submissions: list[ContestSubmissionFull],
-    sort_by_final: bool = True,
-) -> list[ContestSubmissionFull]:
-    result = []
-    for author_id in set(
-        map(lambda submission: submission.authorId, submissions)
-    ):
-        for task_id in set(
-            map(lambda submission: submission.problemId, submissions)
-        ):
-            if task_id in [
-                '5897533/2021_10_05/6OX0YJhjMw',
-                '5897533/2021_10_13/4aAHf8v2kd',
-            ]:  # TODO: ФИО and  Факультет tasks
-                continue
-            result.extend(
-                sorted(
-                    filter(
-                        lambda submission: (
-                            submission.authorId
-                            == author_id  # pylint: disable=cell-var-from-loop
-                            and submission.problemId
-                            == task_id  # pylint: disable=cell-var-from-loop
-                        ),
-                        submissions,
-                    ),
-                    key=lambda submission: submission.finalScore
-                    if sort_by_final
-                    else submission.noDeadlineScore,
-                    reverse=True,
-                )[:1]
-            )
-    return result
-
-
 async def get_author_id(
     login: str,
     yandex_contest_id: int,
@@ -158,74 +122,6 @@ async def get_contest_info(
         tasks_count=tasks_count,
         duration=duration,
     )
-
-
-async def get_student_best_submissions(
-    contest: Contest,
-    student: Student,
-    student_contest: StudentContest,
-    logger: 'loguru.Logger',
-    zero_is_ok: bool = False,
-) -> list[ContestSubmissionFull]:
-    url = (
-        f'contests/{contest.yandex_contest_id}/participants/'
-        f'{student_contest.author_id}/stats'
-    )
-
-    response = await make_request_to_yandex_contest_api(url, logger=logger)
-    if response.status_code != 200:
-        logger.error(
-            'Error while getting results for student {} (id={})'
-            'Status code: {}. Response: {}',
-            student.contest_login,
-            student_contest.author_id,
-            response.status_code,
-            response.text,
-        )
-    data = response.json()
-    runs = data['runs']
-
-    logger.info(
-        'Got {} submissions for contest "{}" with author {} (id={})',
-        len(runs),
-        contest.yandex_contest_id,
-        student.contest_login,
-        student_contest.author_id,
-    )
-
-    results = [
-        ContestSubmissionFull(
-            id=submission['runId'],
-            authorId=data['id'],
-            problemId=submission['problemId'],
-            problemAlias=submission['problemAlias'],
-            verdict=submission['verdict'],
-            login=data['login'],
-            timeFromStart=submission['timeFromStart'],
-            noDeadlineScore=(
-                float(submission['finalScore'])
-                if isinstance(submission['finalScore'], str)
-                and submission['finalScore']
-                and float(submission['finalScore'])
-                else (1 if zero_is_ok and submission['verdict'] == 'OK' else 0)
-            ),
-            finalScore=(
-                float(submission['finalScore'])
-                if isinstance(submission['finalScore'], str)
-                and submission['finalScore']
-                and float(submission['finalScore'])
-                else (1 if zero_is_ok and submission['verdict'] == 'OK' else 0)
-            )
-            if datetime.fromisoformat(submission['submissionTime']).replace(
-                tzinfo=None
-            )
-            <= contest.deadline
-            else 0,
-        )
-        for submission in runs
-    ]
-
-    return await filter_best_submissions_only(results, sort_by_final=False)
 
 
 async def get_or_create_student_contest(

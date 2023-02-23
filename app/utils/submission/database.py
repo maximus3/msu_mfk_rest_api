@@ -1,8 +1,22 @@
+from uuid import UUID
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import models
 from app.schemas import contest as contest_schemas
+
+
+async def get_last_updated_submission(
+    session: AsyncSession, contest_id: UUID
+) -> int | None:
+    query = (
+        select(models.Submission)
+        .where(models.Submission.contest_id == contest_id)
+        .order_by(models.Submission.run_id.desc())
+        .limit(1)
+    )
+    return await session.scalar(query)
 
 
 async def get_submission(
