@@ -1,3 +1,5 @@
+# pylint: disable=duplicate-code
+
 import sqlalchemy as sa
 
 from .base import BaseModel

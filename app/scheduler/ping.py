@@ -8,6 +8,7 @@ from httpx import AsyncClient
 from app.bot_helper import send
 from app.config import get_settings
 from app.endpoints.v1 import prefix
+from app.schemas import scheduler as scheduler_schemas
 
 
 async def job() -> None:
@@ -63,9 +64,11 @@ async def job() -> None:
         raise e
 
 
-job_info = {
-    'func': job,
-    'trigger': 'interval',
-    'minutes': 1,
-    'name': 'ping_app',
-}
+job_info = scheduler_schemas.JobInfo(
+    **{
+        'func': job,
+        'trigger': 'interval',
+        'minutes': 1,
+        'name': 'ping_app',
+    }
+)

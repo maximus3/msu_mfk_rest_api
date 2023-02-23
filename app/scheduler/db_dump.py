@@ -10,6 +10,7 @@ from app import constants
 from app.bot_helper import send
 from app.config import DefaultSettings, get_settings
 from app.database.connection import SessionManager
+from app.schemas import scheduler as scheduler_schemas
 
 
 TABLE_NAMES = [
@@ -92,9 +93,11 @@ async def job(filename: str | None = None) -> None:
         Path(filename).unlink()
 
 
-job_info = {
-    'func': job,
-    'trigger': 'cron',
-    'hour': 3,
-    'name': 'db_dump',
-}
+job_info = scheduler_schemas.JobInfo(
+    **{
+        'func': job,
+        'trigger': 'cron',
+        'hour': 3,
+        'name': 'db_dump',
+    }
+)

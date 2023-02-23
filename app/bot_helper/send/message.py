@@ -1,3 +1,6 @@
+import typing as tp
+
+import loguru
 from aiogram.utils.exceptions import CantParseEntities
 
 from app.bot_helper import bot
@@ -40,3 +43,21 @@ async def send_traceback_message(
         f'</code>'
     )
     return await send_message(message, level)
+
+
+async def send_message_safe(
+    logger: 'loguru.Logger', *args: tp.Any, **kwargs: tp.Any
+) -> None:
+    try:
+        await send_message(*args, **kwargs)
+    except Exception as send_exc:  # pylint: disable=broad-except
+        logger.exception('Error while sending error message: {}', send_exc)
+
+
+async def send_traceback_message_safe(
+    logger: 'loguru.Logger', *args: tp.Any, **kwargs: tp.Any
+) -> None:
+    try:
+        await send_traceback_message(*args, **kwargs)
+    except Exception as send_exc:  # pylint: disable=broad-except
+        logger.exception('Error while sending error message: {}', send_exc)

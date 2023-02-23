@@ -1,3 +1,5 @@
+# pylint: disable=too-many-lines
+
 import traceback
 import uuid
 
@@ -9,6 +11,8 @@ from app.database import models
 from app.database.connection import SessionManager
 from app.m3tqdm import tqdm
 from app.schemas import contest as contest_schemas
+from app.schemas import course as course_schemas
+from app.schemas import scheduler as scheduler_schemas
 from app.utils import contest as contest_utils
 from app.utils import course as course_utils
 from app.utils import student as student_utils
@@ -23,7 +27,7 @@ async def job() -> None:
     base_logger = loguru.logger.bind(uuid=uuid.uuid4().hex)
     async for course in tqdm(
         courses,
-        name=job_info['name'] + '-courses',
+        name=job_info.name + '-courses',
     ):
         logger = base_logger.bind(
             course={'id': course.id, 'short_name': course.short_name}
@@ -37,16 +41,12 @@ async def job() -> None:
                 course.short_name,
                 exc,
             )
-            try:
-                await send.send_traceback_message(
-                    f'Error while updating course '
-                    f'results for {course.short_name}: {exc}',
-                    code=traceback.format_exc(),
-                )
-            except Exception as send_exc:  # pylint: disable=broad-except
-                logger.exception(
-                    'Error while sending error message: {}', send_exc
-                )
+            await send.send_traceback_message_safe(
+                logger=logger,
+                message=f'Error while updating course '
+                f'results for {course.short_name}: {exc}',
+                code=traceback.format_exc(),
+            )
             continue
 
     await send.send_message(
@@ -68,10 +68,20 @@ async def update_course_results(
             )
         )
     contests.sort(key=lambda x: x.lecture)
-    course_score_sum = 0
+    course_score_sum = sum(contest.score_max for contest in contests)
+    if course.score_max != course_score_sum:
+        raise RuntimeError(
+            f'Course {course.id} has {course.score_max} '
+            f'score max, but got {course_score_sum} score sum'
+        )
+    if course.contest_count != len(contests):
+        raise RuntimeError(
+            f'Course {course.id} has {course.contest_count} '
+            f'contest count, but got {len(contests)} contests'
+        )
     async for contest in tqdm(
         contests,
-        name=job_info['name'] + '-contests',
+        name=job_info.name + '-contests',
     ):
         logger = base_logger.bind(
             contest={
@@ -85,12 +95,12 @@ async def update_course_results(
             students_sc_departments,
             base_logger=logger,
         )
-        course_score_sum += contest.score_max
         async with SessionManager().create_async_session() as session:
             last_updated_submission = (
                 await task_utils.get_last_updated_submission(
                     session, contest.id
                 )
+                or -1
             )
         submissions = await contest_utils.get_new_submissions(
             contest, last_updated_submission, logger=logger
@@ -122,7 +132,7 @@ async def check_student_contest_relations(
             )
     async for student, _, _ in tqdm(
         students_sc_departments,
-        name=job_info['name'] + '-check_student_contest_relations',
+        name=job_info.name + '-check_student_contest_relations',
     ):
         logger = base_logger.bind(
             student={'id': student.id, 'contest_login': student.contest_login}
@@ -132,7 +142,7 @@ async def check_student_contest_relations(
         )
 
         if student_contest is None:
-            logger.warning(
+            logger.info(
                 'Student {} has no relation with contest {}, creating',
                 student.id,
                 contest.id,
@@ -173,13 +183,9 @@ async def process_submissions(
                 session, contest.id, submission.problemId
             )
         if task is None:
-            base_logger.error(
-                'Task {} not found for contest {}',
-                submission.problemId,
-                contest.id,
-            )
             raise RuntimeError(
-                f'Task {submission.problemId} not found for contest {contest.id}'
+                f'Task {submission.problemId} not '
+                f'found for contest {contest.id}'
             )
         await process_submission(
             course,
@@ -190,7 +196,7 @@ async def process_submissions(
         )
 
 
-async def process_submission(
+async def process_submission(  # noqa: C901 # pylint: disable=too-many-arguments,too-many-branches,too-many-statements # TODO
     course: models.Course,
     contest: models.Contest,
     task: models.Task,
@@ -241,6 +247,12 @@ async def process_submission(
             submission.id,
             submission_model.id,
         )
+        await send.send_message_safe(
+            logger,
+            message=f'Submission {submission.id} already '
+            f'in database (id={submission_model.id})',
+            level='warning',
+        )
     submission_model = await submission_utils.add_submission(
         session,
         student,
@@ -250,11 +262,11 @@ async def process_submission(
         student_task,
         submission,
     )
-    await session.commit()
-    if (
+    await session.flush()
+    if (  # pylint: disable=too-many-nested-blocks  # TODO
         submission_model.final_score > student_task.final_score
         or submission_model.no_deadline_score > student_task.no_deadline_score
-    ):
+    ):  # TODO: check block other transactions
         is_done_submission = submission_model.final_score == task.score_max
 
         score_diff = submission_model.final_score - student_task.final_score
@@ -270,16 +282,208 @@ async def process_submission(
 
         student_contest.score += score_diff
         student_contest.score_no_deadline += no_deadline_score_diff
-        student_contest.tasks_done += (
-            is_done_diff  # TODO: is_ok check by levels
+        student_contest.tasks_done += is_done_diff
+
+        contest_levels = await contest_utils.get_contest_levels(
+            session, contest.id
+        )
+        contest_levels.sort(key=lambda x: (x.count_method, x.ok_threshold))
+        student_contest_levels = [
+            await contest_utils.get_or_create_student_contest_level(
+                session, student.id, course.id, contest.id, level.id
+            )
+            for level in contest_levels
+        ]
+        contests_ok_diff = 0
+        for contest_level, student_contest_level in zip(
+            contest_levels, student_contest_levels
+        ):
+            if student_contest_level.is_ok:
+                continue
+            if (
+                contest_level.level_ok_method
+                == contest_schemas.LevelOkMethod.TASKS_COUNT
+            ):
+                if (
+                    contest_level.count_method
+                    == contest_schemas.LevelCountMethod.ABSOLUTE
+                ):
+                    if (  # pylint: disable=no-else-raise  # TODO: remove after implement
+                        contest_level.include_after_deadline
+                    ):
+                        raise NotImplementedError(
+                            f'Not implemented for '
+                            f'{contest_schemas.LevelOkMethod.TASKS_COUNT} '
+                            f'{contest_schemas.LevelCountMethod.ABSOLUTE} '
+                            f'include_after_deadline'
+                        )  # TODO
+                    else:
+                        student_contest_level.is_ok = (
+                            student_contest.tasks_done
+                            >= contest_level.ok_threshold
+                        )
+                elif (
+                    contest_level.count_method
+                    == contest_schemas.LevelCountMethod.PERCENT
+                ):
+                    if (  # pylint: disable=no-else-raise  # TODO: remove after implement
+                        contest_level.include_after_deadline
+                    ):
+                        raise NotImplementedError(
+                            f'Not implemented for '
+                            f'{contest_schemas.LevelOkMethod.TASKS_COUNT} '
+                            f'{contest_schemas.LevelCountMethod.PERCENT} '
+                            f'include_after_deadline'
+                        )  # TODO
+                    else:
+                        student_contest_level.is_ok = (
+                            100
+                            * student_contest.tasks_done
+                            / contest.tasks_count
+                        ) >= contest_level.ok_threshold
+                else:
+                    raise RuntimeError(
+                        f'Contest level count method '
+                        f'{contest_level.count_method} not found'
+                    )
+            elif (
+                contest_level.level_ok_method
+                == contest_schemas.LevelOkMethod.SCORE_SUM
+            ):
+                if (
+                    contest_level.count_method
+                    == contest_schemas.LevelCountMethod.ABSOLUTE
+                ):
+                    if contest_level.include_after_deadline:
+                        student_contest_level.is_ok = (
+                            student_contest.score_no_deadline
+                            >= contest_level.ok_threshold
+                        )
+                    else:
+                        student_contest_level.is_ok = (
+                            student_contest.score >= contest_level.ok_threshold
+                        )
+                elif (
+                    contest_level.count_method
+                    == contest_schemas.LevelCountMethod.PERCENT
+                ):
+                    if contest_level.include_after_deadline:
+                        student_contest_level.is_ok = (
+                            100
+                            * student_contest.score_no_deadline
+                            / contest.score_max
+                        ) >= contest_level.ok_threshold
+                    else:
+                        student_contest_level.is_ok = (
+                            100 * student_contest.score / contest.score_max
+                        ) >= contest_level.ok_threshold
+                else:
+                    raise RuntimeError(
+                        f'Contest level count method '
+                        f'{contest_level.count_method} not found'
+                    )
+            else:
+                raise RuntimeError(
+                    f'Contest level ok method '
+                    f'{contest_level.level_ok_method} not found'
+                )
+            if contest_level.level_name == 'Зачет автоматом':  # TODO: remove
+                contests_ok_diff = (
+                    0 if student_contest.is_ok else student_contest_level.is_ok
+                )
+                student_contest.is_ok = (
+                    student_contest.is_ok or student_contest_level.is_ok
+                )
+            elif contest_level.level_name == 'Допуск к зачету':
+                student_contest.is_ok_no_deadline = (
+                    student_contest.is_ok_no_deadline
+                    or student_contest_level.is_ok
+                )
+
+        student_course.score += score_diff
+        student_course.contests_ok += contests_ok_diff
+        student_course.score_percent = (
+            100 * student_course.score / course.score_max
+        )
+        student_course.contests_ok_percent = (
+            100 * student_course.contests_ok / course.contest_count
         )
 
-        student_course.score += score_diff  # TODO: and ???
+        course_levels = await course_utils.get_course_levels(
+            session, course.id
+        )  # TODO: add types FINAL, NECESSARY contests for levels
+        course_levels.sort(key=lambda x: (x.count_method, x.ok_threshold))
+        student_course_levels = [
+            await course_utils.get_or_create_student_course_level(
+                session, student.id, course.id, level.id
+            )
+            for level in course_levels
+        ]
+        for course_level, student_course_level in zip(
+            course_levels, student_course_levels
+        ):
+            if student_course_level.is_ok:
+                continue
+            if (
+                course_level.level_ok_method
+                == course_schemas.LevelOkMethod.CONTESTS_OK
+            ):
+                if (
+                    course_level.count_method
+                    == course_schemas.LevelCountMethod.ABSOLUTE
+                ):
+                    student_course_level.is_ok = (
+                        student_course.contests_ok >= course_level.ok_threshold
+                    )
+                elif (
+                    course_level.count_method
+                    == course_schemas.LevelCountMethod.PERCENT
+                ):
+                    student_course_level.is_ok = (
+                        student_course.contests_ok_percent
+                        >= course_level.ok_threshold
+                    )
+                else:
+                    raise RuntimeError(
+                        f'Course level count method '
+                        f'{course_level.count_method} not found'
+                    )
+            elif (
+                course_level.level_ok_method
+                == course_schemas.LevelOkMethod.SCORE_SUM
+            ):
+                if (
+                    course_level.count_method
+                    == course_schemas.LevelCountMethod.ABSOLUTE
+                ):
+                    student_course_level.is_ok = (
+                        student_course.score >= course_level.ok_threshold
+                    )
+                elif (
+                    course_level.count_method
+                    == course_schemas.LevelCountMethod.PERCENT
+                ):
+                    student_course_level.is_ok = (
+                        student_course.score_percent
+                        >= course_level.ok_threshold
+                    )
+                else:
+                    raise RuntimeError(
+                        f'Course level count method '
+                        f'{course_level.count_method} not found'
+                    )
+            else:
+                raise RuntimeError(
+                    f'Course level ok method '
+                    f'{course_level.level_ok_method} not found'
+                )
+            if course_level.level_name == 'Зачет автоматом':  # TODO: remove
+                student_course.is_ok = (
+                    student_course.is_ok or student_course_level.is_ok
+                )
 
-    # TODO: ???
 
-
-async def check_student_task_relation(
+async def check_student_task_relation(  # pylint: disable=too-many-arguments
     student: models.Student,
     contest: models.Contest,
     course: models.Course,
@@ -303,7 +507,7 @@ async def check_student_task_relation(
     )
 
     if student_task is None:
-        logger.warning(
+        logger.info(
             'Student {} has no relation with task {}, creating',
             student.id,
             task.id,
@@ -319,9 +523,6 @@ async def check_student_task_relation(
     return student_task
 
 
-job_info = {
-    'func': job,
-    'trigger': 'interval',
-    'hours': 1,
-    'name': 'update_results',
-}
+job_info = scheduler_schemas.JobInfo(
+    func=job, name='update_results', trigger='interval', hours=1
+)

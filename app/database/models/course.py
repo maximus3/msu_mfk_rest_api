@@ -14,6 +14,9 @@ class Course(BaseModel):
     score_max = sa.Column(
         sa.Float, nullable=False, server_default='0.0', default=0.0
     )
+    contest_count = sa.Column(
+        sa.Integer, nullable=False, server_default='0', default=0
+    )
     ok_method = sa.Column(
         sa.Enum('contests_ok', 'score_sum', name='ok_method'),
         default='contests_ok',
