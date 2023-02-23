@@ -97,7 +97,7 @@ async def update_course_results(
         )
         async with SessionManager().create_async_session() as session:
             last_updated_submission = (
-                await task_utils.get_last_updated_submission(
+                await submission_utils.get_last_updated_submission(
                     session, contest.id
                 )
                 or -1
@@ -105,6 +105,7 @@ async def update_course_results(
         submissions = await contest_utils.get_new_submissions(
             contest, last_updated_submission, logger=logger
         )
+        submissions.sort(key=lambda x: x.id)
         await process_submissions(
             course,
             contest,
@@ -274,6 +275,15 @@ async def process_submission(  # noqa: C901 # pylint: disable=too-many-arguments
             submission_model.no_deadline_score - student_task.no_deadline_score
         )
         is_done_diff = 0 if student_task.is_done else is_done_submission
+        logger.info(
+            'Submission {} is new best submission for task {}. '
+            'score_diff={}, no_deadline_score_diff={}, is_done_diff={}',
+            submission.id,
+            task.id,
+            score_diff,
+            no_deadline_score_diff,
+            is_done_diff,
+        )
 
         student_task.best_submission_id = submission_model.id
         student_task.final_score = submission_model.final_score
@@ -288,7 +298,7 @@ async def process_submission(  # noqa: C901 # pylint: disable=too-many-arguments
 
         contest_levels = await contest_utils.get_contest_levels(
             session, contest.id
-        )
+        )  # TODO: get in upper function
         contest_levels.sort(key=lambda x: (x.count_method, x.ok_threshold))
         student_contest_levels = [
             await contest_utils.get_or_create_student_contest_level(
@@ -401,6 +411,7 @@ async def process_submission(  # noqa: C901 # pylint: disable=too-many-arguments
                     student_contest.is_ok_no_deadline
                     or student_contest_level.is_ok
                 )
+        logger.info('contests_ok_diff={}', contests_ok_diff)
 
         student_course.score = round(student_course.score + score_diff, 4)
         student_course.contests_ok += contests_ok_diff
@@ -412,7 +423,7 @@ async def process_submission(  # noqa: C901 # pylint: disable=too-many-arguments
         )
 
         course_levels = await course_utils.get_course_levels(
-            session, course.id
+            session, course.id  # TODO: get in upper function
         )  # TODO: add types FINAL, NECESSARY contests for levels
         course_levels.sort(key=lambda x: (x.count_method, x.ok_threshold))
         student_course_levels = [
