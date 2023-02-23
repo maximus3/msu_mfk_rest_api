@@ -3,7 +3,12 @@ from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.database.models import Contest, StudentContest
+from app.database.models import (
+    Contest,
+    ContestLevels,
+    StudentContest,
+    StudentContestLevels,
+)
 
 
 async def get_all_contests(session: AsyncSession) -> list[Contest]:
@@ -159,3 +164,37 @@ async def get_ok_author_ids(
         .where(StudentContest.is_ok)
     )
     return [author_id for author_id, in await session.execute(query)]
+
+
+async def get_contest_levels(
+    session: AsyncSession, contest_id: UUID
+) -> list[ContestLevels]:
+    query = select(ContestLevels).where(ContestLevels.contest_id == contest_id)
+    return (await session.execute(query)).scalars().all()
+
+
+async def get_or_create_student_contest_level(
+    session: AsyncSession,
+    student_id: UUID,
+    course_id: UUID,
+    contest_id: UUID,
+    level_id: UUID,
+) -> StudentContestLevels:
+    query = (
+        select(StudentContestLevels)
+        .where(StudentContestLevels.student_id == student_id)
+        .where(StudentContestLevels.contest_id == contest_id)
+        .where(StudentContestLevels.course_id == course_id)
+        .where(StudentContestLevels.contest_level_id == level_id)
+    )
+    student_contest_level = await session.scalar(query)
+    if student_contest_level is None:
+        student_contest_level = StudentContestLevels(
+            student_id=student_id,
+            course_id=course_id,
+            contest_id=contest_id,
+            contest_level_id=level_id,
+        )
+        session.add(student_contest_level)
+        await session.flush()
+    return student_contest_level

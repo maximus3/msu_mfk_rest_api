@@ -13,7 +13,7 @@ async def get_submission(
     return (await session.execute(query)).scalars().first()
 
 
-async def add_submission(
+async def add_submission(  # pylint: disable=too-many-arguments
     session: AsyncSession,
     student: models.Student,
     contest: models.Contest,
@@ -23,7 +23,7 @@ async def add_submission(
     submission: contest_schemas.ContestSubmissionFull,
 ) -> models.Submission:
     no_deadline_score = (
-        1
+        task.score_max
         if (
             not submission.finalScore
             and submission.verdict == 'OK'
@@ -47,7 +47,8 @@ async def add_submission(
         verdict=submission.verdict,
         final_score=final_score,
         no_deadline_score=no_deadline_score,
-        submission_link=f'https://admin.contest.yandex.ru/submissions/{submission.id}/',
+        submission_link=f'https://admin.contest.yandex.ru/'
+        f'submissions/{submission.id}/',
         time_from_start=submission.timeFromStart,
         submission_time=submission.submissionTime,
     )

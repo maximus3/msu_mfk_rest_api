@@ -14,7 +14,7 @@ def get_scheduler() -> AsyncIOScheduler:
     """
     _scheduler = AsyncIOScheduler()
     for job_info in list_of_jobs:
-        _scheduler.add_job(**job_info)
+        _scheduler.add_job(**job_info.dict())
     return _scheduler
 
 

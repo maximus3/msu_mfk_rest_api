@@ -519,7 +519,7 @@ async def make_full_submissions(
         key=lambda x: x.id,
     )
     logger.info(
-        'Getting submissions for contest "{}" ' 'for {} submissions',
+        'Getting submissions for contest "{}" for {} submissions',
         contest.yandex_contest_id,
         len(submission_values),
     )
@@ -531,10 +531,7 @@ async def make_full_submissions(
         batch_url = url + '&'.join(
             map(
                 lambda run_id: f'runIds={run_id}',
-                [
-                    submission_id
-                    for submission_id in submission_values[i : i + batch_size]
-                ],
+                submission_values[i : i + batch_size],
             )
         )
         first_id, last_id = (
