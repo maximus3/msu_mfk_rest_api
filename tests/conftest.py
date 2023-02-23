@@ -11,6 +11,7 @@ from pathlib import Path
 from types import SimpleNamespace
 from uuid import uuid4
 
+import httpx
 import pytest
 from alembic.command import upgrade
 from alembic.config import Config
@@ -431,6 +432,35 @@ async def mock_make_request_to_yandex_contest(  # type: ignore
             request.param if hasattr(request, 'param') else 200
         )
     yield objects_to_mock[0]
+
+
+@pytest.fixture
+def mock_make_request_to_yandex_contest_v2(  # type: ignore  # TODO: remove v1
+    mocker,
+):
+    # @functools.wraps
+    def _wrapper(endpoints_to_result: dict):  # type: ignore
+        async def _request(endpoint, *args, **kwargs):
+            if endpoint not in endpoints_to_result:
+                raise KeyError(f'No mock for endpoint {endpoint}')
+            return httpx.Response(
+                endpoints_to_result[endpoint]['status_code'],
+                json=endpoints_to_result[endpoint]['json'],
+            )
+
+        _ = [
+            mocker.patch(
+                'app.utils.yandex_request.service'
+                '.make_request_to_yandex_contest_api',
+                side_effect=_request,
+            ),
+            mocker.patch(
+                'app.utils.contest.service.make_request_to_yandex_contest_api',
+                side_effect=_request,
+            ),
+        ]
+
+    return _wrapper
 
 
 @pytest.fixture
