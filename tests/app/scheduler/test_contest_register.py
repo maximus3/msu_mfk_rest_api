@@ -24,6 +24,7 @@ class BaseHandler:
         return student_contest
 
 
+@pytest.mark.usefixtures('mock_bot')
 class TestRegisterStudentHandler(BaseHandler):
     @pytest.mark.parametrize(
         'mock_make_request_to_yandex_contest',
@@ -64,6 +65,7 @@ class TestRegisterStudentHandler(BaseHandler):
             assert relation_created is None
 
 
+@pytest.mark.usefixtures('mock_bot')
 class TestCheckStudentsForContestRegistrationHandler(BaseHandler):
     @classmethod
     async def assert_four_relations(

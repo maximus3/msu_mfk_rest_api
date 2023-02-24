@@ -439,7 +439,7 @@ async def mock_make_request_to_yandex_contest(  # type: ignore
         obj.return_value.status_code = (
             request.param if hasattr(request, 'param') else 200
         )
-        obj.return_value.text = 'text'
+        obj.return_value.text = '1'
     yield objects_to_mock[0]
 
 
