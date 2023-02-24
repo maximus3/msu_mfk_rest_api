@@ -217,7 +217,7 @@ class TestAddStudentToContest:
         )
         assert await contest.add_student_to_contest(
             session, created_contest, created_student, logger=loguru.logger
-        ) == (False, 'Unknown error. Status code: 500')
+        ) == (False, 'Unknown error. Status code: 500. Text: text')
         assert (
             await self.check_relation(
                 created_student, created_contest, session
