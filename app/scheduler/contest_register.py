@@ -31,6 +31,11 @@ async def register_student(
             contest.id,
             message,
         )
+        await send.send_message_safe(
+            logger=logger,
+            message=f'Student {student.contest_login} not registered on '
+            f'contest {contest.yandex_contest_id}. Reason: {message}',
+        )
         return False
     await session.commit()
     logger.info(
