@@ -23,6 +23,9 @@ async def job(base_logger: 'loguru.Logger') -> None:
     SessionManager().refresh()
     async with SessionManager().create_async_session() as session:
         courses = await course_utils.get_all_active_courses(session)
+    base_logger.info(
+        'Has {} courses',
+    )
     async for course in tqdm(
         courses,
         name=job_info.name + '-courses',
