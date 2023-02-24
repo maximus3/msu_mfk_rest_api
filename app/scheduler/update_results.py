@@ -103,11 +103,15 @@ async def update_course_results(
             base_logger=logger,
         )
         async with SessionManager().create_async_session() as session:
-            last_updated_submission = (
+            last_updated_submission_model = (
                 await submission_utils.get_last_updated_submission(
                     session, contest.id
                 )
-                or -1
+            )
+            last_updated_submission = (
+                last_updated_submission_model.run_id
+                if last_updated_submission_model
+                else -1
             )
             contest_levels = await contest_utils.get_contest_levels(
                 session, contest.id
