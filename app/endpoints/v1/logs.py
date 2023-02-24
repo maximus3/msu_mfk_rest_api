@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.requests import Request
 
 from app.config import get_settings
@@ -20,21 +20,31 @@ api_router = APIRouter(
     '/app',
     status_code=status.HTTP_200_OK,
 )
-async def get(
+async def get(  # pylint: disable=too-many-statements
     _: Request,
     __: User = Depends(get_current_user),
     last: int = 100,
     log_id: str | None = None,
     student_login: str | None = None,
     log_name: str | None = None,
+    log_file: str = 'app',
 ) -> logs_schemas.LogsResponse:
     settings = get_settings()
     response = logs_schemas.LogsResponse(items=[], count=0)
-    if not Path(settings.LOGGING_APP_FILE).exists():
+    if log_file == 'app':
+        log_filename = settings.LOGGING_APP_FILE
+    elif log_file == 'scheduler':
+        log_filename = settings.LOGGING_SCHEDULER_FILE
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail='Log file not found',
+        )
+    if not Path(log_filename).exists():
         return response
     for encoding in ['utf-8', 'cp1252', 'iso-8859-1']:
         try:
-            with open(settings.LOGGING_APP_FILE, 'r', encoding=encoding) as f:
+            with open(log_filename, 'r', encoding=encoding) as f:
                 for line in f:
                     try:
                         json_data = json.loads(line)
