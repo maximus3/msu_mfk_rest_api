@@ -3,11 +3,18 @@ version: '3.9'
 services:
   app:
     container_name: app_msu_mfk_rest_api
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "5"
     build:
       context: .
       dockerfile: Dockerfile
     env_file:
       - .env
+    volumes:
+      - ./logs:/opt/app/logs
     ports:
       - "8090:8090"
     depends_on:
@@ -30,6 +37,8 @@ services:
       - .env
     environment:
       - POSTGRES_HOST=postgres_msu_mfk_rest_api
+    volumes:
+      - ./logs:/opt/app/logs
     command: make up-scheduler
     depends_on:
       - postgres

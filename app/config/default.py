@@ -35,7 +35,9 @@ class DefaultSettings(BaseSettings):
         '[%(asctime)s.%(msecs)03d] %(name)s: '
         '%(message)s'
     )
-    LOGGING_APP_FILE = 'logfile.log'
+    LOGGING_FILE_DIR = Path('logs')
+    LOGGING_APP_FILE = LOGGING_FILE_DIR / 'logfile.log'
+    LOGGING_SCHEDULER_FILE = LOGGING_FILE_DIR / 'scheduler_logfile.log'
 
     BASE_DIR: Path = Path(__file__).resolve().parent.parent.parent
 

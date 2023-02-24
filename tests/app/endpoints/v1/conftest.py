@@ -12,7 +12,7 @@ def fixture_mock_logging_file():
     settings = get_settings()
 
     tmp_name = '.'.join([uuid4().hex, 'pytest'])
-    settings.LOGGING_APP_FILE = tmp_name
+    settings.LOGGING_APP_FILE = Path(tmp_name)
     environ['LOGGING_APP_FILE'] = tmp_name
 
     yield tmp_name

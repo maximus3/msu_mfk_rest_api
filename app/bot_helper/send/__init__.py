@@ -1,4 +1,5 @@
 from .db_dump import send_db_dump
+from .file import send_file
 from .message import (
     send_message,
     send_message_safe,
@@ -19,4 +20,5 @@ __all__ = [
     'send_ping_status',
     'send_results',
     'send_or_edit',
+    'send_file',
 ]
