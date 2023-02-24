@@ -101,13 +101,17 @@ async def get_or_create_all_student_models(
     course_id: UUID,
     contest_id: UUID,
     author_id: int,
-) -> tuple[Student, StudentCourse, StudentContest]:
-    student_contest: StudentContest = await session.scalar(
-        select(StudentContest)
-        .where(StudentContest.contest_id == contest_id)
-        .where(StudentContest.course_id == course_id)
-        .where(StudentContest.author_id == author_id)
+) -> tuple[Student | None, StudentCourse | None, StudentContest | None]:
+    student_contest: StudentContest = (
+        await session.scalar(
+            select(StudentContest)
+            .where(StudentContest.contest_id == contest_id)
+            .where(StudentContest.course_id == course_id)
+            .where(StudentContest.author_id == author_id)
+        )
     )
+    if student_contest is None:
+        return None, None, None
     student: Student = await session.scalar(
         select(Student).where(Student.id == student_contest.student_id)
     )
