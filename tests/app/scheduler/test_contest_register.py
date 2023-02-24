@@ -121,7 +121,7 @@ class TestCheckStudentsForContestRegistrationHandler(BaseHandler):
         await contest_register.check_students_for_contest_registration(
             session,
             created_course,
-            logger=loguru.logger,
+            base_logger=loguru.logger,
         )
         for contest_model in created_two_contests:
             for student_model in created_two_students_with_course:
@@ -166,7 +166,7 @@ class TestCheckStudentsForContestRegistrationHandler(BaseHandler):
             [None, None, None, None],
         )
         await contest_register.check_students_for_contest_registration(
-            session, created_two_courses[0], logger=loguru.logger
+            session, created_two_courses[0], base_logger=loguru.logger
         )
         await self.assert_four_relations(
             session,
@@ -175,7 +175,7 @@ class TestCheckStudentsForContestRegistrationHandler(BaseHandler):
             [would_register, None, None, None],
         )
         await contest_register.check_students_for_contest_registration(
-            session, created_two_courses[1], logger=loguru.logger
+            session, created_two_courses[1], base_logger=loguru.logger
         )
         await self.assert_four_relations(
             session,
@@ -212,7 +212,7 @@ class TestCheckStudentsForContestRegistrationHandler(BaseHandler):
             True,
         )
         await contest_register.check_students_for_contest_registration(
-            session, created_two_courses[0], logger=loguru.logger
+            session, created_two_courses[0], base_logger=loguru.logger
         )
         await self.assert_four_relations(
             session,
@@ -222,7 +222,7 @@ class TestCheckStudentsForContestRegistrationHandler(BaseHandler):
             True,
         )
         await contest_register.check_students_for_contest_registration(
-            session, created_two_courses[1], logger=loguru.logger
+            session, created_two_courses[1], base_logger=loguru.logger
         )
         await self.assert_four_relations(
             session,

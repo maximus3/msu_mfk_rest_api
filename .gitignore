@@ -122,3 +122,4 @@ deploy/*
 
 logs/*
 !logs/README.md
+!logs/scheduler/README.md

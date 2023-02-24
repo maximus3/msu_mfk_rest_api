@@ -1,13 +1,10 @@
-from app.bot_helper import bot
 from app.config import get_settings
+
+from .file import send_file
 
 
 async def send_db_dump(filename: str) -> None:
     settings = get_settings()
-    with open(filename, 'rb') as f:
-        await bot.bot.send_document(
-            chat_id=get_settings().TG_DB_DUMP_CHAT_ID,
-            document=f,
-            caption=settings.PROJECT_NAME,
-            disable_notification=True,
-        )
+    return await send_file(
+        filename, settings.PROJECT_NAME, chat_id=settings.TG_DB_DUMP_CHAT_ID
+    )
