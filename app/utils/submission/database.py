@@ -9,7 +9,7 @@ from app.schemas import contest as contest_schemas
 
 async def get_last_updated_submission(
     session: AsyncSession, contest_id: UUID
-) -> int | None:
+) -> models.Submission | None:
     query = (
         select(models.Submission)
         .where(models.Submission.contest_id == contest_id)
