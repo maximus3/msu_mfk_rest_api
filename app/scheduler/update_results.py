@@ -1,7 +1,6 @@
 # pylint: disable=too-many-lines
 
 import traceback
-import uuid
 
 import loguru
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -20,14 +19,14 @@ from app.utils import submission as submission_utils
 from app.utils import task as task_utils
 
 
-async def job() -> None:
+async def job(base_logger: 'loguru.Logger') -> None:
     SessionManager().refresh()
     async with SessionManager().create_async_session() as session:
         courses = await course_utils.get_all_active_courses(session)
-    base_logger = loguru.logger.bind(uuid=uuid.uuid4().hex)
     async for course in tqdm(
         courses,
         name=job_info.name + '-courses',
+        send_or_edit_func=send.send_or_edit,
     ):
         logger = base_logger.bind(
             course={'id': course.id, 'short_name': course.short_name}
@@ -86,6 +85,7 @@ async def update_course_results(
     async for contest in tqdm(
         contests,
         name=job_info.name + '-contests',
+        send_or_edit_func=send.send_or_edit,
     ):
         logger = base_logger.bind(
             contest={
@@ -144,6 +144,7 @@ async def check_student_contest_relations(
     async for student, _, _ in tqdm(
         students_sc_departments,
         name=job_info.name + '-check_student_contest_relations',
+        send_or_edit_func=send.send_or_edit,
     ):
         logger = base_logger.bind(
             student={'id': student.id, 'contest_login': student.contest_login}
@@ -566,5 +567,9 @@ async def check_student_task_relation(  # pylint: disable=too-many-arguments
 
 
 job_info = scheduler_schemas.JobInfo(
-    func=job, name='update_results', trigger='interval', hours=1
+    func=job,
+    name='update_results',
+    trigger='interval',
+    hours=1,
+    config=scheduler_schemas.JobConfig(send_logs=True),
 )

@@ -1,5 +1,5 @@
+import traceback
 import typing as tp
-import uuid
 from datetime import datetime
 from pathlib import Path
 
@@ -72,14 +72,15 @@ async def dump_table(
         f.write(f'{insert_prefix} ({", ".join(row_data)});\n')
 
 
-async def job(filename: str | None = None) -> None:
+async def job(
+    base_logger: 'loguru.Logger', filename: str | None = None
+) -> None:
     settings = get_settings()
-    logger = loguru.logger.bind(uuid=uuid.uuid4().hex)
 
     formatted_dt = datetime.now().strftime(constants.dt_format_filename)
     filename = filename or f'db_dump_{formatted_dt}.sql'
 
-    logger.info('Starting db dump to {}', filename)
+    base_logger.info('Starting db dump to {}', filename)
     try:
         with open(
             filename,
@@ -91,9 +92,13 @@ async def job(filename: str | None = None) -> None:
                     table_name = '"user"'
                 await dump_table(f, table_name, settings)
         await send.send_db_dump(filename)
-    except Exception as e:
-        logger.exception('Error while dumping db: {}', e)
-        raise e
+    except Exception as exc:  # pylint: disable=broad-except
+        base_logger.exception('Error while dumping db: {}', exc)
+        await send.send_traceback_message_safe(
+            logger=base_logger,
+            message=f'Error while dumping db: {exc}',
+            code=traceback.format_exc(),
+        )
     finally:
         Path(filename).unlink()
 
@@ -104,5 +109,6 @@ job_info = scheduler_schemas.JobInfo(
         'trigger': 'cron',
         'hour': 3,
         'name': 'db_dump',
-    }
+    },
+    config=scheduler_schemas.JobConfig(send_logs=True),
 )
