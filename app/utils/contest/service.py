@@ -72,7 +72,10 @@ async def add_student_to_contest(
                 contest.yandex_contest_id,
             )
         case _:
-            message = f'Unknown error. Status code: {response.status_code}. Text: {response.text}'
+            message = (
+                f'Unknown error. Status code: {response.status_code}. '
+                f'Text: {response.text}'
+            )
             return False, message
 
     await add_student_contest_relation(

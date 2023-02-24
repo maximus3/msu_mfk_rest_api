@@ -249,9 +249,35 @@ async def process_submission(  # noqa: C901 # pylint: disable=too-many-arguments
         contest.id,
         author_id=submission.authorId,
     )
+    if student is None or student_course is None or student_contest is None:
+        logger = base_logger.bind(
+            task={'id': task.id, 'yandex_task_id': task.yandex_task_id},
+            submission={'id': submission.id, 'author_id': submission.authorId},
+        )
+        logger.warning(
+            'No student with such author id {}: student {}, '
+            'student course {}, student contest {}. '
+            'Submission {} will not be processed',
+            submission.authorId,
+            student,
+            student_course,
+            student_contest,
+            submission.id,
+        )
+        await send.send_message_safe(
+            logger=logger,
+            message=f'No student with such author id '
+            f'{submission.authorId}: student {student}, '
+            f'student course {student_course}, '
+            f'student contest {student_contest}. '
+            f'Submission {submission.id} '
+            f'will not be processed',
+        )
+        return
     logger = base_logger.bind(
         student={'id': student.id, 'contest_login': student.contest_login},
         task={'id': task.id, 'yandex_task_id': task.yandex_task_id},
+        submission={'id': submission.id, 'author_id': submission.authorId},
     )
     student_task = await check_student_task_relation(
         student,
