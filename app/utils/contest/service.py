@@ -195,6 +195,8 @@ async def get_new_submissions(
         result_dict.update(new_values)
         if len(new_values) < len(data['submissions']):
             break
+        if len(result_dict) == all_submissions_count:
+            break
         page += 1
         response = await make_request_to_yandex_contest_api(
             url.format(page, page_size), logger=logger
@@ -234,21 +236,28 @@ async def make_full_submissions(
         batch_url = url + '&'.join(
             map(
                 lambda run_id: f'runIds={run_id}',
-                submission_values[i : i + batch_size],
+                [
+                    submission_value.id
+                    for submission_value in submission_values[
+                        i : i + batch_size
+                    ]
+                ],
             )
         )
         first_id, last_id = (
-            submission_values[i],
-            submission_values[i + batch_size]
+            submission_values[i].id,
+            submission_values[i + batch_size].id
             if i + batch_size < len(submission_values)
-            else submission_values[-1],
+            else submission_values[-1].id,
         )
         logger.info(
             'Getting submissions ids {}-{} (index {}-{})',
             first_id,
             last_id,
             i,
-            i + batch_size,
+            i + batch_size
+            if i + batch_size < len(submission_values)
+            else len(submission_values) - 1,
         )
         try:
             response = await make_request_to_yandex_contest_api(
@@ -260,7 +269,9 @@ async def make_full_submissions(
                 first_id,
                 last_id,
                 i,
-                i + batch_size,
+                i + batch_size
+                if i + batch_size < len(submission_values)
+                else len(submission_values) - 1,
             )
             continue
         if response.status_code != 200:
@@ -270,7 +281,9 @@ async def make_full_submissions(
                 first_id,
                 last_id,
                 i,
-                i + batch_size,
+                i + batch_size
+                if i + batch_size < len(submission_values)
+                else len(submission_values) - 1,
                 response.status_code,
                 response.text,
             )
@@ -285,8 +298,8 @@ async def make_full_submissions(
                 login=submission['participantInfo']['login'],
                 timeFromStart=submission['timeFromStart'],
                 submissionTime=datetime.fromisoformat(
-                    submission['submissionTime'].replace(tzinfo=None)
-                ),
+                    submission['submissionTime']
+                ).replace(tzinfo=None),
                 finalScore=(
                     float(submission['finalScore'])
                     if isinstance(submission['finalScore'], str)

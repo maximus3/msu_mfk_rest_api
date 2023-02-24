@@ -1,11 +1,11 @@
 import enum
 
 
-class LevelOkMethod(enum.Enum):
+class LevelOkMethod(str, enum.Enum):
     CONTESTS_OK = 'contests_ok'
     SCORE_SUM = 'score_sum'
 
 
-class LevelCountMethod(enum.Enum):
+class LevelCountMethod(str, enum.Enum):
     ABSOLUTE = 'absolute'
     PERCENT = 'percent'

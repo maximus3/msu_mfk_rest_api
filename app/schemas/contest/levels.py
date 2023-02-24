@@ -19,11 +19,11 @@ class Levels(BaseModel):
     levels: list[Level]
 
 
-class LevelOkMethod(enum.Enum):
+class LevelOkMethod(str, enum.Enum):
     SCORE_SUM = 'score_sum'
     TASKS_COUNT = 'tasks_count'
 
 
-class LevelCountMethod(enum.Enum):
+class LevelCountMethod(str, enum.Enum):
     ABSOLUTE = 'absolute'
     PERCENT = 'percent'

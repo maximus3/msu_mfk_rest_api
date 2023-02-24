@@ -143,6 +143,10 @@ class StudentTask(BaseModel):
         UUID(as_uuid=True),
         nullable=True,
     )
+    best_no_deadline_submission_id = sa.Column(
+        UUID(as_uuid=True),
+        nullable=True,
+    )
 
 
 class StudentCourseLevels(BaseModel):

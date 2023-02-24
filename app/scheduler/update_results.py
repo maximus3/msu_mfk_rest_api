@@ -190,6 +190,7 @@ async def process_submissions(  # pylint: disable=too-many-arguments
     submissions: list[contest_schemas.ContestSubmissionFull],
     base_logger: 'loguru.Logger',
 ) -> None:
+    base_logger.info('Got {} submissions for process', len(submissions))
     for submission in submissions:
         async with SessionManager().create_async_session() as session:
             task = await task_utils.get_task(
@@ -288,24 +289,26 @@ async def process_submission(  # noqa: C901 # pylint: disable=too-many-arguments
     ):  # TODO: check block other transactions
         is_done_submission = submission_model.final_score == task.score_max
 
-        score_diff = submission_model.final_score - student_task.final_score
-        no_deadline_score_diff = (
-            submission_model.no_deadline_score - student_task.no_deadline_score
+        score_diff = max(
+            submission_model.final_score - student_task.final_score, 0
         )
+        no_deadline_score_diff = max(
+            submission_model.no_deadline_score
+            - student_task.no_deadline_score,
+            0,
+        )  # TODO: max no need?
         is_done_diff = 0 if student_task.is_done else is_done_submission
-        logger.info(
-            'Submission {} is new best submission for task {}. '
-            'score_diff={}, no_deadline_score_diff={}, is_done_diff={}',
-            submission.id,
-            task.id,
-            score_diff,
-            no_deadline_score_diff,
-            is_done_diff,
-        )
 
-        student_task.best_submission_id = submission_model.id
-        student_task.final_score = submission_model.final_score
-        student_task.no_deadline_score = submission_model.no_deadline_score
+        if score_diff:
+            student_task.best_submission_id = submission_model.id
+        if no_deadline_score_diff:
+            student_task.best_no_deadline_submission_id = submission_model.id
+        student_task.final_score = round(
+            student_task.final_score + score_diff, 4
+        )
+        student_task.no_deadline_score = round(
+            student_task.no_deadline_score + no_deadline_score_diff, 4
+        )
         student_task.is_done = student_task.is_done or is_done_submission
 
         student_contest.score = round(student_contest.score + score_diff, 4)
@@ -425,15 +428,26 @@ async def process_submission(  # noqa: C901 # pylint: disable=too-many-arguments
                     student_contest.is_ok_no_deadline
                     or student_contest_level.is_ok
                 )
-        logger.info('contests_ok_diff={}', contests_ok_diff)
+            session.add(student_contest_level)
+        logger.info(
+            'Submission {} is new best submission for task {}. '
+            'score_diff={}, no_deadline_score_diff={}, '
+            'is_done_diff={}, contests_ok_diff={}',
+            submission.id,
+            task.id,
+            score_diff,
+            no_deadline_score_diff,
+            is_done_diff,
+            contests_ok_diff,
+        )
 
         student_course.score = round(student_course.score + score_diff, 4)
         student_course.contests_ok += contests_ok_diff
-        student_course.score_percent = (
-            100 * student_course.score / course.score_max
+        student_course.score_percent = round(
+            100 * student_course.score / course.score_max, 4
         )
-        student_course.contests_ok_percent = (
-            100 * student_course.contests_ok / course.contest_count
+        student_course.contests_ok_percent = round(
+            100 * student_course.contests_ok / course.contest_count, 4
         )
 
         student_course_levels = [
@@ -504,6 +518,11 @@ async def process_submission(  # noqa: C901 # pylint: disable=too-many-arguments
                 student_course.is_ok = (
                     student_course.is_ok or student_course_level.is_ok
                 )
+            session.add(student_course_level)
+
+        session.add(student_task)
+        session.add(student_contest)
+        session.add(student_course)
 
 
 async def check_student_task_relation(  # pylint: disable=too-many-arguments
