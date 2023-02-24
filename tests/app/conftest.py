@@ -34,6 +34,13 @@ async def mock_bot(mocker, bot):
 
 
 @pytest.fixture
+async def mock_send_or_edit(mocker):
+    """Mock send_or_edit func"""
+    mock = mocker.patch('app.bot_helper.send.send_or_edit')
+    return mock
+
+
+@pytest.fixture
 def mock_message_id(mocker):
     """Mock message id fixture"""
     mock = mocker.patch(
