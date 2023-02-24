@@ -15,7 +15,7 @@ async def make_request_to_yandex_contest_api(
     settings = get_settings()
     while retry_count > 0:
         async with AsyncClient() as client:
-            logger.debug(
+            logger.info(
                 'Making request to Yandex Contest API: {} {} (timeout: {})',
                 method,
                 f'{settings.YANDEX_CONTEST_API_URL}{endpoint}',
@@ -52,7 +52,7 @@ async def make_request_to_yandex_contest_api(
             break
     if retry_count == 0:
         raise httpx.ReadTimeout('Request to Yandex Contest API timed out')
-    logger.debug(
+    logger.info(
         'Yandex API request [{}]: {} {}.',
         response.status_code,
         method,
