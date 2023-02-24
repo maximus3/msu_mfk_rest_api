@@ -21,15 +21,18 @@ from sqlalchemy_utils import create_database, database_exists, drop_database
 from app.config import get_settings
 from app.creator import get_app
 from app.database.connection import SessionManager
+from app.schemas import contest as contest_schemas
 from app.utils import user
 from tests.factory_lib import (
     ContestFactory,
+    ContestLevelsFactory,
     CourseFactory,
     DepartmentFactory,
     StudentContestFactory,
     StudentCourseFactory,
     StudentDepartmentFactory,
     StudentFactory,
+    TaskFactory,
     UserFactory,
 )
 from tests.utils import make_alembic_config
@@ -360,8 +363,13 @@ async def not_created_contest(potential_contest):  # type: ignore
 
 
 @pytest.fixture
-async def created_contest(not_created_contest, session):  # type: ignore
+async def created_contest(
+    not_created_contest, created_course, session
+):  # type: ignore
+    created_course.contest_count = 1
+    created_course.score_max = not_created_contest.score_max
     session.add(not_created_contest)
+    session.add(created_course)
     await session.commit()
     await session.refresh(not_created_contest)
 
@@ -444,8 +452,9 @@ def mock_make_request_to_yandex_contest_v2(  # type: ignore  # TODO: remove v1
             if endpoint not in endpoints_to_result:
                 raise KeyError(f'No mock for endpoint {endpoint}')
             return httpx.Response(
-                endpoints_to_result[endpoint]['status_code'],
-                json=endpoints_to_result[endpoint]['json'],
+                endpoints_to_result[endpoint].get('status_code') or 200,
+                json=endpoints_to_result[endpoint].get('json'),
+                text=endpoints_to_result[endpoint].get('text'),
             )
 
         _ = [
@@ -487,6 +496,54 @@ async def created_two_students_with_course(session, created_course):
     session.add_all(relation_models)
 
     await session.commit()
+
+    yield models
+
+
+@pytest.fixture
+async def not_created_task(session, created_contest, created_course):
+    created_contest.score_max = 3
+    created_course.score_max = 3
+    await session.commit()
+    yield TaskFactory.build(
+        contest_id=created_contest.id, score_max=3, is_zero_ok=True
+    )
+
+
+@pytest.fixture
+async def created_task(session, not_created_task):
+    session.add(not_created_task)
+    await session.commit()
+    await session.refresh(not_created_task)
+
+    yield not_created_task
+
+
+@pytest.fixture
+async def created_contest_levels(session, created_course, created_contest):
+    models = [
+        ContestLevelsFactory.build(
+            course_id=created_course.id,
+            contest_id=created_contest.id,
+            level_name='Зачет автоматом',
+            level_ok_method=contest_schemas.LevelOkMethod.SCORE_SUM,
+            count_method=contest_schemas.LevelCountMethod.ABSOLUTE,
+            ok_threshold=2,
+            include_after_deadline=False,
+        ),
+        ContestLevelsFactory.build(
+            course_id=created_course.id,
+            contest_id=created_contest.id,
+            level_name='Допуск к зачету',
+            level_ok_method=contest_schemas.LevelOkMethod.SCORE_SUM,
+            count_method=contest_schemas.LevelCountMethod.ABSOLUTE,
+            ok_threshold=2,
+            include_after_deadline=True,
+        ),
+    ]
+    session.add_all(models)
+    await session.commit()
+    await asyncio.gather(*[session.refresh(model) for model in models])
 
     yield models
 

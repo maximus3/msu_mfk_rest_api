@@ -1,5 +1,6 @@
 from factory import Factory, Faker, fuzzy
 
+from app.database import models
 from app.database.models import (
     Contest,
     Course,
@@ -90,3 +91,28 @@ class StudentDepartmentFactory(Factory):
 
     student_id = Faker('uuid4')
     department_id = Faker('uuid4')
+
+
+class TaskFactory(Factory):
+    class Meta:
+        model = models.Task
+
+    contest_id = Faker('uuid4')
+    yandex_task_id = fuzzy.FuzzyText()
+    name = fuzzy.FuzzyText()
+    alias = fuzzy.FuzzyText()
+    is_zero_ok = fuzzy.FuzzyChoice([True, False])
+    score_max = fuzzy.FuzzyInteger(1, 10)
+
+
+class ContestLevelsFactory(Factory):
+    class Meta:
+        model = models.ContestLevels
+
+    contest_id = Faker('uuid4')
+    course_id = Faker('uuid4')
+    level_name = fuzzy.FuzzyText()
+    level_ok_method = fuzzy.FuzzyText()
+    count_method = fuzzy.FuzzyText()
+    ok_threshold = fuzzy.FuzzyInteger(1, 100)
+    include_after_deadline = fuzzy.FuzzyChoice([True, False])
