@@ -1,4 +1,4 @@
-import uuid
+import traceback
 from collections import defaultdict
 from itertools import product
 
@@ -11,9 +11,8 @@ from app.endpoints.v1 import prefix
 from app.schemas import scheduler as scheduler_schemas
 
 
-async def job() -> None:
+async def job(base_logger: 'loguru.Logger') -> None:
     settings = get_settings()
-    logger = loguru.logger.bind(uuid=uuid.uuid4().hex)
 
     base_url = f'http://{{}}{settings.PATH_PREFIX}{prefix}/health_check/{{}}'
     hosts = [
@@ -29,7 +28,7 @@ async def job() -> None:
             try:
                 response = await client.get(base_url.format(host, endpoint))
                 if response.status_code != 200:
-                    logger.error(
+                    base_logger.error(
                         'Health check "{}" on {} failed '
                         'with status code {}',
                         host,
@@ -40,12 +39,12 @@ async def job() -> None:
                         endpoint
                     ] = f'Failed (status code: {response.status_code})'
                     continue
-                logger.info(
+                base_logger.info(
                     'Health check "{}" on {} is successful', host, endpoint
                 )
                 result[host][endpoint] = 'Successful'
             except Exception as e:  # pylint: disable=broad-except
-                logger.error(
+                base_logger.error(
                     'Health check "{}" on {} failed (url "{}"): {}',
                     host,
                     endpoint,
@@ -59,9 +58,13 @@ async def job() -> None:
 
     try:
         await send.send_ping_status(result)
-    except Exception as e:
-        logger.error('Failed to send ping status: {}', e)
-        raise e
+    except Exception as exc:  # pylint: disable=broad-except
+        base_logger.error('Failed to send ping status: {}', exc)
+        await send.send_traceback_message_safe(
+            logger=base_logger,
+            message=f'Failed to send ping status: {exc}',
+            code=traceback.format_exc(),
+        )
 
 
 job_info = scheduler_schemas.JobInfo(
@@ -70,5 +73,6 @@ job_info = scheduler_schemas.JobInfo(
         'trigger': 'interval',
         'minutes': 1,
         'name': 'ping_app',
-    }
+    },
+    config=scheduler_schemas.JobConfig(send_logs=False),
 )

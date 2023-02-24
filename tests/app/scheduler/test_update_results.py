@@ -1,5 +1,6 @@
 import datetime
 
+import loguru
 import pytest
 
 from app.config import get_settings
@@ -20,7 +21,7 @@ class TestJob:
         settings = get_settings()
 
         # act
-        await update_results.job()
+        await update_results.job(base_logger=loguru.logger)
 
         # assert
         mock_bot.send_message.assert_called_once_with(
@@ -113,7 +114,7 @@ class TestJob:
         settings = get_settings()
 
         # act
-        await update_results.job()
+        await update_results.job(base_logger=loguru.logger)
 
         # assert
         mock_bot.send_message.assert_called_once_with(
