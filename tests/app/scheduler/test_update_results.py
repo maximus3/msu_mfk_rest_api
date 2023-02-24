@@ -16,7 +16,7 @@ pytestmark = pytest.mark.asyncio
 
 @pytest.mark.usefixtures('migrated_postgres')
 class TestJob:
-    async def test_run(self, mock_bot):
+    async def test_run(self, mock_bot, mock_send_or_edit):
         # arrange
         settings = get_settings()
 
@@ -41,6 +41,7 @@ class TestJob:
         created_contest_levels,
         mock_make_request_to_yandex_contest_v2,
         mock_bot,
+        mock_send_or_edit,
         create_async_session,
     ):
         # arrange
