@@ -430,5 +430,12 @@ server-copy: ##@Server Copy files to server
 server-copy-elk: ##@Server Copy ELK images to server
 	@make server-copy args="logs/elasticsearch.docker logs/logstash.docker logs/kibana.docker"
 
+.PHONY: update-dev-branch
+update-dev-branch: ##@Git Rebase dev on main branch
+	@git checkout main
+	@git pull
+	@git checkout dev
+	@git rebase main
+
 %::
 	echo $(MESSAGE)
