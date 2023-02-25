@@ -436,6 +436,7 @@ update-dev-branch: ##@Git Rebase dev on main branch
 	@git pull
 	@git checkout dev
 	@git rebase main
+	@git push -f
 
 %::
 	echo $(MESSAGE)
