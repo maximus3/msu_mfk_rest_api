@@ -41,3 +41,6 @@ class Submission(BaseModel):
     submission_link = sa.Column(sa.String, nullable=False)
     time_from_start = sa.Column(sa.Integer, nullable=False)
     submission_time = sa.Column(sa.DateTime, nullable=False)
+
+    def __repr__(self):  # type: ignore
+        return f'<Submission {self.run_id} author_id={self.author_id}>'

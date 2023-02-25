@@ -33,3 +33,6 @@ class Task(BaseModel):
     score_max = sa.Column(
         sa.Float, nullable=False, server_default='0.0', default=0.0
     )
+
+    def __repr__(self):  # type: ignore
+        return f'<Task {self.yandex_task_id} contest_id={self.contest_id}>'

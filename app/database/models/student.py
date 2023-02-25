@@ -15,6 +15,9 @@ class Student(BaseModel):
     contest_login = sa.Column(sa.String, unique=True, index=True)
     token = sa.Column(sa.String, unique=True)
 
+    def __repr__(self):  # type: ignore
+        return f'<Student {self.contest_login}>'
+
 
 class StudentDepartment(BaseModel):
     """
@@ -35,6 +38,9 @@ class StudentDepartment(BaseModel):
         nullable=False,
         index=True,
     )
+
+    def __repr__(self):  # type: ignore
+        return f'<StudentDepartment student_id={self.student_id} department_id={self.department_id}>'
 
 
 class StudentCourse(BaseModel):
@@ -64,6 +70,9 @@ class StudentCourse(BaseModel):
     )
     is_ok = sa.Column(sa.Boolean, nullable=False, server_default='false')
     is_ok_final = sa.Column(sa.Boolean, nullable=False, server_default='false')
+
+    def __repr__(self):  # type: ignore
+        return f'<StudentCourse student_id={self.student_id} course_id={self.course_id}>'
 
 
 class StudentContest(BaseModel):
@@ -100,6 +109,9 @@ class StudentContest(BaseModel):
     is_ok_no_deadline = sa.Column(
         sa.Boolean, default=False, nullable=False, server_default='false'
     )
+
+    def __repr__(self):  # type: ignore
+        return f'<StudentContest student_id={self.student_id} contest_id={self.contest_id}>'
 
 
 class StudentTask(BaseModel):
@@ -148,6 +160,9 @@ class StudentTask(BaseModel):
         nullable=True,
     )
 
+    def __repr__(self):  # type: ignore
+        return f'<StudentContest student_id={self.student_id} task_id={self.task_id}>'
+
 
 class StudentCourseLevels(BaseModel):
     __tablename__ = 'student_course_levels'
@@ -170,6 +185,9 @@ class StudentCourseLevels(BaseModel):
     is_ok = sa.Column(
         sa.Boolean, default=False, server_default='false', nullable=False
     )
+
+    def __repr__(self):  # type: ignore
+        return f'<StudentCourseLevels student_id={self.student_id} course_id={self.course_id} course_level_id={self.course_level_id}>'
 
 
 class StudentContestLevels(BaseModel):
@@ -198,3 +216,6 @@ class StudentContestLevels(BaseModel):
     is_ok = sa.Column(
         sa.Boolean, default=False, server_default='false', nullable=False
     )
+
+    def __repr__(self):  # type: ignore
+        return f'<StudentContestLevels student_id={self.student_id} contest_id={self.contest_id} contest_level_id={self.contest_level_id}>'

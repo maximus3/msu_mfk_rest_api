@@ -21,3 +21,6 @@ class User(BaseModel):
         index=True,
         doc='Hashed password.',
     )
+
+    def __repr__(self):  # type: ignore
+        return f'<User {self.username}>'
