@@ -45,7 +45,6 @@ class Course(BaseModel):
         return f'<Course {self.short_name}>'
 
 
-
 class CourseLevels(BaseModel):
     __tablename__ = 'course_levels'
 

@@ -40,7 +40,10 @@ class StudentDepartment(BaseModel):
     )
 
     def __repr__(self):  # type: ignore
-        return f'<StudentDepartment student_id={self.student_id} department_id={self.department_id}>'
+        return (
+            f'<StudentDepartment student_id={self.student_id} '
+            f'department_id={self.department_id}>'
+        )
 
 
 class StudentCourse(BaseModel):
@@ -72,7 +75,10 @@ class StudentCourse(BaseModel):
     is_ok_final = sa.Column(sa.Boolean, nullable=False, server_default='false')
 
     def __repr__(self):  # type: ignore
-        return f'<StudentCourse student_id={self.student_id} course_id={self.course_id}>'
+        return (
+            f'<StudentCourse student_id={self.student_id} '
+            f'course_id={self.course_id}>'
+        )
 
 
 class StudentContest(BaseModel):
@@ -111,7 +117,10 @@ class StudentContest(BaseModel):
     )
 
     def __repr__(self):  # type: ignore
-        return f'<StudentContest student_id={self.student_id} contest_id={self.contest_id}>'
+        return (
+            f'<StudentContest student_id={self.student_id} '
+            f'contest_id={self.contest_id}>'
+        )
 
 
 class StudentTask(BaseModel):
@@ -161,7 +170,10 @@ class StudentTask(BaseModel):
     )
 
     def __repr__(self):  # type: ignore
-        return f'<StudentContest student_id={self.student_id} task_id={self.task_id}>'
+        return (
+            f'<StudentContest student_id={self.student_id} '
+            f'task_id={self.task_id}>'
+        )
 
 
 class StudentCourseLevels(BaseModel):
@@ -187,7 +199,11 @@ class StudentCourseLevels(BaseModel):
     )
 
     def __repr__(self):  # type: ignore
-        return f'<StudentCourseLevels student_id={self.student_id} course_id={self.course_id} course_level_id={self.course_level_id}>'
+        return (
+            f'<StudentCourseLevels student_id={self.student_id} '
+            f'course_id={self.course_id} '
+            f'course_level_id={self.course_level_id}>'
+        )
 
 
 class StudentContestLevels(BaseModel):
@@ -218,4 +234,8 @@ class StudentContestLevels(BaseModel):
     )
 
     def __repr__(self):  # type: ignore
-        return f'<StudentContestLevels student_id={self.student_id} contest_id={self.contest_id} contest_level_id={self.contest_level_id}>'
+        return (
+            f'<StudentContestLevels student_id={self.student_id} '
+            f'contest_id={self.contest_id} '
+            f'contest_level_id={self.contest_level_id}>'
+        )

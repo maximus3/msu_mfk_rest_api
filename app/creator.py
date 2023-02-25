@@ -13,6 +13,7 @@ from starlette.responses import Response
 from uvicorn.protocols import utils
 
 from app.config import DefaultSettings, get_settings
+from app.database.admin.creator import get_sqladmin
 from app.endpoints import list_of_routes
 
 
@@ -88,13 +89,17 @@ class InterceptHandler(logging.Handler):
             depth += 1
 
         loguru.logger.opt(depth=depth, exception=record.exc_info).log(
-            level, record.getMessage(), extra={}
+            level,
+            record.getMessage().replace('{', r'{{').replace('}', r'}}'),
+            extra={},
         )
 
 
 def configure_logger(settings: DefaultSettings) -> None:
     loguru.logger.remove()
-    loguru.logger.add(sink=sys.stderr, serialize=True, enqueue=True)
+    loguru.logger.add(
+        sink=sys.stderr, serialize=not settings.DEBUG, enqueue=True
+    )
     loguru.logger.add(
         settings.LOGGING_APP_FILE,
         rotation='500 MB',
@@ -137,5 +142,7 @@ def get_app(set_up_logger: bool = True) -> FastAPI:
 
     if set_up_logger:
         configure_logger(settings)
+
+    _ = get_sqladmin(application)
 
     return application

@@ -1,0 +1,19 @@
+# Code generated automatically.
+# pylint: disable=duplicate-code
+
+from sqladmin import ModelView
+
+from app.database.admin import models_forms
+from app.database import models
+
+
+class {{ model.__name__ }}Admin(ModelView, model=models.{{ model.__name__ }}):
+    _column_list = {{ column_list }}
+    column_list = {{ column_list }}
+    form_excluded_columns = {{ form_excluded_columns }}
+    form_include_pk = True
+    name_plural = '{{ model.__name__ }}s'
+    column_default_sort = '{{ column_list[1] }}'
+
+    form_overrides = models_forms.get_form_overrides({{ foreign_keys }})
+    form_args = models_forms.get_form_args({{ foreign_keys }})

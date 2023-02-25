@@ -1,10 +1,12 @@
 # pylint: disable=duplicate-code
 
 import sqlalchemy as sa
+from sqlalchemy.orm import Session
 
 from app.schemas.contest import ContestTag
 
 from .base import BaseModel
+from .course import Course
 
 
 class Contest(BaseModel):
@@ -32,7 +34,18 @@ class Contest(BaseModel):
     )
 
     def __repr__(self):  # type: ignore
-        return f'<Contest {self.yandex_contest_id} course_id={self.course_id}>'
+        return (
+            f'<Contest {self.yandex_contest_id} (course_id={self.course_id})>'
+        )
+
+    def real_repr(self, session: Session) -> str:
+        course_short_name = (
+            session.query(Course)
+            .where(Course.id == self.course_id)
+            .first()
+            .short_name
+        )
+        return f'<Contest {self.yandex_contest_id} ({course_short_name})>'
 
 
 class ContestLevels(BaseModel):
@@ -72,4 +85,8 @@ class ContestLevels(BaseModel):
     )
 
     def __repr__(self):  # type: ignore
-        return f'<ContestLevel {self.level_name} course_id={self.course_id} contest_id={self.contest_id}>'
+        return (
+            f'<ContestLevel {self.level_name} '
+            f'course_id={self.course_id} '
+            f'contest_id={self.contest_id}>'
+        )
