@@ -13,3 +13,6 @@ class TQDMLogs(BaseModel):
     need_time_for_all = sa.Column(sa.String, nullable=False)
     avg_data = sa.Column(sa.String, nullable=False)
     all_time = sa.Column(sa.String, nullable=False)
+
+    def __repr__(self):  # type: ignore
+        return f'<TQDMLogs {self.name}>'

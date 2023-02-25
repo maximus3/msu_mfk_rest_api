@@ -31,6 +31,9 @@ class Contest(BaseModel):
         server_default='{}',
     )
 
+    def __repr__(self):  # type: ignore
+        return f'<Contest {self.yandex_contest_id} course_id={self.course_id}>'
+
 
 class ContestLevels(BaseModel):
     __tablename__ = 'contest_levels'
@@ -67,3 +70,6 @@ class ContestLevels(BaseModel):
         server_default='false',
         nullable=False,
     )
+
+    def __repr__(self):  # type: ignore
+        return f'<ContestLevel {self.level_name} course_id={self.course_id} contest_id={self.contest_id}>'

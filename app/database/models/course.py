@@ -41,6 +41,10 @@ class Course(BaseModel):
         doc='Is course in archive (not show in api)',
     )
 
+    def __repr__(self):  # type: ignore
+        return f'<Course {self.short_name}>'
+
+
 
 class CourseLevels(BaseModel):
     __tablename__ = 'course_levels'
