@@ -1,3 +1,4 @@
+import functools
 import typing as tp
 from contextlib import asynccontextmanager, contextmanager
 
@@ -65,3 +66,11 @@ class SessionManager:  # pragma: no cover
     async def get_async_session(self) -> AsyncSession:
         async with self.create_async_session() as session:
             yield session
+
+    def with_session(self, func: tp.Callable) -> tp.Callable:  # type: ignore
+        @functools.wraps(func)
+        async def wrapper(*args: tp.Any, **kwargs: tp.Any) -> tp.Any:
+            async with self.create_async_session() as session:
+                return await func(*args, session=session, **kwargs)
+
+        return wrapper

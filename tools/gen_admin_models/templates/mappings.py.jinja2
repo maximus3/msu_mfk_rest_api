@@ -1,0 +1,8 @@
+# Code generated automatically.
+
+from app.database import models
+
+tablename_to_model = {
+    {% for model in models %}'{{ model.__tablename__ }}': models.{{ model.__name__ }},
+    {% endfor %}
+}

@@ -43,6 +43,7 @@ class DefaultSettings(BaseSettings):
 
     # to get a string like this run: "openssl rand -hex 32"
     SECRET_KEY: str = Field('', env='SECRET_KEY')
+    SQLADMIN_SECRET_KEY: str = Field('', env='SQLADMIN_SECRET_KEY')
     ALGORITHM: str = Field('HS256', env='ALGORITHM')
     ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(
         1440, env='ACCESS_TOKEN_EXPIRE_MINUTES'

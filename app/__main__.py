@@ -1,5 +1,7 @@
+import asyncio
 import traceback
 
+import loguru
 from fastapi.requests import Request
 from fastapi.responses import JSONResponse
 from uvicorn import run
@@ -41,6 +43,15 @@ async def exception_handler(
 
 if __name__ == '__main__':  # pragma: no cover
     settings_for_application = get_settings()
+
+    asyncio.get_event_loop().run_until_complete(
+        send.send_message_safe(
+            logger=loguru.logger,
+            message=f'Created application: '
+            f'debug={settings_for_application.DEBUG}',
+            level='info',
+        )
+    )
 
     run(
         'app.__main__:app',

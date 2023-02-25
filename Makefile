@@ -55,6 +55,7 @@ env:  ##@Environment Create .env file with variables
 	@$(eval SHELL:=/bin/bash)
 	@cp .env.example .env
 	@echo "SECRET_KEY=$$(openssl rand -hex 32)" >> .env
+	@echo "SQLADMIN_SECRET_KEY=$$(openssl rand -hex 32)" >> .env
 
 
 .PHONY: venv
@@ -166,6 +167,7 @@ docker-up: ##@Application Docker up
 .PHONY: docker-up-d
 docker-up-d: ##@Application Docker up detach
 	docker-compose up -d --remove-orphans
+	docker-compose up -d --force-recreate nginx
 
 .PHONY: docker-build
 docker-build: ##@Application Docker build
@@ -199,10 +201,17 @@ docker-migrate: ##@Application Migrate db in docker
 	docker exec $(APPLICATION_NAME) make migrate $(args)
 
 .PHONY: commit
-commit: format ##@Git Commit with message all files
+commit: format lint ##@Git Commit with message all files (with lint)
+	$(eval MESSAGE := $(shell read -p "Commit message: " MESSAGE; echo $$MESSAGE))
 	@git add .
 	@git status
+	@git commit -m "$(MESSAGE)"
+
+.PHONY: commit-fast
+commit-fast: format ##@Git Commit with message all files (no lint)
 	$(eval MESSAGE := $(shell read -p "Commit message: " MESSAGE; echo $$MESSAGE))
+	@git add .
+	@git status
 	@git commit -m "$(MESSAGE)"
 
 .PHONY: push
@@ -263,9 +272,9 @@ restore-local: ##@Database Restore database local
 	$(eval DB_USERNAME=$(shell cat deploy/db_username.txt))
 
 	echo "Restoring local database from $(FILENAME)"
-	docker cp db/$(FILENAME) postgres_container:$(FILENAME)
-	docker exec postgres_container psql -d $(DB_NAME) -U $(DB_USERNAME) -f $(FILENAME)
-	docker exec postgres_container rm $(FILENAME)
+	docker cp db/$(FILENAME) postgres_msu_mfk_rest_api:$(FILENAME)
+	docker exec postgres_msu_mfk_rest_api psql -d $(DB_NAME) -U $(DB_USERNAME) -f $(FILENAME)
+	docker exec postgres_msu_mfk_rest_api rm $(FILENAME)
 	echo "Done"
 
 .PHONY: restore-server
@@ -361,10 +370,65 @@ generate-deploy-key: ##@Deploy Generate deploy key
 	$(eval HOST=$(shell cat deploy/host.txt))
 	$(eval USERNAME=$(shell cat deploy/username.txt))
 
-	test -e deploy/id_rsa && (echo "Deploy key already exists, remove deploy/id_rsa to generate new one" && exit 1)
-	echo "Generating deploy key"
+	([ ! -e deploy/id_rsa ] && echo "Generating deploy key") || (echo "Deploy key already exists, remove deploy/id_rsa to generate new one" && exit 1)
 	ssh-keygen -t rsa -b 4096 -C "$(USERNAME)@$(HOST)" -q -N "" -f deploy/id_rsa
 	ssh-copy-id -i deploy/id_rsa.pub -p $(PORT) $(USERNAME)@$(HOST)
+
+.PHONY: gen
+gen: ##@Application Generate files
+	$(VENV_BIN)/python -m tools gen-admin-models $(args)
+
+.PHONY: sqlalchemy
+sqlalchemy: ##@Application Open sqlalchemy shell
+	$(VENV_BIN)/python -m tools sqlalchemy $(args)
+
+.PHONY: hash-password
+hash-password: ##@Application Hash password
+	$(VENV_BIN)/python -m tools hash-password $(args)
+
+.PHONY: vpn-install
+vpn-install: ##@VPN Install VPN
+	sudo apt install apt-transport-https
+	sudo wget https://swupdate.openvpn.net/repos/openvpn-repo-pkg-key.pub
+	sudo apt-key add openvpn-repo-pkg-key.pub
+	sudo wget -O /etc/apt/sources.list.d/openvpn3.list https://swupdate.openvpn.net/community/openvpn3/repos/openvpn3-$(lsb_release -s -c).list
+	sudo apt update
+	sudo apt install openvpn3 -y
+
+.PHONY: vpn-start
+vpn-start: ##@VPN Start VPN
+	openvpn3 session-start --config deploy/vpn.ovpn
+
+.PHONY: vpn-stop
+vpn-stop: ##@VPN Stop VPN
+	sudo killall openvpn3
+
+.PHONY: docker-save-elk
+docker-save-elk: ##@Docker SAVE ELK images
+	docker save -o logs/elasticsearch.docker docker.elastic.co/elasticsearch/elasticsearch:8.5.3
+	docker save -o logs/logstash.docker docker.elastic.co/logstash/logstash:8.5.3
+	docker save -o logs/kibana.docker docker.elastic.co/kibana/kibana:8.5.3
+
+.PHONY: docker-load-elk
+docker-load-elk: ##@Docker LOAD ELK images
+	docker load -i logs/elasticsearch.docker
+	docker load -i logs/logstash.docker
+	docker load -i logs/kibana.docker
+
+.PHONY: server-copy
+server-copy: ##@Server Copy files to server
+	$(eval PORT=$(shell cat deploy/port.txt))
+	$(eval HOST=$(shell cat deploy/host.txt))
+	$(eval USERNAME=$(shell cat deploy/username.txt))
+	$(eval FILES=$(args))
+
+	echo "Copy files to server"
+	scp -P $(PORT) $(FILES) $(USERNAME)@$(HOST):/tmp
+	echo "Done"
+
+.PHONY: server-copy-elk
+server-copy-elk: ##@Server Copy ELK images to server
+	@make server-copy args="logs/elasticsearch.docker logs/logstash.docker logs/kibana.docker"
 
 %::
 	echo $(MESSAGE)
