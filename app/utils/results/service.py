@@ -11,6 +11,7 @@ from app.database.models import (
     StudentCourseLevels,
 )
 from app.schemas import ContestResults, CourseLevelResults, CourseResults
+from app.schemas import course as course_schemas
 from app.schemas.contest import ContestTag
 from app.utils.common import get_datetime_msk_tz
 from app.utils.contest import get_contests_with_relations
@@ -49,21 +50,8 @@ async def get_student_course_results(  # pylint: disable=too-many-arguments
                 tasks_count=contest.tasks_count,
                 score_max=contest.score_max,
                 levels_count=contest.levels['count'] if contest.levels else 0,
-                levels=sorted(
-                    contest.levels['levels'],
-                    key=lambda level: level['score_need'],
-                )
-                if contest.levels
-                else [],
-                levels_ok=[
-                    (student_contest.score or 0) >= level['score_need']
-                    for level in sorted(
-                        contest.levels['levels'],
-                        key=lambda level: level['score_need'],
-                    )
-                ]
-                if contest.levels
-                else [],
+                levels=[],  # TODO: remove
+                levels_ok=[],  # TODO: remove
                 lecture=contest.lecture,
                 tasks_done=student_contest.tasks_done,
                 score=student_contest.score,
@@ -84,9 +72,9 @@ async def get_student_course_results(  # pylint: disable=too-many-arguments
             )
         )
 
-    if course.ok_method == 'contests_ok':
+    if course.ok_method == course_schemas.LevelOkMethod.CONTESTS_OK:
         perc_ok = student_course.contests_ok_percent
-    elif course.ok_method == 'score_sum':
+    elif course.ok_method == course_schemas.LevelOkMethod.SCORE_SUM:
         perc_ok = student_course.score_percent
     else:
         logger.error(
@@ -95,27 +83,9 @@ async def get_student_course_results(  # pylint: disable=too-many-arguments
         )
         raise ValueError(f'Unknown ok_method: {course.ok_method}')
 
-    tmp = {
-        'dl_autumn_2022': 'Для получения '
-        'зачета вам необходимо набрать не менее 6 '
-        'баллов за домашние задания по курсу '
-        'и решить итоговый контест на 0.7 баллов и выше.',
-        'da_autumn_2022': 'Для получения '
-        'зачета вам необходимо решить не менее 50% '
-        'задач из каждого домашнего задания к лекциям 2-10 '
-        'и решить итоговый контест на 5 баллов и выше.',
-        'ml_autumn_2022': 'Для получения '
-        'зачета вам необходимо решить все домашние '
-        'задания по курсу. Домашнее задание считается '
-        'решенным, если выполнено количество задач, '
-        'определенное для получения зачета (например, '
-        'для зачета нужно было набрать 12 баллов, тогда '
-        'студент должен набрать 12 баллов без учета дедлайна) '
-        'и решить итоговый контест на 9 баллов и выше.',
-    }
     logger.info(
         'Student {} has course result',
-        student.id,
+        student.contest_login,
     )
 
     return CourseResults(
@@ -126,18 +96,7 @@ async def get_student_course_results(  # pylint: disable=too-many-arguments
         is_ok=student_course.is_ok,
         is_ok_final=student_course.is_ok_final,
         perc_ok=int(perc_ok),
-        str_need=(
-            f'Вы набрали необходимое количество баллов для зачета по курсу '
-            f'"{course.name}". Обратите внимание, что для получения зачета, '
-            f'вы должны были зарегистрироваться на курс через ЛК до 18 '
-            f'декабря. Проверьте, что ФИО, которое вы указывали при '
-            f'регистрации через чат-бота, полностью совпадает с ФИО в ЛК '
-            f'https://lk.msu.ru/. В случае обнаружения неточностей, напишите '
-            f'нам с помощью этого чат-бота. О проставлении зачетов мы сообщим '
-            f'в официальном Telegram-канале курса.'
-            if student_course.is_ok or student_course.is_ok_final
-            else tmp[course.short_name]
-        ),
+        str_need='',
         course_levels=[
             CourseLevelResults(
                 name=level.level_name,
