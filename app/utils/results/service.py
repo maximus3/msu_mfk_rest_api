@@ -72,14 +72,13 @@ async def get_student_course_results(  # pylint: disable=too-many-arguments
                         else math.ceil(
                             level.ok_threshold * contest.score_max / 100
                         ),
+                        'is_ok': student_level.is_ok,
                     }
-                    for level in contest_levels
+                    for level, student_level in zip(
+                        contest_levels, student_contest_levels
+                    )
                     if level.level_ok_method
                     == contest_schemas.LevelOkMethod.SCORE_SUM
-                ],
-                levels_ok=[
-                    student_contest_level.is_ok
-                    for student_contest_level in student_contest_levels
                 ],
                 lecture=contest.lecture,
                 tasks_done=student_contest.tasks_done,

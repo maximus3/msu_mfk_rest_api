@@ -3,6 +3,10 @@ from pydantic import BaseModel
 from app.schemas.contest.levels import Level
 
 
+class LevelWithOk(Level):
+    is_ok: bool
+
+
 class ContestResults(BaseModel):
     """Contest Results"""
 
@@ -10,8 +14,7 @@ class ContestResults(BaseModel):
     tasks_count: int
     score_max: float
     levels_count: int
-    levels: list[Level]
-    levels_ok: list[bool]
+    levels: list[LevelWithOk]
     lecture: int
     tasks_done: int
     score: float
