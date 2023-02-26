@@ -7,7 +7,43 @@ on:
     branches: [ "*" ]
 
 jobs:
-  check:
+  lint:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    #----------------------------------------------
+    #       check-out repo and set-up python
+    #----------------------------------------------
+    - name: Check out repository
+      uses: actions/checkout@v3
+    - name: Set up python
+      id: setup-python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+    #----------------------------------------------
+    #       load cached venv if cache exists
+    #----------------------------------------------
+    - name: Load cached venv
+      id: cached-poetry-dependencies
+      uses: actions/cache@v3
+      with:
+        path: .venv
+        key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('poetry.lock') }}
+    #----------------------------------------------
+    #  -----  install & configure poetry  -----
+    #----------------------------------------------
+    - name: Install Poetry and dependencies
+      run: |
+        make env
+        make venv
+        make install
+
+    - name: Run lint
+      run: make lint
+
+  test:
 
     runs-on: ubuntu-latest
 
@@ -50,9 +86,6 @@ jobs:
         make venv
         make install
 
-    - name: Run lint
-      run: make lint
-
     - name: Run tests
       run: |
         printf "APP_HOST=localhost\n" >> .env
@@ -62,7 +95,7 @@ jobs:
   deploy:
 
     runs-on: ubuntu-latest
-    needs: [ check ]
+    needs: [ lint, test ]
     if: ${{ github.ref == 'refs/heads/main' }}
     steps:
     - uses: actions/checkout@v3
