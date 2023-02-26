@@ -1,4 +1,6 @@
 # pylint: disable=too-many-lines
+import math
+
 import loguru
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -11,10 +13,10 @@ from app.database.models import (
     StudentCourseLevels,
 )
 from app.schemas import ContestResults, CourseLevelResults, CourseResults
+from app.schemas import contest as contest_schemas
 from app.schemas import course as course_schemas
-from app.schemas.contest import ContestTag
+from app.utils import contest as contest_utils
 from app.utils.common import get_datetime_msk_tz
-from app.utils.contest import get_contests_with_relations
 
 
 async def get_student_course_results(  # pylint: disable=too-many-arguments
@@ -29,7 +31,7 @@ async def get_student_course_results(  # pylint: disable=too-many-arguments
     contests = []
 
     for contest, student_contest in sorted(
-        await get_contests_with_relations(
+        await contest_utils.get_contests_with_relations(
             session,
             course.id,
             student.id,
@@ -44,22 +46,50 @@ async def get_student_course_results(  # pylint: disable=too-many-arguments
         if contest.lecture == 99999:
             name = 'Зачет 12.01.2023'
 
+        contest_levels = await contest_utils.get_contest_levels(
+            session, contest.id
+        )
+        contest_levels.sort(key=lambda x: (x.count_method, x.ok_threshold))
+        student_contest_levels = [
+            await contest_utils.get_or_create_student_contest_level(
+                session, student.id, course.id, contest.id, level.id
+            )
+            for level in contest_levels
+        ]
+
         contests.append(
             ContestResults(
                 link=contest.link,
                 tasks_count=contest.tasks_count,
                 score_max=contest.score_max,
-                levels_count=contest.levels['count'] if contest.levels else 0,
-                levels=[],  # TODO: remove
-                levels_ok=[],  # TODO: remove
+                levels_count=len(contest_levels),
+                levels=[
+                    {
+                        'name': level.name,
+                        'score_need': level.ok_threshold
+                        if level.count_method
+                        == contest_schemas.LevelCountMethod.ABSOLUTE
+                        else math.ceil(
+                            level.ok_threshold * contest.score_max / 100
+                        ),
+                    }
+                    for level in contest_levels
+                    if level.level_ok_method
+                    == contest_schemas.LevelOkMethod.SCORE_SUM
+                ],
+                levels_ok=[
+                    student_contest_level.is_ok
+                    for student_contest_level in student_contest_levels
+                ],
                 lecture=contest.lecture,
                 tasks_done=student_contest.tasks_done,
                 score=student_contest.score,
                 score_no_deadline=student_contest.score_no_deadline,
                 is_ok=student_contest.is_ok,
                 is_ok_no_deadline=student_contest.is_ok_no_deadline,
-                is_necessary=ContestTag.NECESSARY in contest.tags,
-                is_final=ContestTag.FINAL in contest.tags,
+                is_necessary=contest_schemas.ContestTag.NECESSARY
+                in contest.tags,
+                is_final=contest_schemas.ContestTag.FINAL in contest.tags,
                 name=name,
                 updated_at=get_datetime_msk_tz(
                     student_contest.dt_updated
@@ -117,14 +147,17 @@ async def update_student_course_results(  # pylint: disable=too-many-statements
     course_score_sum = 0
     necessary_contests_results = []
 
-    for contest, student_contest in await get_contests_with_relations(
+    for (
+        contest,
+        student_contest,
+    ) in await contest_utils.get_contests_with_relations(
         session,
         course.id,
         student.id,
     ):
         course_score_sum += student_contest.score
 
-        if ContestTag.NECESSARY in contest.tags:
+        if contest_schemas.ContestTag.NECESSARY in contest.tags:
             necessary_contests_results.append(student_contest.is_ok)
 
     count_necessary_contests = len(necessary_contests_results)
@@ -179,19 +212,19 @@ async def update_sc_results_final(  # pylint: disable=too-many-statements,too-ma
     for (  # pylint: disable=too-many-nested-blocks
         contest,
         student_contest,
-    ) in await get_contests_with_relations(
+    ) in await contest_utils.get_contests_with_relations(
         session,
         course.id,
         student.id,
     ):
-        if ContestTag.FINAL in contest.tags:
+        if contest_schemas.ContestTag.FINAL in contest.tags:
             final_results.append(student_contest.is_ok)
         else:
             contests_results.append(student_contest.is_ok_no_deadline)
             course_score_sum += student_contest.score_no_deadline
             course_score_sum_with_deadline += student_contest.score
 
-            if ContestTag.NECESSARY in contest.tags:
+            if contest_schemas.ContestTag.NECESSARY in contest.tags:
                 for level in course_levels:
                     if level.level_ok_method == 'contests_ok':
                         level_names = (
