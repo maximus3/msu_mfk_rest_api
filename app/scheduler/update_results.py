@@ -368,9 +368,10 @@ async def process_submission(  # noqa: C901 # pylint: disable=too-many-arguments
         for level in contest_levels
     ]
     contests_ok_diff = 0
-    for contest_level, student_contest_level in zip(
-        contest_levels, student_contest_levels
-    ):
+    for (  # pylint: disable=too-many-nested-blocks
+        contest_level,
+        student_contest_level,
+    ) in zip(contest_levels, student_contest_levels):
         if student_contest_level.is_ok:
             continue
         if (
@@ -410,9 +411,7 @@ async def process_submission(  # noqa: C901 # pylint: disable=too-many-arguments
                     )  # TODO
                 else:
                     student_contest_level.is_ok = (
-                        100
-                        * student_contest.tasks_done
-                        / contest.tasks_count
+                        100 * student_contest.tasks_done / contest.tasks_count
                     ) >= contest_level.ok_threshold
             else:
                 raise RuntimeError(
@@ -534,8 +533,7 @@ async def process_submission(  # noqa: C901 # pylint: disable=too-many-arguments
                 == course_schemas.LevelCountMethod.PERCENT
             ):
                 student_course_level.is_ok = (
-                    student_course.score_percent
-                    >= course_level.ok_threshold
+                    student_course.score_percent >= course_level.ok_threshold
                 )
             else:
                 raise RuntimeError(
