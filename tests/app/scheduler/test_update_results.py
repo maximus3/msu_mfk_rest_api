@@ -155,7 +155,7 @@ class TestJob:
             assert student_contest.score_no_deadline == created_task.score_max
             assert student_contest.tasks_done == 0
             assert not student_contest.is_ok
-            assert student_contest.is_ok_no_deadline
+            assert not student_contest.is_ok_no_deadline
 
             student_course_model = await course_utils.get_student_course(
                 session, created_student.id, created_course.id
