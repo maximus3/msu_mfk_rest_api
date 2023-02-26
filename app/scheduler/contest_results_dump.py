@@ -124,10 +124,10 @@ async def get_course_results(
             ] = contest_results.score
 
             if contest_results.levels:
-                for i, level in enumerate(contest_results.levels):
+                for level in contest_results.levels:
                     course_results.results[student.contest_login][
                         f'lecture_{contest_results.lecture}_level_{level.name}'
-                    ] = contest_results.levels_ok[i]
+                    ] = level.is_ok
 
             if keys_add:
                 course_results.keys.append(
