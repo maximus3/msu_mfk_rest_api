@@ -65,7 +65,7 @@ async def get_student_course_results(  # pylint: disable=too-many-arguments
                 levels_count=len(contest_levels),
                 levels=[
                     {
-                        'name': level.name,
+                        'name': level.level_name,
                         'score_need': level.ok_threshold
                         if level.count_method
                         == contest_schemas.LevelCountMethod.ABSOLUTE
