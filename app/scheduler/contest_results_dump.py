@@ -1,7 +1,6 @@
 # pylint: disable=too-many-statements
 
 import traceback
-import uuid
 from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
@@ -15,6 +14,7 @@ from app.database.connection import SessionManager
 from app.database.models import Course, CourseLevels
 from app.m3tqdm import tqdm
 from app.schemas import CourseResultsCSV
+from app.schemas import scheduler as scheduler_schemas
 from app.utils.course import (
     get_all_active_courses,
     get_course_levels,
@@ -22,10 +22,8 @@ from app.utils.course import (
 )
 from app.utils.results import (
     get_student_course_results,
-    update_sc_results_final,
     update_student_course_results,
 )
-from app.utils.scheduler import write_sql_tqdm
 from app.utils.student import get_students_by_course_with_department
 
 
@@ -44,42 +42,36 @@ async def save_to_csv(course_results: CourseResultsCSV, filename: str) -> None:
 async def get_course_results(
     course: Course,
     course_levels: list[CourseLevels],
-    logger: 'loguru.Logger',
+    base_logger: 'loguru.Logger',
 ) -> CourseResultsCSV:
     SessionManager().refresh()
     async with SessionManager().create_async_session() as session:
         students_departments_results = []
         async for (student, student_course, department,) in tqdm(
             await get_students_by_course_with_department(session, course.id),
-            name='contest_results_dump_students',
-            logger=logger,
-            sql_write_func=write_sql_tqdm,
-            send_or_edit_func=send.send_or_edit,
+            name=job_info.name + '-students',
         ):
+            logger = base_logger.bind(
+                student={
+                    'id': student.id,
+                    'contest_login': student.contest_login,
+                }
+            )
             student_course_levels = [
                 await get_or_create_student_course_level(
                     session, student.id, course.id, course_level.id
                 )
                 for course_level in course_levels
             ]
-            if course.default_update_on:
-                await update_student_course_results(
-                    student,
-                    course,
-                    student_course,
-                    logger=logger,
-                    session=session,
-                )
-            else:
-                await update_sc_results_final(
-                    student,
-                    course,
-                    course_levels,
-                    student_course,
-                    student_course_levels,
-                    logger=logger,
-                    session=session,
-                )
+            await update_student_course_results(
+                student,
+                course,
+                course_levels,
+                student_course,
+                student_course_levels,
+                base_logger=logger,
+                session=session,
+            )
             await session.commit()
             student_results = await get_student_course_results(
                 student,
@@ -115,9 +107,6 @@ async def get_course_results(
         course_results.results[student.contest_login][
             'score_max'
         ] = student_results.score_max
-        course_results.results[student.contest_login][
-            'ok'
-        ] = student_results.is_ok
         for contest_results in student_results.contests:
             course_results.results[student.contest_login][
                 f'lecture_{contest_results.lecture}_score'
@@ -149,48 +138,44 @@ async def get_course_results(
 
     course_results.keys.append('score_sum')
     course_results.keys.append('score_max')
-    course_results.keys.append('ok')
     return course_results
 
 
-async def job() -> None:
+async def job(base_logger: 'loguru.Logger') -> None:
     SessionManager().refresh()
     async with SessionManager().create_async_session() as session:
         courses = await get_all_active_courses(session)
         levels_by_course = [
             await get_course_levels(session, course.id) for course in courses
         ]
-    logger = loguru.logger.bind(uuid=uuid.uuid4().hex)
     filenames = []
     async for course, course_levels in tqdm(
         zip(courses, levels_by_course),
         total=len(courses),
-        name='contest_results_dump_courses',
-        logger=logger,
-        sql_write_func=write_sql_tqdm,
-        send_or_edit_func=send.send_or_edit,
+        name=job_info.name + '-courses',
     ):
+        # pylint: disable=duplicate-code
+        logger = base_logger.bind(
+            course={'id': course.id, 'short_name': course.short_name}
+        )
         logger.info('Course: {}', course)
+        # pylint: disable=duplicate-code
         try:
             course_results = await get_course_results(
-                course, course_levels, logger=logger
+                course, course_levels, base_logger=logger
             )
         except Exception as exc:  # pylint: disable=broad-except
             logger.exception(
                 'Error while getting course results for {}: {}',
-                course.name,
+                course.short_name,
                 exc,
             )
-            try:
-                await send.send_traceback_message(
-                    f'Error while getting course '
-                    f'results for {course.name}: {exc}',
-                    code=traceback.format_exc(),
-                )
-            except Exception as send_exc:  # pylint: disable=broad-except
-                logger.exception(
-                    'Error while sending error message: {}', send_exc
-                )
+            await send.send_traceback_message_safe(
+                logger=logger,
+                message=f'Error while getting course '
+                f'results for {course.short_name}: {exc}',
+                code=traceback.format_exc(),
+            )
             continue
         filename = (
             f'results_{course.short_name}_'
@@ -201,17 +186,18 @@ async def job() -> None:
 
     try:
         await send_results(filenames)
-    except Exception as e:
-        logger.error('Error while sending results: {}', e)
-        raise e
+    except Exception as exc:
+        base_logger.error('Error while sending results: {}', exc)
+        raise exc
     finally:
         for filename in filenames:
             Path(filename).unlink()
 
 
-job_info = {
-    'func': job,
-    'trigger': 'interval',
-    'hours': 3,
-    'name': 'contest_results_dump',
-}
+job_info = scheduler_schemas.JobInfo(
+    func=job,
+    name='contest_results_dump',
+    trigger='interval',
+    hours=3,
+    config=scheduler_schemas.JobConfig(send_logs=True),
+)
