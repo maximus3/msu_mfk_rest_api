@@ -15,6 +15,7 @@ from app.bot_helper import send
 from app.database.connection import SessionManager
 from app.database.models import User
 from app.schemas import StudentResults
+from app.utils import student as student_utils
 from app.utils.common import fill_pdf
 from app.utils.course import (
     get_all_active_courses,
@@ -24,7 +25,6 @@ from app.utils.course import (
     get_student_courses,
 )
 from app.utils.results import get_student_course_results
-from app.utils.student import get_student
 from app.utils.user import get_current_user
 
 
@@ -51,13 +51,9 @@ async def get_all_results(
         uuid=request['request_id'], student={'contest_login': student_login}
     )
     headers = {'log_contest_login': student_login}
-    student = await get_student(session, student_login)
-    if student is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail='Student not found',
-            headers=headers,
-        )
+    student = await student_utils.get_student_or_raise(
+        session, student_login, headers=headers
+    )
     all_courses = await get_all_active_courses(session)
     levels_by_course = {
         course.id: await get_course_levels(session, course.id)
