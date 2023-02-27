@@ -1,11 +1,15 @@
+import typing as tp
 from uuid import UUID
 
 import loguru
+from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
+from starlette import status
 
+from app.database import models
 from app.utils.course import get_student_course
 
-from .database import get_student_by_fio
+from .database import get_student, get_student_by_fio
 
 
 async def get_student_course_is_ok(
@@ -31,3 +35,16 @@ async def get_student_course_is_ok(
         course_id,
     )
     return student_course.is_ok
+
+
+async def get_student_or_raise(
+    session: AsyncSession, contest_login: str, **kwargs: tp.Any
+) -> models.Student:
+    student = await get_student(session, contest_login)
+    if student is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail='Student not found',
+            **kwargs,
+        )
+    return student

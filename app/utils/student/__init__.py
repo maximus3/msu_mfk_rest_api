@@ -8,7 +8,7 @@ from .database import (
     get_students_by_course_with_department,
     get_students_by_course_with_no_contest,
 )
-from .service import get_student_course_is_ok
+from .service import get_student_course_is_ok, get_student_or_raise
 
 
 __all__ = [
@@ -21,4 +21,5 @@ __all__ = [
     'get_student_by_fio',
     'get_student_course_is_ok',
     'get_or_create_all_student_models',
+    'get_student_or_raise',
 ]
