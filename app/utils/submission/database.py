@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import models
 from app.schemas import contest as contest_schemas
+from app.utils import task as task_utils
 
 
 async def get_last_updated_submission(
@@ -45,10 +46,16 @@ async def add_submission(  # pylint: disable=too-many-arguments
         )
         else submission.finalScore
     )
-    final_score = (
+    score_before_finish = (
         no_deadline_score
         if submission.submissionTime <= contest.deadline
         else 0
+    )
+    final_score = task_utils.eval_expr(
+        task.final_score_evaluation_formula.format(
+            best_score_before_finish=score_before_finish,
+            best_score=no_deadline_score,
+        )
     )
     submission_model = models.Submission(
         course_id=course.id,
@@ -60,7 +67,8 @@ async def add_submission(  # pylint: disable=too-many-arguments
         run_id=submission.id,
         verdict=submission.verdict,
         final_score=final_score,
-        no_deadline_score=no_deadline_score,
+        score=no_deadline_score,
+        score_before_finish=score_before_finish,
         submission_link=f'https://admin.contest.yandex.ru/'
         f'submissions/{submission.id}/',
         time_from_start=submission.timeFromStart,

@@ -39,6 +39,7 @@ class CourseResults(BaseModel):
     name: str
     contests: list[ContestResults]
     score_sum: float
+    score_sum_no_deadline: float
     score_max: float
     is_ok: bool
     is_ok_final: bool
