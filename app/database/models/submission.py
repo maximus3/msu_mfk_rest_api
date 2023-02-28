@@ -37,7 +37,12 @@ class Submission(BaseModel):
     run_id = sa.Column(sa.Integer, nullable=False)
     verdict = sa.Column(sa.String, nullable=False)
     final_score = sa.Column(sa.Float, nullable=False)
-    no_deadline_score = sa.Column(sa.Float, nullable=False)
+    score = sa.Column(
+        sa.Float, nullable=False, default=0, server_default='0.0'
+    )
+    score_before_finish = sa.Column(
+        sa.Float, nullable=False, default=0, server_default='0.0'
+    )
     submission_link = sa.Column(sa.String, nullable=False)
     time_from_start = sa.Column(sa.Integer, nullable=False)
     submission_time = sa.Column(sa.DateTime, nullable=False)

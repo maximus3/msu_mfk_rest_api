@@ -65,12 +65,20 @@ class StudentCourse(BaseModel):
         nullable=False,
         index=True,
     )
-    score = sa.Column(sa.Float, nullable=False, server_default='0.0')
-    contests_ok = sa.Column(sa.Integer, nullable=False, server_default='0')
-    score_percent = sa.Column(sa.Float, nullable=False, server_default='0.0')
-    contests_ok_percent = sa.Column(
-        sa.Float, nullable=False, server_default='0.0'
+    score = sa.Column(
+        sa.Float,
+        nullable=False,
+        server_default='0.0',
+        doc='Sum of contests scores',
     )
+    score_no_deadline = sa.Column(
+        sa.Float,
+        default=0.0,
+        nullable=False,
+        server_default='0.0',
+        doc='Sum of contests scores no deadline',
+    )
+    contests_ok = sa.Column(sa.Integer, nullable=False, server_default='0')
     is_ok = sa.Column(sa.Boolean, nullable=False, server_default='false')
     is_ok_final = sa.Column(sa.Boolean, nullable=False, server_default='false')
 
@@ -107,13 +115,29 @@ class StudentContest(BaseModel):
     )
     author_id = sa.Column(sa.Integer, nullable=True)
     tasks_done = sa.Column(sa.Integer, default=0, nullable=False)
-    score = sa.Column(sa.Float, default=0.0, nullable=False)
-    score_no_deadline = sa.Column(
-        sa.Float, default=0.0, nullable=False, server_default='0.0'
+    score = sa.Column(
+        sa.Float, default=0.0, nullable=False, doc='Sum of tasks final scores'
     )
-    is_ok = sa.Column(sa.Boolean, default=False, nullable=False)
+    score_no_deadline = sa.Column(
+        sa.Float,
+        default=0.0,
+        nullable=False,
+        server_default='0.0',
+        doc='Sum of tasks best scores',
+    )
+    is_ok = sa.Column(
+        sa.Boolean,
+        default=False,
+        nullable=False,
+        server_default='false',
+        doc='Is ok for level Зачет автоматом',
+    )
     is_ok_no_deadline = sa.Column(
-        sa.Boolean, default=False, nullable=False, server_default='false'
+        sa.Boolean,
+        default=False,
+        nullable=False,
+        server_default='false',
+        doc='Is ok for level Допуск к зачету',
     )
 
     def __repr__(self):  # type: ignore
@@ -152,19 +176,28 @@ class StudentTask(BaseModel):
         nullable=False,
         index=True,
     )
-    final_score = sa.Column(sa.Float, nullable=False)
-    no_deadline_score = sa.Column(sa.Float, nullable=False)
+    final_score = sa.Column(
+        sa.Float,
+        nullable=False,
+        doc='Final score evaluated by final_score_evaluation_formula',
+    )
+    best_score_before_finish = sa.Column(
+        sa.Float, nullable=False, default=0, server_default='0.0'
+    )
+    best_score = sa.Column(
+        sa.Float, nullable=False, default=0, server_default='0.0'
+    )
     is_done = sa.Column(
         sa.Boolean,
         nullable=False,
         default=False,
         server_default='false',
     )
-    best_submission_id = sa.Column(
+    best_score_before_finish_submission_id = sa.Column(
         UUID(as_uuid=True),
         nullable=True,
     )
-    best_no_deadline_submission_id = sa.Column(
+    best_score_submission_id = sa.Column(
         UUID(as_uuid=True),
         nullable=True,
     )
