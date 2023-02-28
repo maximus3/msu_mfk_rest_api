@@ -377,6 +377,7 @@ generate-deploy-key: ##@Deploy Generate deploy key
 .PHONY: gen
 gen: ##@Application Generate files
 	$(VENV_BIN)/python -m tools gen-admin-models $(args)
+	@make format
 
 .PHONY: sqlalchemy
 sqlalchemy: ##@Application Open sqlalchemy shell

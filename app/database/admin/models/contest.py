@@ -19,6 +19,7 @@ class ContestAdmin(ModelView, model=models.Contest):
         'score_max',
         'levels',
         'tags',
+        'default_final_score_evaluation_formula',
     ]
     column_list = [
         'id',
@@ -31,6 +32,7 @@ class ContestAdmin(ModelView, model=models.Contest):
         'score_max',
         'levels',
         'tags',
+        'default_final_score_evaluation_formula',
     ]
     form_excluded_columns = ['id', 'dt_created', 'dt_updated']
     form_include_pk = True
