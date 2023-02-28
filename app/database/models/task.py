@@ -1,3 +1,5 @@
+# pylint: disable=duplicate-code
+
 import sqlalchemy as sa
 
 from .base import BaseModel
@@ -32,6 +34,17 @@ class Task(BaseModel):
     )
     score_max = sa.Column(
         sa.Float, nullable=False, server_default='0.0', default=0.0
+    )
+
+    final_score_evaluation_formula = sa.Column(
+        sa.String,
+        nullable=False,
+        default='{best_score_before_finish}',
+        server_default='{best_score_before_finish}',
+        doc='Default evaluation formula for tasks.'
+        'Current available variables: '
+        'best_score_before_finish, '
+        'best_score (include before)',
     )
 
     def __repr__(self):  # type: ignore

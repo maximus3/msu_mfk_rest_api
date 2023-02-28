@@ -97,6 +97,17 @@ class Course(BaseModel):
         sa.Integer, nullable=False, server_default='0', default=0
     )
 
+    default_final_score_evaluation_formula = sa.Column(
+        sa.String,
+        nullable=False,
+        default='{best_score_before_finish}',
+        server_default='{best_score_before_finish}',
+        doc='Default evaluation formula for tasks.'
+        'Current available variables: '
+        'best_score_before_finish, '
+        'best_score (include before)',
+    )
+
     is_archive = sa.Column(
         sa.Boolean,
         default=False,

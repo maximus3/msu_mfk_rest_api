@@ -33,6 +33,17 @@ class Contest(BaseModel):
         server_default='{}',
     )
 
+    default_final_score_evaluation_formula = sa.Column(
+        sa.String,
+        nullable=False,
+        default='{best_score_before_finish}',
+        server_default='{best_score_before_finish}',
+        doc='Default evaluation formula for tasks.'
+        'Current available variables: '
+        'best_score_before_finish, '
+        'best_score (include before)',
+    )
+
     def __repr__(self):  # type: ignore
         return (
             f'<Contest {self.yandex_contest_id} (course_id={self.course_id})>'
