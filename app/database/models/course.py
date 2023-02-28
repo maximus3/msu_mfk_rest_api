@@ -56,12 +56,14 @@ class Course(BaseModel):
         sa.Boolean,
         nullable=False,
         default=False,
+        server_default='false',
         doc='Course activity status.',
     )
     is_open = sa.Column(
         sa.Boolean,
         nullable=False,
         default=False,
+        server_default='false',
         doc='Is course with open registration.',
     )
     code_word = sa.Column(
