@@ -32,6 +32,12 @@ class Contest(BaseModel):
         default=[],
         server_default='{}',
     )
+    name_format = sa.Column(
+        sa.String,
+        nullable=False,
+        default='Лекция {lecture_num}',
+        server_default='Лекция {lecture_num}',
+    )
 
     default_final_score_evaluation_formula = sa.Column(
         sa.String,
