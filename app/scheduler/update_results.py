@@ -315,50 +315,67 @@ async def process_submission(  # noqa: C901 # pylint: disable=too-many-arguments
     await session.flush()
     if (  # pylint: disable=too-many-nested-blocks  # TODO
         submission_model.final_score > student_task.final_score
-        or submission_model.no_deadline_score > student_task.no_deadline_score
+        or submission_model.score_before_finish
+        > student_task.best_score_before_finish
+        or submission_model.score > student_task.best_score
     ):  # TODO: check block other transactions
         is_done_submission = submission_model.final_score == task.score_max
 
-        score_diff = max(
+        final_score_diff = max(
             submission_model.final_score - student_task.final_score, 0
         )
+        score_before_finish_diff = max(
+            submission_model.score_before_finish
+            - student_task.best_score_before_finish,
+            0,
+        )
         no_deadline_score_diff = max(
-            submission_model.no_deadline_score
-            - student_task.no_deadline_score,
+            submission_model.score - student_task.best_score,
             0,
         )  # TODO: max no need?
         is_done_diff = 0 if student_task.is_done else is_done_submission
 
         logger.info(
             'Submission {} is new best submission for task {}. '
-            'score_diff={}, no_deadline_score_diff={}, '
+            'final_score_diff={}, score_before_finish_diff={}'
+            'no_deadline_score_diff={}, '
             'is_done_diff={}',
             submission.id,
             task.id,
-            score_diff,
+            final_score_diff,
+            score_before_finish_diff,
             no_deadline_score_diff,
             is_done_diff,
         )
 
-        if score_diff:
-            student_task.best_submission_id = submission_model.id
+        if score_before_finish_diff:
+            student_task.best_score_before_finish_submission_id = (
+                submission_model.id
+            )
         if no_deadline_score_diff:
-            student_task.best_no_deadline_submission_id = submission_model.id
+            student_task.best_score_submission_id = submission_model.id
         student_task.final_score = round(
-            student_task.final_score + score_diff, 4
+            student_task.final_score + final_score_diff, 4
         )
-        student_task.no_deadline_score = round(
-            student_task.no_deadline_score + no_deadline_score_diff, 4
+        student_task.best_score_before_finish = round(
+            student_task.best_score_before_finish + score_before_finish_diff, 4
+        )
+        student_task.best_score = round(
+            student_task.best_score + no_deadline_score_diff, 4
         )
         student_task.is_done = student_task.is_done or is_done_submission
 
-        student_contest.score = round(student_contest.score + score_diff, 4)
+        student_contest.score = round(
+            student_contest.score + final_score_diff, 4
+        )
         student_contest.score_no_deadline = round(
             student_contest.score_no_deadline + no_deadline_score_diff, 4
         )  # TODO: magic constant
         student_contest.tasks_done += is_done_diff
 
-        student_course.score = round(student_course.score + score_diff, 4)
+        student_course.score = round(
+            student_course.score + final_score_diff, 4
+        )
 
         session.add(student_task)
         session.add(student_contest)

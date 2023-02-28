@@ -39,13 +39,13 @@ async def get_student_course_results(  # pylint: disable=too-many-arguments
         ),
         key=lambda x: x[0].lecture,
     ):
-        name = f'Лекция {contest.lecture}'
+        _ = f'Лекция {contest.lecture}'
         if contest.lecture == 999:
-            name = 'Зачет 21.12.2022'
+            _ = 'Зачет 21.12.2022'
         if contest.lecture == 9999:
-            name = 'Зачет 25.12.2022'
+            _ = 'Зачет 25.12.2022'
         if contest.lecture == 99999:
-            name = 'Зачет 12.01.2023'
+            _ = 'Зачет 12.01.2023'
 
         contest_levels = await contest_utils.get_contest_levels(
             session, contest.id
@@ -122,6 +122,7 @@ async def get_student_course_results(  # pylint: disable=too-many-arguments
         name=course.name,
         contests=contests,
         score_sum=student_course.score,
+        score_sum_no_deadline=student_course.score_no_deadline,
         score_max=course.score_max,
         is_ok=student_course.is_ok,
         is_ok_final=student_course.is_ok_final,
