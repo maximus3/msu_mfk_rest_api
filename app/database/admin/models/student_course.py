@@ -13,9 +13,8 @@ class StudentCourseAdmin(ModelView, model=models.StudentCourse):
         'course_id',
         'student_id',
         'score',
+        'score_no_deadline',
         'contests_ok',
-        'score_percent',
-        'contests_ok_percent',
         'is_ok',
         'is_ok_final',
     ]
@@ -24,9 +23,8 @@ class StudentCourseAdmin(ModelView, model=models.StudentCourse):
         'course_id',
         'student_id',
         'score',
+        'score_no_deadline',
         'contests_ok',
-        'score_percent',
-        'contests_ok_percent',
         'is_ok',
         'is_ok_final',
     ]

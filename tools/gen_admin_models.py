@@ -9,7 +9,7 @@ from app.config import get_settings
 from app.database import models
 
 
-def main(recreate_str: str = '') -> None:
+def main(recreate_str: str = 'recreate') -> None:
     """Generate models for sqladmin."""
 
     recreate = recreate_str.lower() == 'recreate'

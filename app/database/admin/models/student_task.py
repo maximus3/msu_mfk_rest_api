@@ -15,10 +15,11 @@ class StudentTaskAdmin(ModelView, model=models.StudentTask):
         'task_id',
         'student_id',
         'final_score',
-        'no_deadline_score',
+        'best_score_before_finish',
+        'best_score',
         'is_done',
-        'best_submission_id',
-        'best_no_deadline_submission_id',
+        'best_score_before_finish_submission_id',
+        'best_score_submission_id',
     ]
     column_list = [
         'id',
@@ -27,10 +28,11 @@ class StudentTaskAdmin(ModelView, model=models.StudentTask):
         'task_id',
         'student_id',
         'final_score',
-        'no_deadline_score',
+        'best_score_before_finish',
+        'best_score',
         'is_done',
-        'best_submission_id',
-        'best_no_deadline_submission_id',
+        'best_score_before_finish_submission_id',
+        'best_score_submission_id',
     ]
     form_excluded_columns = ['id', 'dt_created', 'dt_updated']
     form_include_pk = True

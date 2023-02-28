@@ -16,6 +16,7 @@ class TaskAdmin(ModelView, model=models.Task):
         'alias',
         'is_zero_ok',
         'score_max',
+        'final_score_evaluation_formula',
     ]
     column_list = [
         'id',
@@ -25,6 +26,7 @@ class TaskAdmin(ModelView, model=models.Task):
         'alias',
         'is_zero_ok',
         'score_max',
+        'final_score_evaluation_formula',
     ]
     form_excluded_columns = ['id', 'dt_created', 'dt_updated']
     form_include_pk = True
