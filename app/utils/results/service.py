@@ -90,7 +90,7 @@ async def get_student_course_results(  # pylint: disable=too-many-arguments
                 is_necessary=contest_schemas.ContestTag.NECESSARY
                 in contest.tags,
                 is_final=contest_schemas.ContestTag.FINAL in contest.tags,
-                name=name,
+                name=contest.name_format.format(lecture_num=contest.lecture),
                 updated_at=get_datetime_msk_tz(
                     student_contest.dt_updated
                 ).strftime(
