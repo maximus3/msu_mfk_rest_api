@@ -179,12 +179,14 @@ class StudentTask(BaseModel):
     final_score = sa.Column(
         sa.Float,
         nullable=False,
+        default=0,
+        server_default='0.0',
         doc='Final score evaluated by final_score_evaluation_formula',
     )
     best_score_before_finish = sa.Column(
         sa.Float, nullable=False, default=0, server_default='0.0'
     )
-    best_score = sa.Column(
+    best_score_no_deadline = sa.Column(
         sa.Float, nullable=False, default=0, server_default='0.0'
     )
     is_done = sa.Column(
@@ -197,7 +199,7 @@ class StudentTask(BaseModel):
         UUID(as_uuid=True),
         nullable=True,
     )
-    best_score_submission_id = sa.Column(
+    best_score_no_deadline_submission_id = sa.Column(
         UUID(as_uuid=True),
         nullable=True,
     )

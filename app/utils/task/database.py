@@ -62,8 +62,6 @@ async def add_student_task_relation(
         contest_id=contest.id,
         task_id=task.id,
         student_id=student.id,
-        final_score=0,
-        no_deadline_score=0,
     )
     session.add(student_task)
     return student_task

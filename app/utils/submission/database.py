@@ -54,7 +54,7 @@ async def add_submission(  # pylint: disable=too-many-arguments
     final_score = task_utils.eval_expr(
         task.final_score_evaluation_formula.format(
             best_score_before_finish=score_before_finish,
-            best_score=no_deadline_score,
+            best_score_no_deadline=no_deadline_score,
         )
     )
     submission_model = models.Submission(
@@ -67,7 +67,7 @@ async def add_submission(  # pylint: disable=too-many-arguments
         run_id=submission.id,
         verdict=submission.verdict,
         final_score=final_score,
-        score=no_deadline_score,
+        score_no_deadline=no_deadline_score,
         score_before_finish=score_before_finish,
         submission_link=f'https://admin.contest.yandex.ru/'
         f'submissions/{submission.id}/',

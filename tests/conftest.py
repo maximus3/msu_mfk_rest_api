@@ -161,7 +161,11 @@ def user_headers(user_token):
 
 @pytest.fixture
 async def potential_course():  # type: ignore
-    yield CourseFactory.build()
+    yield CourseFactory.build(
+        default_final_score_evaluation_formula='max('
+        '{best_score_before_finish}, '
+        '{best_score_no_deadline} / 2)'
+    )
 
 
 @pytest.fixture
@@ -368,6 +372,9 @@ async def created_contest(
 ):  # type: ignore
     created_course.contest_count = 1
     created_course.score_max = not_created_contest.score_max
+    not_created_contest.default_final_score_evaluation_formula = (
+        created_course.default_final_score_evaluation_formula
+    )
     session.add(not_created_contest)
     session.add(created_course)
     await session.commit()
@@ -507,7 +514,10 @@ async def not_created_task(session, created_contest, created_course):
     created_course.score_max = 3
     await session.commit()
     yield TaskFactory.build(
-        contest_id=created_contest.id, score_max=3, is_zero_ok=True
+        contest_id=created_contest.id,
+        score_max=3,
+        is_zero_ok=True,
+        final_score_evaluation_formula=created_contest.default_final_score_evaluation_formula,  # pylint: disable=line-too-long
     )
 
 

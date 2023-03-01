@@ -47,7 +47,7 @@ class Contest(BaseModel):
         doc='Default evaluation formula for tasks.'
         'Current available variables: '
         'best_score_before_finish, '
-        'best_score (include before)',
+        'best_score_no_deadline',
     )
 
     def __repr__(self):  # type: ignore

@@ -317,7 +317,8 @@ async def process_submission(  # noqa: C901 # pylint: disable=too-many-arguments
         submission_model.final_score > student_task.final_score
         or submission_model.score_before_finish
         > student_task.best_score_before_finish
-        or submission_model.score > student_task.best_score
+        or submission_model.score_no_deadline
+        > student_task.best_score_no_deadline
     ):  # TODO: check block other transactions
         is_done_submission = submission_model.final_score == task.score_max
 
@@ -330,7 +331,8 @@ async def process_submission(  # noqa: C901 # pylint: disable=too-many-arguments
             0,
         )
         no_deadline_score_diff = max(
-            submission_model.score - student_task.best_score,
+            submission_model.score_no_deadline
+            - student_task.best_score_no_deadline,
             0,
         )  # TODO: max no need?
         is_done_diff = 0 if student_task.is_done else is_done_submission
@@ -353,15 +355,17 @@ async def process_submission(  # noqa: C901 # pylint: disable=too-many-arguments
                 submission_model.id
             )
         if no_deadline_score_diff:
-            student_task.best_score_submission_id = submission_model.id
+            student_task.best_score_no_deadline_submission_id = (
+                submission_model.id
+            )
         student_task.final_score = round(
             student_task.final_score + final_score_diff, 4
         )
         student_task.best_score_before_finish = round(
             student_task.best_score_before_finish + score_before_finish_diff, 4
         )
-        student_task.best_score = round(
-            student_task.best_score + no_deadline_score_diff, 4
+        student_task.best_score_no_deadline = round(
+            student_task.best_score_no_deadline + no_deadline_score_diff, 4
         )
         student_task.is_done = student_task.is_done or is_done_submission
 
