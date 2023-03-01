@@ -124,34 +124,50 @@ class TestJob:
             parse_mode='HTML',
         )
 
+        assert (
+            created_contest.default_final_score_evaluation_formula
+            == created_course.default_final_score_evaluation_formula
+        )
+        assert (
+            created_task.final_score_evaluation_formula
+            == created_contest.default_final_score_evaluation_formula
+        )
+
         async with create_async_session(expire_on_commit=False) as session:
             submission_1 = await submission_utils.get_submission(session, 1)
             assert submission_1 is not None
-            assert submission_1.final_score == 0
-            assert submission_1.no_deadline_score == created_task.score_max
+            assert submission_1.final_score == created_task.score_max / 2
+            assert submission_1.score_no_deadline == created_task.score_max
+            assert submission_1.score_before_finish == 0
 
             submission_2 = await submission_utils.get_submission(session, 2)
             assert submission_2 is not None
             assert submission_2.final_score == 1
-            assert submission_2.no_deadline_score == 1
+            assert submission_2.score_no_deadline == 1
+            assert submission_2.score_before_finish == 1
 
             student_task = await task_utils.get_student_task_relation(
                 session, created_student.id, created_task.id
             )
             assert student_task is not None
-            assert student_task.final_score == 1
-            assert student_task.no_deadline_score == 3
+            assert student_task.final_score == created_task.score_max / 2
+            assert student_task.best_score_no_deadline == 3
+            assert student_task.best_score_before_finish == 1
             assert not student_task.is_done
-            assert student_task.best_submission_id == submission_2.id
             assert (
-                student_task.best_no_deadline_submission_id == submission_1.id
+                student_task.best_score_before_finish_submission_id
+                == submission_2.id
+            )
+            assert (
+                student_task.best_score_no_deadline_submission_id
+                == submission_1.id
             )
 
             student_contest = await contest_utils.get_student_contest_relation(
                 session, created_student.id, created_contest.id
             )
             assert student_contest is not None
-            assert student_contest.score == 1
+            assert student_contest.score == created_task.score_max / 2
             assert student_contest.score_no_deadline == created_task.score_max
             assert student_contest.tasks_done == 0
             # assert not student_contest.is_ok
@@ -161,7 +177,7 @@ class TestJob:
                 session, created_student.id, created_course.id
             )
             assert student_course_model is not None
-            assert student_course_model.score == 1.0
+            assert student_course_model.score == created_task.score_max / 2
             # assert student_course_model.contests_ok == 0
             # assert student_course_model.score_percent == 33.3333
             # assert student_course_model.contests_ok_percent == 0
