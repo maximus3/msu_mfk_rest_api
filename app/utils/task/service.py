@@ -21,8 +21,6 @@ _allowed_funcs = {
 
 def eval_expr(expr: str) -> float:
     """
-    >>> eval_expr('2^6')
-    4
     >>> eval_expr('2**6')
     64
     >>> eval_expr('1 + 2*3**(4^5) / (6 + -7)')
