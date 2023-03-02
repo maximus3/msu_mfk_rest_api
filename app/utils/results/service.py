@@ -102,17 +102,6 @@ async def get_student_course_results(  # pylint: disable=too-many-arguments
             )
         )
 
-    if course.ok_method == course_schemas.LevelOkMethod.CONTESTS_OK:
-        perc_ok = student_course.contests_ok_percent
-    elif course.ok_method == course_schemas.LevelOkMethod.SCORE_SUM:
-        perc_ok = student_course.score_percent
-    else:
-        logger.error(
-            'Unknown ok_method: {}',
-            course.ok_method,
-        )
-        raise ValueError(f'Unknown ok_method: {course.ok_method}')
-
     logger.info(
         'Student {} has course result',
         student.contest_login,
@@ -126,7 +115,7 @@ async def get_student_course_results(  # pylint: disable=too-many-arguments
         score_max=course.score_max,
         is_ok=student_course.is_ok,
         is_ok_final=student_course.is_ok_final,
-        perc_ok=int(perc_ok),
+        perc_ok=0,  # TODO
         str_need='',
         course_levels=[
             CourseLevelResults(
