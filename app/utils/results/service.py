@@ -66,6 +66,7 @@ async def get_student_course_results(  # pylint: disable=too-many-arguments
                             level.ok_threshold * contest.score_max / 100
                         ),
                         'is_ok': student_level.is_ok,
+                        'include_after_deadline': level.include_after_deadline,
                     }
                     for level, student_level in zip(
                         contest_levels, student_contest_levels
