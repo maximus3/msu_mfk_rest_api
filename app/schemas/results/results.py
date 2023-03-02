@@ -1,10 +1,11 @@
 from pydantic import BaseModel
 
-from app.schemas.contest.levels import Level
 
-
-class LevelWithOk(Level):
+class LevelWithOk(BaseModel):
+    name: str
     is_ok: bool
+    score_need: float
+    include_after_deadline: bool
 
 
 class ContestResults(BaseModel):
