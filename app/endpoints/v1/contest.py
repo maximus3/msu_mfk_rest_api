@@ -53,19 +53,25 @@ async def create(
     contest_info = await get_contest_info(
         contest_request.yandex_contest_id, logger=logger
     )
+    tags = []
+    if contest_request.is_necessary:
+        tags.append(ContestTag.NECESSARY)
+    if contest_request.is_final:
+        tags.append(ContestTag.FINAL)
     contest = Contest(
         yandex_contest_id=contest_request.yandex_contest_id,
         lecture=contest_request.lecture,
-        tags=[ContestTag.NECESSARY] if contest_request.is_necessary else [],
+        tags=tags,
         course_id=course.id,
         link='https://contest.yandex.ru/contest/'
         + str(contest_request.yandex_contest_id),
         score_max=contest_request.score_max,
-        levels=contest_request.levels.dict()
-        if contest_request.levels
-        else None,
+        levels=None,  # TODO: delete
         deadline=contest_info.deadline,
         tasks_count=contest_info.tasks_count,
+        default_final_score_evaluation_formula=contest_request.default_final_score_evaluation_formula  # pylint: disable=line-too-long
+        or course.default_final_score_evaluation_formula,
+        name_format=contest_request.name_format,
     )
     course.score_max += contest_request.score_max
     course.contest_count += 1
@@ -80,9 +86,24 @@ async def create(
                 name=task.name,
                 alias=task.alias,
                 is_zero_ok=False,  # TODO: need change in db next
-                score_max=0,
+                score_max=0,  # TODO: need change in db next
+                final_score_evaluation_formula=contest.default_final_score_evaluation_formula,  # pylint: disable=line-too-long
             )
         )
+    await session.flush()
+    if contest_request.levels:
+        for level in contest_request.levels.items:
+            session.add(
+                models.ContestLevels(
+                    course_id=course.id,
+                    contest_id=contest.id,
+                    level_name=level.name,
+                    level_ok_method=level.ok_method,
+                    count_method=level.count_method,
+                    ok_threshold=level.ok_threshold,
+                    include_after_deadline=level.include_after_deadline,
+                )
+            )
     await session.commit()
     return ContestInfoResponse(
         course_short_name=course.short_name,
@@ -92,6 +113,5 @@ async def create(
         link=contest.link,
         tasks_count=contest.tasks_count,
         score_max=contest.score_max,
-        levels=contest.levels,
         is_necessary=ContestTag.NECESSARY in contest.tags,
     )

@@ -10,3 +10,6 @@ class ContestCreateRequest(BaseModel):
     score_max: float
     levels: Levels | None = None
     is_necessary: bool = True
+    is_final: bool = False
+    default_final_score_evaluation_formula: str | None = None
+    name_format: str | None = None

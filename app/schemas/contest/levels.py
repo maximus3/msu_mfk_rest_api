@@ -3,22 +3,6 @@ import enum
 from pydantic import BaseModel
 
 
-class Level(BaseModel):
-    """
-    Level of contest.
-    """
-
-    name: str
-    score_need: float | int
-
-
-class Levels(BaseModel):
-    """Levels schema"""
-
-    count: int
-    levels: list[Level]
-
-
 class LevelOkMethod(str, enum.Enum):
     SCORE_SUM = 'score_sum'
     TASKS_COUNT = 'tasks_count'
@@ -27,3 +11,21 @@ class LevelOkMethod(str, enum.Enum):
 class LevelCountMethod(str, enum.Enum):
     ABSOLUTE = 'absolute'
     PERCENT = 'percent'
+
+
+class Level(BaseModel):
+    """
+    Level of contest.
+    """
+
+    name: str
+    ok_method: LevelOkMethod
+    count_method: LevelCountMethod
+    ok_threshold: float | int
+    include_after_deadline: bool
+
+
+class Levels(BaseModel):
+    """Levels schema"""
+
+    items: list[Level]
