@@ -135,13 +135,13 @@ async def get_results_by_course(
                 await get_student_course_results(
                     student,
                     course,
-                    levels_by_course[course.id],
+                    levels_by_course,
                     student_course,
                     [
                         await get_or_create_student_course_level(
                             session, student.id, course.id, course_level.id
                         )
-                        for course_level in levels_by_course[course.id]
+                        for course_level in levels_by_course
                     ],
                     logger,
                     session,
