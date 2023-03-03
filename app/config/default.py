@@ -63,6 +63,7 @@ class DefaultSettings(BaseSettings):
     TG_HELPER_BOT_TOKEN: str = Field('', env='TG_HELPER_BOT_TOKEN')
     TG_ERROR_CHAT_ID: str = Field('', env='TG_ERROR_CHAT_ID')
     TG_DB_DUMP_CHAT_ID: str = Field('', env='TG_DB_DUMP_CHAT_ID')
+    TG_LOG_SEND_CHAT_ID: str = Field('', env='TG_LOG_SEND_CHAT_ID')
 
     @property
     def database_settings(self) -> dict[str, str | int]:

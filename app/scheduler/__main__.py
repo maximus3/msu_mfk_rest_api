@@ -55,7 +55,9 @@ def _job_info_wrapper(
 
             try:
                 await send.send_file(
-                    log_file_name, f'job-{job_info.name}-{log_id}'
+                    log_file_name,
+                    f'job-{job_info.name}-{log_id}',
+                    chat_id=settings.TG_LOG_SEND_CHAT_ID,
                 )
                 pathlib.Path(log_file_name).unlink()
             except Exception as send_exc:  # pylint: disable=broad-except
