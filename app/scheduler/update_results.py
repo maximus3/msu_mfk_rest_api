@@ -376,6 +376,9 @@ async def process_submission(  # noqa: C901 # pylint: disable=too-many-arguments
         student_course.score = round(
             student_course.score + final_score_diff, 4
         )
+        student_course.score_no_deadline = round(
+            student_course.score_no_deadline + no_deadline_score_diff, 4
+        )
 
         session.add(student_task)
         session.add(student_contest)
