@@ -66,7 +66,6 @@ async def create(
         link='https://contest.yandex.ru/contest/'
         + str(contest_request.yandex_contest_id),
         score_max=contest_request.score_max,
-        levels=None,  # TODO: delete
         deadline=contest_info.deadline,
         tasks_count=contest_info.tasks_count,
         default_final_score_evaluation_formula=contest_request.default_final_score_evaluation_formula  # pylint: disable=line-too-long
