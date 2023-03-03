@@ -109,7 +109,10 @@ async def get_student_course_results(  # pylint: disable=too-many-arguments
         is_ok=student_course.is_ok,
         is_ok_final=student_course.is_ok_final,
         perc_ok=0,  # TODO
-        str_need='',
+        str_need=f'Набрано баллов: {student_course.score}/{course.score_max}'
+        if course_schemas.LevelOkMethod.SCORE_SUM
+        in set(map(lambda x: x.level_ok_method, course_levels))
+        else '',
         course_levels=[
             CourseLevelResults(
                 name=level.level_name,

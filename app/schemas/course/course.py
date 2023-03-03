@@ -1,6 +1,10 @@
 from pydantic import BaseModel
 
 
+class CourseNameRequest(BaseModel):
+    name: str
+
+
 class CourseBase(BaseModel):
     name: str
     short_name: str

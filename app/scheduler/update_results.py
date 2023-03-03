@@ -265,7 +265,8 @@ async def process_submission(  # noqa: C901 # pylint: disable=too-many-arguments
             f'{submission.authorId}: student {student}, '
             f'student course {student_course}, '
             f'student contest {student_contest}. '
-            f'Submission {submission.id} '
+            f'Submission {submission.id} (https://admin.contest.yandex.ru/'
+            f'submissions/{submission.id}/) '
             f'will not be processed',
         )
         return
