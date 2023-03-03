@@ -24,12 +24,7 @@ class TestJob:
         await update_results.job(base_logger=loguru.logger)
 
         # assert
-        mock_bot.send_message.assert_called_once_with(
-            chat_id=settings.TG_ERROR_CHAT_ID,
-            text='Results updated',
-            disable_notification=True,
-            parse_mode='HTML',
-        )
+        mock_bot.send_message.assert_not_called()
 
     async def test_ok(  # pylint: disable=too-many-arguments,unused-argument,too-many-statements  # TODO
         self,
@@ -117,12 +112,7 @@ class TestJob:
         await update_results.job(base_logger=loguru.logger)
 
         # assert
-        mock_bot.send_message.assert_called_once_with(
-            chat_id=settings.TG_ERROR_CHAT_ID,
-            text='Results updated',
-            disable_notification=True,
-            parse_mode='HTML',
-        )
+        mock_bot.send_message.assert_not_called()
 
         assert (
             created_contest.default_final_score_evaluation_formula
