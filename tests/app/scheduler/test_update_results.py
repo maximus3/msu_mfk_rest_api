@@ -3,7 +3,6 @@ import datetime
 import loguru
 import pytest
 
-from app.config import get_settings
 from app.scheduler import update_results
 from app.utils import contest as contest_utils
 from app.utils import course as course_utils
@@ -18,7 +17,6 @@ pytestmark = pytest.mark.asyncio
 class TestJob:
     async def test_run(self, mock_bot):
         # arrange
-        settings = get_settings()
 
         # act
         await update_results.job(base_logger=loguru.logger)
@@ -106,7 +104,6 @@ class TestJob:
                 },
             }
         )
-        settings = get_settings()
 
         # act
         await update_results.job(base_logger=loguru.logger)
