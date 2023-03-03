@@ -75,6 +75,6 @@ async def get_by_student(
         )
     )
     return responses.JSONResponse(
-        CourseResponse(items=courses),
+        CourseResponse(items=courses).dict(),
         headers=headers,
     )
