@@ -89,7 +89,7 @@ async def get_student_course_results(  # pylint: disable=too-many-arguments
                 ).strftime(
                     constants.dt_format,
                 ),
-                deadline=get_datetime_msk_tz(contest.deadline).strftime(
+                deadline=contest.deadline.strftime(
                     constants.dt_format,
                 ),
             )
