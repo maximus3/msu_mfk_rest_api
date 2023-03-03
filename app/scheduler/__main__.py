@@ -45,7 +45,17 @@ def _job_info_wrapper(
                 kwargs,
             )
             kwargs.update(base_logger=base_logger)
-            result = await func(*args, **kwargs)
+            try:
+                result = await func(*args, **kwargs)
+            except Exception as exc:  # pylint: disable=broad-except
+                base_logger.exception(
+                    'Error in job {}: {}', job_info.name, exc
+                )
+                await send.send_traceback_message_safe(
+                    logger=base_logger,
+                    message=f'Error in job {job_info.name}',
+                    code=traceback.format_exc(),
+                )
             base_logger.info('Job {} finished', job_info.name)
 
             if not config.send_logs:
