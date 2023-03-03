@@ -25,6 +25,7 @@ class Contest(BaseModel):
     link = sa.Column(sa.String, unique=True)
     tasks_count = sa.Column(sa.Integer, nullable=True)
     score_max = sa.Column(sa.Float, nullable=True)
+    levels = sa.Column(sa.JSON, nullable=True)
     tags = sa.Column(
         sa.ARRAY(sa.Enum(ContestTag)),
         nullable=False,
