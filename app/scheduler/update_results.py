@@ -49,11 +49,6 @@ async def job(base_logger: 'loguru.Logger') -> None:
             )
             continue
 
-    await send.send_message(
-        'Results updated',
-        level='info',
-    )
-
 
 async def update_course_results(
     course: models.Course,
