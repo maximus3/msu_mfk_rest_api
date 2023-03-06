@@ -75,8 +75,12 @@ async def get_all_results(
                         )
                         for course_level in levels_by_course[course.id]
                     ],
-                    logger,
-                    session,
+                    student_course_contest_data=(
+                        await course_utils.get_student_course_contests_data(
+                            session, course.id, student.id
+                        )
+                    ),
+                    logger=logger,
                 )
                 for course, student_course in await get_student_courses(
                     session, student.id
@@ -98,7 +102,6 @@ async def get_results_by_course(
     course_short_name: str,
     student_login: str,
     _: User = Depends(get_current_user),
-    session: AsyncSession = Depends(SessionManager().get_async_session),
 ) -> JSONResponse:
     """
     Get student results for a specific course.
@@ -109,26 +112,39 @@ async def get_results_by_course(
         course={'short_name': course_short_name},
     )
     headers = {'log_contest_login': student_login}
-    student = await student_utils.get_student_or_raise(
-        session, student_login, headers=headers
-    )
-    course = await get_course_by_short_name(session, course_short_name)
-    if course is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail='Course not found',
-            headers=headers,
+    async with SessionManager().create_async_session() as session:
+        student = await student_utils.get_student_or_raise(
+            session, student_login, headers=headers
         )
-    student_course = await course_utils.get_student_course(
-        session, student.id, course.id
-    )
-    if student_course is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail='Student not registered on course',
-            headers=headers,
+        course = await get_course_by_short_name(session, course_short_name)
+        if course is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail='Course not found',
+                headers=headers,
+            )
+        student_course = await course_utils.get_student_course(
+            session, student.id, course.id
         )
-    levels_by_course = await get_course_levels(session, course.id)
+        if student_course is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail='Student not registered on course',
+                headers=headers,
+            )
+        levels_by_course = await get_course_levels(session, course.id)
+        student_course_levels = [
+            await get_or_create_student_course_level(
+                session, student.id, course.id, course_level.id
+            )
+            for course_level in levels_by_course
+        ]
+        student_course_contest_data = (
+            await course_utils.get_student_course_contests_data(
+                session, course.id, student.id
+            )
+        )
+
     return JSONResponse(
         StudentResults(
             courses=[
@@ -137,14 +153,9 @@ async def get_results_by_course(
                     course,
                     levels_by_course,
                     student_course,
-                    [
-                        await get_or_create_student_course_level(
-                            session, student.id, course.id, course_level.id
-                        )
-                        for course_level in levels_by_course
-                    ],
-                    logger,
-                    session,
+                    student_course_levels,
+                    student_course_contest_data,
+                    logger=logger,
                 )
             ],
             fio=student.fio,

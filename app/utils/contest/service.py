@@ -14,7 +14,7 @@ from app.schemas import (
     YandexContestInfo,
 )
 from app.schemas import contest as contest_schemas
-from app.utils.common import get_datetime_msk_tz
+from app.utils.common.datetime_utils import get_datetime_msk_tz
 from app.utils.yandex_request import make_request_to_yandex_contest_api
 
 from .database import (
