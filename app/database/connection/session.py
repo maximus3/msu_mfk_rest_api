@@ -16,6 +16,11 @@ class SessionManager:  # pragma: no cover
     issuing sessions, storing and updating connection settings.
     """
 
+    ENGINE_KWARGS = {
+        'max_overflow': 30,
+        'pool_size': 20,
+    }
+
     def __init__(self) -> None:
         self.refresh()
 
@@ -34,9 +39,15 @@ class SessionManager:  # pragma: no cover
 
     def refresh(self) -> None:
         settings = get_settings()
-        self.engine = sa.create_engine(settings.database_uri_sync)
+        self.engine = sa.create_engine(
+            settings.database_uri_sync,
+            **self.ENGINE_KWARGS,
+        )
         self.async_engine = create_async_engine(
-            settings.database_uri, future=True, pool_pre_ping=True
+            settings.database_uri,
+            future=True,
+            pool_pre_ping=True,
+            **self.ENGINE_KWARGS,
         )
 
     @contextmanager
