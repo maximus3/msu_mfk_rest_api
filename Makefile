@@ -438,5 +438,9 @@ update-dev-branch: ##@Git Rebase dev on main branch
 	@git checkout dev
 	@git rebase main
 
+.PHONY: delete-container-data
+delete-container-data: ##@Docker Prune containers
+	docker container prune -f
+
 %::
 	echo $(MESSAGE)
