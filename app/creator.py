@@ -4,6 +4,8 @@ import typing as tp
 import uuid
 
 import loguru
+import slowapi
+import slowapi.errors as slowapi_errors
 from fastapi import FastAPI
 from fastapi_pagination import add_pagination
 from starlette.middleware import Middleware
@@ -15,6 +17,7 @@ from uvicorn.protocols import utils
 from app.config import DefaultSettings, get_settings
 from app.database.admin.creator import get_sqladmin
 from app.endpoints import list_of_routes
+from app.limiter import limiter
 
 
 def bind_routes(application: FastAPI, setting: DefaultSettings) -> None:
@@ -145,5 +148,11 @@ def get_app(set_up_logger: bool = True) -> FastAPI:
         configure_logger(settings)
 
     _ = get_sqladmin(application)
+
+    application.state.limiter = limiter
+    application.add_exception_handler(
+        slowapi_errors.RateLimitExceeded,
+        slowapi._rate_limit_exceeded_handler,  # pylint: disable=protected-access
+    )
 
     return application
