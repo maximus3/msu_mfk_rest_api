@@ -33,7 +33,10 @@ async def create(
     _: User = Depends(get_current_user),
     session: AsyncSession = Depends(SessionManager().get_async_session),
 ) -> ContestInfoResponse:
-    logger = loguru.logger.bind(uuid=request['request_id'])
+    logger = loguru.logger.bind(
+        uuid=request['request_id'],
+        student={'contest_login': request.headers.get('log_contest_login')},
+    )
     course = await get_course_by_short_name(
         session, contest_request.course_short_name
     )

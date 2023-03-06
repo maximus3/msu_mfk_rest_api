@@ -55,13 +55,14 @@ class UniqueIDMiddleware(BaseHTTPMiddleware):
                 'uuid': request['request_id'],
             }
             response.headers['log_id'] = request['request_id']
-            if response.headers.get('log_contest_login'):
+            contest_login = request.headers.get(
+                'log_contest_login'
+            ) or response.headers.get('log_contest_login')
+            if contest_login:
                 request_info_dict.update(
                     {
                         'student': {
-                            'contest_login': response.headers[
-                                'log_contest_login'
-                            ]
+                            'contest_login': contest_login,
                         }
                     }
                 )
