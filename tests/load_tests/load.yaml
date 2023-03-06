@@ -1,0 +1,15 @@
+overload:
+  enabled: true
+  package: yandextank.plugins.DataUploader
+  token_file: ".token"
+phantom:
+  address: localhost:8090
+  uris:
+    - "/api/v1/health_check/ping_database"
+  load_profile:
+    load_type: rps
+    schedule: const(10, 30s)
+console:
+  enabled: true
+telegraf:
+  enabled: false

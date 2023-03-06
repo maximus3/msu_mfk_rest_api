@@ -449,5 +449,9 @@ ssh-tunnel: ##@Server SSH tunnel to server for grafana
 	$(eval USERNAME=$(shell cat deploy/username.txt))
 	ssh -p $(PORT) -L 3000:127.0.0.1:3000 -C -N $(USERNAME)@$(HOST)
 
+.PHONY: test-load
+test-load: ##@Testing Load tests
+	cd tests/load_tests && docker-compose up
+
 %::
 	echo $(MESSAGE)

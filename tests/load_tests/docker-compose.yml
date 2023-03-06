@@ -1,0 +1,8 @@
+version: '3.9'
+
+services:
+  tester:
+    image: direvius/yandex-tank
+    volumes:
+      - ./load.yaml:/var/loadtest/load.yaml
+    network_mode: "host"
