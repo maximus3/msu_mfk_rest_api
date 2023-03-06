@@ -3,8 +3,18 @@ from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.database.models import Course, StudentCourse, StudentCourseLevels
-from app.database.models.course import CourseLevels
+from app.database import models
+from app.database.models import (
+    Course,
+    CourseLevels,
+    StudentCourse,
+    StudentCourseLevels,
+)
+from app.utils.contest.database import (
+    get_contest_levels,
+    get_contests_with_relations,
+    get_or_create_student_contest_level,
+)
 
 
 async def get_course(session: AsyncSession, name: str) -> Course | None:
@@ -98,3 +108,53 @@ async def get_or_create_student_course_level(
         session.add(student_course_level)
         await session.flush()
     return student_course_level
+
+
+async def get_student_course_contests_data(
+    session: AsyncSession,
+    course_id: UUID,
+    student_id: UUID,
+) -> list[
+    tuple[
+        models.Contest,
+        models.StudentCourse,
+        list[models.ContestLevels],
+        list[models.StudentContestLevels],
+    ]
+]:
+    contests_with_relations = sorted(
+        await get_contests_with_relations(
+            session,
+            course_id,
+            student_id,
+        ),
+        key=lambda x: x[0].lecture,
+    )
+    all_contest_levels = [
+        sorted(
+            await get_contest_levels(session, contest.id),
+            key=lambda x: (x.count_method, x.ok_threshold),
+        )
+        for contest, _ in contests_with_relations
+    ]
+    all_student_contest_levels = []
+    for (contest, _), contest_levels in zip(
+        contests_with_relations, all_contest_levels
+    ):
+        student_contest_levels = [
+            await get_or_create_student_contest_level(
+                session, student_id, course_id, contest.id, level.id
+            )
+            for level in contest_levels
+        ]
+        all_student_contest_levels.append(student_contest_levels)
+    return list(
+        map(
+            lambda x: (x[0][0], x[0][1], x[1], x[2]),
+            zip(
+                contests_with_relations,
+                all_contest_levels,
+                all_student_contest_levels,
+            ),
+        )
+    )

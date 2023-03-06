@@ -15,6 +15,7 @@ from app.database.models import Course, CourseLevels
 from app.m3tqdm import tqdm
 from app.schemas import CourseResultsCSV
 from app.schemas import scheduler as scheduler_schemas
+from app.utils import course as course_utils
 from app.utils.course import (
     get_all_active_courses,
     get_course_levels,
@@ -73,14 +74,19 @@ async def get_course_results(
                 session=session,
             )
             await session.commit()
+            student_course_contest_data = (
+                await course_utils.get_student_course_contests_data(
+                    session, course.id, student.id
+                )
+            )
             student_results = await get_student_course_results(
                 student,
                 course,
                 course_levels,
                 student_course,
                 student_course_levels,
+                student_course_contest_data,
                 logger=logger,
-                session=session,
             )
             students_departments_results.append(
                 (student, department, student_results)

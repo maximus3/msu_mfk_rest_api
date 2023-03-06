@@ -7,6 +7,7 @@ from .database import (
     get_course_levels,
     get_or_create_student_course_level,
     get_student_course,
+    get_student_course_contests_data,
     get_student_courses,
     is_student_registered_on_course,
 )
@@ -23,4 +24,5 @@ __all__ = [
     'get_student_course',
     'get_course_levels',
     'get_or_create_student_course_level',
+    'get_student_course_contests_data',
 ]

@@ -26,30 +26,24 @@ async def get_student_course_results(  # pylint: disable=too-many-arguments
     course_levels: list[CourseLevels],
     student_course: StudentCourse,
     student_course_levels: list[StudentCourseLevels],
+    student_course_contest_data: list[
+        tuple[
+            models.Contest,
+            models.StudentCourse,
+            list[models.ContestLevels],
+            list[models.StudentContestLevels],
+        ]
+    ],
     logger: 'loguru.Logger',
-    session: AsyncSession,
 ) -> CourseResults:
     contests = []
 
-    for contest, student_contest in sorted(
-        await contest_utils.get_contests_with_relations(
-            session,
-            course.id,
-            student.id,
-        ),
-        key=lambda x: x[0].lecture,
-    ):
-        contest_levels = await contest_utils.get_contest_levels(
-            session, contest.id
-        )
-        contest_levels.sort(key=lambda x: (x.count_method, x.ok_threshold))
-        student_contest_levels = [
-            await contest_utils.get_or_create_student_contest_level(
-                session, student.id, course.id, contest.id, level.id
-            )
-            for level in contest_levels
-        ]
-
+    for (
+        contest,
+        student_contest,
+        contest_levels,
+        student_contest_levels,
+    ) in student_course_contest_data:
         contests.append(
             ContestResults(
                 link=contest.link,
