@@ -442,5 +442,12 @@ update-dev-branch: ##@Git Rebase dev on main branch
 delete-container-data: ##@Docker Prune containers
 	docker container prune -f
 
+.PHONY: ssh-tunnel
+ssh-tunnel: ##@Server SSH tunnel to server for grafana
+	$(eval PORT=$(shell cat deploy/port.txt))
+	$(eval HOST=$(shell cat deploy/host.txt))
+	$(eval USERNAME=$(shell cat deploy/username.txt))
+	ssh -p $(PORT) -L 3000:127.0.0.1:3000 -C -N $(USERNAME)@$(HOST)
+
 %::
 	echo $(MESSAGE)
