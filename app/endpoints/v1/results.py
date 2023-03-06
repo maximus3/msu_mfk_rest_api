@@ -14,6 +14,7 @@ from app import constants
 from app.bot_helper import send
 from app.database.connection import SessionManager
 from app.database.models import User
+from app.limiter import limiter
 from app.schemas import StudentResults
 from app.utils import course as course_utils
 from app.utils import student as student_utils
@@ -97,6 +98,7 @@ async def get_all_results(
     response_model=StudentResults,
     status_code=status.HTTP_200_OK,
 )
+@limiter.limit('5/10seconds')
 async def get_results_by_course(
     request: Request,
     course_short_name: str,
