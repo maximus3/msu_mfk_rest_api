@@ -1,7 +1,9 @@
 import asyncio
 import traceback
 
+import asyncpg.exceptions
 import loguru
+import sqlalchemy.exc
 from fastapi.requests import Request
 from fastapi.responses import JSONResponse
 from uvicorn import run
@@ -19,6 +21,10 @@ app = get_app()
 async def exception_handler(
     request: Request, exc: Exception
 ) -> JSONResponse:  # pragma: no cover
+    response = JSONResponse(
+        status_code=500,
+        content={'message': 'Internal server error'},
+    )
     settings = get_settings()
     message_list = [
         f'*Exception occurred on {settings.PROJECT_NAME}*:',
@@ -32,13 +38,23 @@ async def exception_handler(
             f'EXCEPTION: {exc}',
         ]
     )
-    await send.send_traceback_message(
-        '\n'.join(message_list), code=traceback.format_exc()
-    )
-    return JSONResponse(
-        status_code=500,
-        content={'message': 'Internal server error'},
-    )
+    if isinstance(
+        exc,
+        (
+            asyncpg.exceptions.TooManyConnectionsError,
+            sqlalchemy.exc.TimeoutError,
+        ),
+    ):
+        response = JSONResponse(
+            status_code=429,
+            content={'message': 'Too many requests'},
+        )
+        await send.send_message('\n'.join(message_list))
+    else:
+        await send.send_traceback_message(
+            '\n'.join(message_list), code=traceback.format_exc()
+        )
+    return response
 
 
 if __name__ == '__main__':  # pragma: no cover
