@@ -1,8 +1,7 @@
-import logging
+from loguru import logger
 
 from app.utils.common import hash_password
 
 
 def main(password: str) -> None:
-    logger = logging.getLogger(__name__)
-    logger.info('Hash for %s is %s', password, hash_password(password))
+    logger.info('Hash for {} is {}', password, hash_password(password))

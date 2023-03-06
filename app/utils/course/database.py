@@ -117,7 +117,7 @@ async def get_student_course_contests_data(
 ) -> list[
     tuple[
         models.Contest,
-        models.StudentCourse,
+        models.StudentContest,
         list[models.ContestLevels],
         list[models.StudentContestLevels],
     ]

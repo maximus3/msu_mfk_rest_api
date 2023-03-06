@@ -4,11 +4,14 @@ overload:
   token_file: ".token"
 phantom:
   address: localhost:8090
+  headers:
+    - "[Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsImV4cCI6MTY3ODIwNjY1NH0.7j0NQ3wCczCCXXzMe0EGL4SorLUYERmoMGJpc-CikOs]"
   uris:
-    - "/api/v1/health_check/ping_database"
+#    - "/api/v1/health_check/ping_database"
+    - "/api/v1/results/by-course/ml_spring_2023/zfyvf"
   load_profile:
     load_type: rps
-    schedule: const(10, 30s)
+    schedule: const(2, 30s)
 console:
   enabled: true
 telegraf:

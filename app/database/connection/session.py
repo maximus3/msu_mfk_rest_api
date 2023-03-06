@@ -17,8 +17,9 @@ class SessionManager:  # pragma: no cover
     """
 
     ENGINE_KWARGS = {
-        'max_overflow': 30,
-        'pool_size': 20,
+        'max_overflow': 8,
+        'pool_size': 8,
+        'pool_timeout': 60,
     }
 
     def __init__(self) -> None:
