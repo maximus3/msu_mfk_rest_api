@@ -123,3 +123,8 @@ deploy/*
 logs/*
 !logs/README.md
 !logs/scheduler/README.md
+
+tests/load_tests/.token
+tests/load_tests/*
+!tests/load_tests/docker-compose.yml
+!tests/load_tests/load.yaml
