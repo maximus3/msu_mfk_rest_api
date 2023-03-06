@@ -49,7 +49,11 @@ async def exception_handler(
             status_code=429,
             content={'message': 'Too many requests'},
         )
-        # await send.send_traceback_message_safe(logger=loguru.logger, message='\n'.join(message_list), code='Without code')
+        # await send.send_traceback_message_safe(
+        #     logger=loguru.logger,
+        #     message='\n'.join(message_list),
+        #     code='Without code'
+        # )
     else:
         await send.send_traceback_message(
             '\n'.join(message_list), code=traceback.format_exc()
