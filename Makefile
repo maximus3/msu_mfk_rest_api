@@ -193,8 +193,13 @@ docker-clean: ##@Application Docker prune -f
 docker: docker-clean docker-build docker-up-d docker-clean ##@Application Docker prune, up, run and prune
 
 .PHONY: open
-open: ##@Application Open container in docker
+open: ##@Docker Open container in docker
 	docker exec -it $(args) /bin/bash
+
+.PHONY: docker-run
+docker-run: ##@Docker Run sh in paused docker container
+	docker run --rm -it --entrypoint bash $(args)
+
 
 .PHONY: docker-migrate
 docker-migrate: ##@Application Migrate db in docker
@@ -346,7 +351,7 @@ get-scheduler-logs: ##@Application Get scheduler logs
 	echo "Done"
 
 .PHONY: run-job
-run-job: ##@Application Run scheduler job in docker
+run-job: docker-build ##@Application Run scheduler job in docker
 	docker-compose run --rm --entrypoint make scheduler run-job-local $(args)
 
 .PHONY: run-job-local

@@ -16,4 +16,4 @@ def main(job_name: str) -> None:
         logger.error('Job {} is not unique', job_name)
         return
     job = jobs[0]
-    asyncio.run(job.func())
+    asyncio.run(job.func(base_logger=logger))
