@@ -1,3 +1,4 @@
+import subprocess
 import traceback
 import typing as tp
 from datetime import datetime
@@ -81,16 +82,22 @@ async def job(
     filename = filename or f'db_dump_{formatted_dt}.sql'
 
     base_logger.info('Starting db dump to {}', filename)
+
     try:
-        with open(
-            filename,
-            'w',
-            encoding='utf-8',
-        ) as f:
-            for table_name in TABLE_NAMES:
-                if table_name == 'user':
-                    table_name = '"user"'
-                await dump_table(f, table_name, settings)
+        command = f'pg_dump --file {filename}'
+
+        proc = subprocess.Popen(
+            command,
+            shell=True,
+            env={
+                'PGPASSWORD': settings.POSTGRES_PASSWORD,
+                'PGDATABASE': settings.POSTGRES_DB,
+                'PGPORT': str(settings.POSTGRES_PORT),
+                'PGHOST': settings.POSTGRES_HOST,
+                'PGUSER': settings.POSTGRES_USER,
+            },
+        )
+        proc.wait()
         await send.send_db_dump(filename)
     except Exception as exc:  # pylint: disable=broad-except
         base_logger.exception('Error while dumping db: {}', exc)

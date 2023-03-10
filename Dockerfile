@@ -14,8 +14,14 @@ ENV PYTHONUNBUFFERED=on
 ENV PYTHONPATH=/opt/app
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    && apt-get autoclean && apt-get autoremove \
+    build-essential wget gnupg
+
+# for pg_dump
+RUN sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt bullseye-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+RUN wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
+RUN apt-get update && apt-get install -y postgresql-client-14
+
+RUN apt-get autoclean && apt-get autoremove \
     && rm -rf /var/lib/apt/lists/* \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
