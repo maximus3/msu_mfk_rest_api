@@ -19,11 +19,12 @@ class TestJob:
         # arrange
 
         # act
-        await job(base_logger=loguru.logger)
+        await job(base_logger=loguru.logger, save_csv=False)
 
         # assert
         mock_bot.send_message.assert_not_called()
 
+    @pytest.mark.usefixtures('student_department')
     async def test_ok(  # pylint: disable=too-many-arguments,unused-argument,too-many-statements  # TODO
         self,
         created_course,
@@ -106,7 +107,7 @@ class TestJob:
         )
 
         # act
-        await job(base_logger=loguru.logger)
+        await job(base_logger=loguru.logger, save_csv=False)
 
         # assert
         mock_bot.send_message.assert_not_called()
@@ -166,7 +167,5 @@ class TestJob:
             assert student_course_model is not None
             assert student_course_model.score == created_task.score_max / 2
             # assert student_course_model.contests_ok == 0
-            # assert student_course_model.score_percent == 33.3333
-            # assert student_course_model.contests_ok_percent == 0
             # assert not student_course_model.is_ok  # TODO: no levels
             # assert not student_course_model.is_ok_final
