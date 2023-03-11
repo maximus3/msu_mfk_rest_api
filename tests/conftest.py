@@ -32,10 +32,10 @@ from tests.factory_lib import (
     StudentCourseFactory,
     StudentDepartmentFactory,
     StudentFactory,
+    StudentTaskFactory,
+    SubmissionFactory,
     TaskFactory,
     UserFactory,
-SubmissionFactory,
-StudentTaskFactory,
 )
 from tests.utils import make_alembic_config
 
@@ -536,7 +536,9 @@ async def created_task(session, not_created_task):
 
 
 @pytest.fixture
-async def created_zero_student_task(session, created_task, created_student, created_contest, created_course):
+async def created_zero_student_task(
+    session, created_task, created_student, created_contest, created_course
+):
     not_created_student_task = StudentTaskFactory.build(
         course_id=created_course.id,
         contest_id=created_contest.id,
@@ -549,9 +551,7 @@ async def created_zero_student_task(session, created_task, created_student, crea
         best_score_before_finish_submission_id=None,
         best_score_no_deadline_submission_id=None,
     )
-    session.add(
-        not_created_student_task
-    )
+    session.add(not_created_student_task)
     await session.commit()
     await session.refresh(not_created_student_task)
 
@@ -559,7 +559,15 @@ async def created_zero_student_task(session, created_task, created_student, crea
 
 
 @pytest.fixture
-async def created_zero_submission(session, created_task, created_contest, created_course, created_student, created_zero_student_task, student_contest):
+async def created_zero_submission(  # pylint: disable=too-many-arguments
+    session,
+    created_task,
+    created_contest,
+    created_course,
+    created_student,
+    created_zero_student_task,
+    student_contest,
+):
     not_created_submission = SubmissionFactory.build(
         course_id=created_course.id,
         contest_id=created_contest.id,

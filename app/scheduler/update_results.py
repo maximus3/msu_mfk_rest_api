@@ -46,9 +46,7 @@ async def job(  # pylint: disable=too-many-statements
             await course_utils.get_course_levels(session, course.id)
             for course in courses
         ]
-    base_logger.info(
-        'Has {} courses', len(courses)
-    )
+    base_logger.info('Has {} courses', len(courses))
     filenames = []
     for course, course_levels in zip(courses, levels_by_course):
         logger = base_logger.bind(
