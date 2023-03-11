@@ -37,6 +37,7 @@ RUN make install-prod
 COPY setup.cfg setup.cfg
 COPY alembic.ini alembic.ini
 COPY log.ini log.ini
+COPY config.yaml config.yaml
 
 COPY app app
 COPY static static
