@@ -8,7 +8,7 @@ from app.config import get_settings
 
 
 def get_config(filename: str | pathlib.Path) -> dict[tp.Any, tp.Any]:
-    with open(filename, 'r') as f:
+    with open(filename, 'r', encoding='utf-8') as f:
         return yaml.safe_load(f)
 
 

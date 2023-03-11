@@ -4,8 +4,8 @@ import loguru
 import pytest
 from sqlalchemy import select
 
+import app.scheduler.contest_register as contest_register
 from app.database.models import StudentContest
-from app.scheduler import contest_register
 
 
 pytestmark = pytest.mark.asyncio

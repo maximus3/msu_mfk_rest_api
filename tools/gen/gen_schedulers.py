@@ -11,7 +11,7 @@ from app.config import get_settings
 
 
 def make_data(
-    jinja2_env: jinja2.Environment, *args: tp.Any, **kwargs: tp.Any
+    jinja2_env: jinja2.Environment, *_: tp.Any, **__: tp.Any
 ) -> tuple[
     pathlib.Path, dict[str, tuple[jinja2.Template, bool, dict[str, tp.Any]]]
 ]:
