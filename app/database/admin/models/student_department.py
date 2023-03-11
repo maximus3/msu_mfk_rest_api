@@ -3,8 +3,8 @@
 
 from sqladmin import ModelView
 
-from app.database.admin import models_forms
 from app.database import models
+from app.database.admin import models_forms
 
 
 class StudentDepartmentAdmin(ModelView, model=models.StudentDepartment):

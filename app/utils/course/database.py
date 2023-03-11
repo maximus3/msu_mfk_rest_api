@@ -22,6 +22,11 @@ async def get_course(session: AsyncSession, name: str) -> Course | None:
     return await session.scalar(query)
 
 
+async def get_course_by_id(session: AsyncSession, id_: UUID) -> Course:
+    query = select(Course).where(Course.id == id_)
+    return await session.scalar(query)
+
+
 async def get_course_by_short_name(
     session: AsyncSession, short_name: str
 ) -> Course | None:

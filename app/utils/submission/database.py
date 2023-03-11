@@ -76,3 +76,46 @@ async def add_submission(  # pylint: disable=too-many-arguments
     )
     session.add(submission_model)
     return submission_model
+
+
+async def update_submission(  # pylint: disable=too-many-arguments
+    session: AsyncSession,
+    contest: models.Contest,
+    task: models.Task,
+    submission: contest_schemas.ContestSubmissionFull,
+    submission_for_update: models.Submission,
+) -> None:
+    no_deadline_score = (
+        task.score_max
+        if (
+            not submission.finalScore
+            and submission.verdict == 'OK'
+            and task.is_zero_ok
+        )
+        else submission.finalScore
+    )
+    score_before_finish = (
+        no_deadline_score
+        if submission.submissionTime <= contest.deadline
+        else 0
+    )
+    final_score = task_utils.eval_expr(
+        task.final_score_evaluation_formula.format(
+            best_score_before_finish=score_before_finish,
+            best_score_no_deadline=no_deadline_score,
+        )
+    )
+    submission_for_update.verdict = submission.verdict
+    submission_for_update.final_score = final_score
+    submission_for_update.score_no_deadline = no_deadline_score
+    submission_for_update.score_before_finish = score_before_finish
+    session.add(submission_for_update)
+
+
+async def get_no_verdict_submissions(
+    session: AsyncSession,
+) -> list[models.Submission]:
+    query = select(models.Submission).where(
+        models.Submission.verdict == 'No report'
+    )
+    return (await session.execute(query)).scalars().all()

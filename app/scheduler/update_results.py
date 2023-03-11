@@ -21,8 +21,25 @@ from app.utils import submission as submission_utils
 from app.utils import task as task_utils
 
 
-async def job(base_logger: 'loguru.Logger', save_csv: bool = True) -> None:
+async def job(  # pylint: disable=too-many-statements
+    base_logger: 'loguru.Logger', save_csv: bool = True
+) -> None:
     SessionManager().refresh()
+
+    try:
+        await check_and_update_no_verdict_submissions(base_logger)
+    except Exception as exc:  # pylint: disable=broad-except
+        base_logger.exception(
+            'Error while check_and_update_no_verdict_submissions: {}',
+            exc,
+        )
+        await send.send_traceback_message_safe(
+            logger=base_logger,
+            message=f'Error while '
+            f'check_and_update_no_verdict_submissions: {exc}',
+            code=traceback.format_exc(),
+        )
+
     async with SessionManager().create_async_session() as session:
         courses = await course_utils.get_all_active_courses(session)
         levels_by_course = [
@@ -53,6 +70,7 @@ async def job(base_logger: 'loguru.Logger', save_csv: bool = True) -> None:
                 code=traceback.format_exc(),
             )
 
+        # dump results
         try:
             course_results = await get_course_results(
                 course, course_levels, base_logger=logger
@@ -251,6 +269,7 @@ async def process_submission(  # noqa: C901 # pylint: disable=too-many-arguments
     task: models.Task,
     submission: contest_schemas.ContestSubmissionFull,
     base_logger: 'loguru.Logger',
+    submission_model: models.Submission | None = None,
     session: AsyncSession | None = None,
 ) -> None:
     if session is None:
@@ -264,6 +283,7 @@ async def process_submission(  # noqa: C901 # pylint: disable=too-many-arguments
                 task,
                 submission,
                 base_logger=base_logger,
+                submission_model=submission_model,
                 session=session,
             )
     (
@@ -315,31 +335,41 @@ async def process_submission(  # noqa: C901 # pylint: disable=too-many-arguments
         logger,
         session,
     )
-    submission_model = await submission_utils.get_submission(
-        session,
-        submission.id,
-    )
-    if submission_model is not None:
-        logger.warning(
-            'Submission {} already in database (id={})',
+    if submission_model:
+        await submission_utils.update_submission(
+            session,
+            contest,
+            task,
+            submission,
+            submission_model,
+        )
+    else:
+        submission_model = await submission_utils.get_submission(
+            session,
             submission.id,
-            submission_model.id,
         )
-        await send.send_message_safe(
-            logger,
-            message=f'Submission {submission.id} already '
-            f'in database (id={submission_model.id})',
-            level='warning',
+        if submission_model is not None:
+            logger.warning(
+                'Submission {} already in database (id={})',
+                submission.id,
+                submission_model.id,
+            )
+            await send.send_message_safe(
+                logger,
+                message=f'Submission {submission.id} already '
+                f'in database (id={submission_model.id})',
+                level='warning',
+            )
+            return
+        submission_model = await submission_utils.add_submission(
+            session,
+            student,
+            contest,
+            course,
+            task,
+            student_task,
+            submission,
         )
-    submission_model = await submission_utils.add_submission(
-        session,
-        student,
-        contest,
-        course,
-        task,
-        student_task,
-        submission,
-    )
     await session.flush()
     if (  # pylint: disable=too-many-nested-blocks  # TODO
         submission_model.final_score > student_task.final_score
@@ -457,7 +487,7 @@ async def check_student_task_relation(  # pylint: disable=too-many-arguments
     return student_task
 
 
-async def get_course_results(
+async def get_course_results(  # pylint: disable=too-many-statements
     course: models.Course,
     course_levels: list[models.CourseLevels],
     base_logger: 'loguru.Logger',
@@ -579,3 +609,61 @@ async def save_to_csv(
                 if i != len(course_results.keys) - 1:
                     f.write(',')
             f.write('\n')
+
+
+async def check_and_update_no_verdict_submissions(
+    base_logger: 'loguru.Logger',
+) -> None:
+    async with SessionManager().create_async_session() as session:
+        no_verdict_submissions = (
+            await submission_utils.get_no_verdict_submissions(session)
+        )
+        for submission in no_verdict_submissions:
+            logger = base_logger.bind(
+                submission={
+                    'id': submission.id,
+                    'author_id': submission.authorId,
+                },
+                course={'id': submission.course_id},
+                contest={'id': submission.contest_id},
+                task={'id': submission.task_id},
+                student={'id': submission.student_id},
+            )
+            contest = await contest_utils.get_contest_by_id(
+                session, submission.contest_id
+            )
+            yandex_submission = await contest_utils.get_submission_from_yandex(
+                contest, submission, logger
+            )
+            if yandex_submission.verdict == submission.verdict:
+                logger.info(
+                    'Submission {} has no verdict, skipping',
+                    yandex_submission.id,
+                )
+                continue
+            course = await course_utils.get_course_by_id(
+                session, submission.course_id
+            )
+            course_levels = await course_utils.get_course_levels(
+                session, course.id
+            )
+            contest_levels = await contest_utils.get_contest_levels(
+                session, contest.id
+            )
+            task = await task_utils.get_task_by_id(session, submission.task_id)
+            await process_submission(
+                course,
+                course_levels=course_levels,
+                contest=contest,
+                contest_levels=contest_levels,
+                task=task,
+                submission=yandex_submission,
+                base_logger=logger.bind(
+                    course={'id': course.id, 'short_name': course.short_name},
+                    contest={
+                        'id': contest.id,
+                        'yandex_contest_id': contest.yandex_contest_id,
+                    },
+                ),
+                session=session,
+            )
