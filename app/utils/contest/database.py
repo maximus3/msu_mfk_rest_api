@@ -39,6 +39,11 @@ async def get_contests(
     return (await session.execute(query)).scalars().fetchall()
 
 
+async def get_contest_by_id(session: AsyncSession, id_: UUID) -> Contest:
+    query = select(Contest).where(Contest.id == id_)
+    return await session.scalar(query)
+
+
 async def get_contest_by_yandex_contest_id(
     session: AsyncSession,
     yandex_contest_id: int,

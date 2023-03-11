@@ -17,6 +17,7 @@ from app.schemas import contest as contest_schemas
 from app.utils.common.datetime_utils import get_datetime_msk_tz
 from app.utils.yandex_request import make_request_to_yandex_contest_api
 
+from ...database import models
 from .database import (
     add_student_contest_relation,
     get_student_contest_relation,
@@ -314,3 +315,25 @@ async def make_full_submissions(
             for submission in response.json()
         )
     return results
+
+
+async def get_submission_from_yandex(
+    contest: Contest,
+    submission: models.Submission,
+    logger: 'loguru.Logger',
+) -> ContestSubmissionFull:
+    return (
+        await make_full_submissions(
+            {
+                submission.id: ContestSubmission(
+                    id=submission.id,
+                    authorId=submission.author_id,
+                    problemId='',
+                    problemAlias='',
+                    verdict='',
+                )
+            },
+            contest,
+            logger,
+        )
+    )[0]
