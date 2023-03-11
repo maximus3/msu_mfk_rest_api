@@ -23,7 +23,7 @@ async def job(base_logger: 'loguru.Logger') -> None:
     base_logger.info(
         'Has {} courses',
     )
-    async for course in courses:
+    for course in courses:
         logger = base_logger.bind(
             course={'id': course.id, 'short_name': course.short_name}
         )
@@ -73,7 +73,7 @@ async def update_course_results(
             f'Course {course.id} has {course.contest_count} '
             f'contest count, but got {len(contests)} contests'
         )
-    async for contest in contests:
+    for contest in contests:
         logger = base_logger.bind(
             contest={
                 'id': contest.id,
@@ -132,7 +132,7 @@ async def check_student_contest_relations(
                 base_logger=base_logger,
                 session=session,
             )
-    async for student, _, _ in students_sc_departments:
+    for student, _, _ in students_sc_departments:
         logger = base_logger.bind(
             student={'id': student.id, 'contest_login': student.contest_login}
         )
