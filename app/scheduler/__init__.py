@@ -1,18 +1,48 @@
+# Code generated automatically.
+
 from app.schemas import scheduler as scheduler_schemas
 
-from .contest_register import job_info as contest_register_job_info
-from .contest_results_dump import job_info as contest_results_dump_job_info
-from .db_dump import job_info as dump_db_job_info
-from .ping import job_info as ping_job_info
-from .update_results import job_info as update_student_results_job_info
+from .contest_register import job as contest_register
+from .contest_results_dump import job as contest_results_dump
+from .db_dump import job as db_dump
+from .ping import job as ping
+from .update_results import job as update_results
 
 
 list_of_jobs: list[scheduler_schemas.JobInfo] = [
-    contest_register_job_info,
-    contest_results_dump_job_info,
-    dump_db_job_info,
-    ping_job_info,
-    update_student_results_job_info,
+    scheduler_schemas.JobInfo(
+        **{
+            'trigger': 'interval',
+            'minutes': 1,
+            'config': {'send_logs': False},
+        },
+        func=ping,
+        name='ping',
+    ),
+    scheduler_schemas.JobInfo(
+        **{'trigger': 'cron', 'hour': 3, 'config': {'send_logs': True}},
+        func=db_dump,
+        name='db_dump',
+    ),
+    scheduler_schemas.JobInfo(
+        **{
+            'trigger': 'interval',
+            'minutes': 10,
+            'config': {'send_logs': True},
+        },
+        func=contest_register,
+        name='contest_register',
+    ),
+    scheduler_schemas.JobInfo(
+        **{'trigger': 'interval', 'hours': 2, 'config': {'send_logs': True}},
+        func=contest_results_dump,
+        name='contest_results_dump',
+    ),
+    scheduler_schemas.JobInfo(
+        **{'trigger': 'interval', 'hours': 1, 'config': {'send_logs': True}},
+        func=update_results,
+        name='update_results',
+    ),
 ]
 
 

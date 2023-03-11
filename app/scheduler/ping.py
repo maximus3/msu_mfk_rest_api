@@ -8,7 +8,6 @@ from httpx import AsyncClient
 from app.bot_helper import send
 from app.config import get_settings
 from app.endpoints.v1 import prefix
-from app.schemas import scheduler as scheduler_schemas
 
 
 async def job(base_logger: 'loguru.Logger') -> None:
@@ -65,14 +64,3 @@ async def job(base_logger: 'loguru.Logger') -> None:
             message=f'Failed to send ping status: {exc}',
             code=traceback.format_exc(),
         )
-
-
-job_info = scheduler_schemas.JobInfo(
-    **{
-        'func': job,
-        'trigger': 'interval',
-        'minutes': 1,
-        'name': 'ping_app',
-    },
-    config=scheduler_schemas.JobConfig(send_logs=False),
-)

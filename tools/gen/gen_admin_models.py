@@ -9,7 +9,9 @@ from app.config import get_settings
 from app.database import models
 
 
-def main(recreate_str: str = 'recreate') -> None:
+def main(
+    jinja2_env: jinja2.Environment, recreate_str: str = 'recreate'
+) -> None:
     """Generate models for sqladmin."""
 
     recreate = recreate_str.lower() == 'recreate'
@@ -17,12 +19,6 @@ def main(recreate_str: str = 'recreate') -> None:
     logger = logging.getLogger(__name__)
 
     settings = get_settings()
-    templates_dir = (
-        pathlib.Path(__file__).parent / 'gen_admin_models' / 'templates'
-    )
-    jinja2_env = jinja2.Environment(
-        loader=jinja2.FileSystemLoader(templates_dir)
-    )
     template = jinja2_env.get_template('admin_model.py.jinja2')
     init_template = jinja2_env.get_template('__init__.py.jinja2')
     mappings_template = jinja2_env.get_template('mappings.py.jinja2')
@@ -41,11 +37,11 @@ def main(recreate_str: str = 'recreate') -> None:
         model.__tablename__: model
         for model in models.BaseModel.__subclasses__()
     }
-    logger.info('Found %s models in database.', len(db_models))
+    logger.info('Found {} models in database.', len(db_models))
     for model in db_models.values():
         if model.__tablename__ in already_exists and not recreate:
             logger.info(
-                'Skipping %s because it already exists.', model.__tablename__
+                'Skipping {} because it already exists.', model.__tablename__
             )
             continue
         with open(
@@ -73,7 +69,7 @@ def main(recreate_str: str = 'recreate') -> None:
                     foreign_keys=foreign_keys,
                 )
             )
-        logger.info('Generated %s.', model.__tablename__)
+        logger.info('Generated {}.', model.__tablename__)
 
     with open(admin_models_dir / '__init__.py', 'w', encoding='utf-8') as f:
         f.write(

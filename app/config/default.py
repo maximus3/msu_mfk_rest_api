@@ -40,6 +40,7 @@ class DefaultSettings(BaseSettings):
     LOGGING_SCHEDULER_FILE = LOGGING_FILE_DIR / 'scheduler_logfile.log'
 
     BASE_DIR: Path = Path(__file__).resolve().parent.parent.parent
+    CONFIG_FILENAME: str = 'config.yaml'
 
     # to get a string like this run: "openssl rand -hex 32"
     SECRET_KEY: str = Field('', env='SECRET_KEY')
