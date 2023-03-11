@@ -14,11 +14,6 @@ scheduler:
     minutes: 10
     config:
       send_logs: true
-  contest_results_dump:
-    trigger: interval
-    hours: 2
-    config:
-      send_logs: true
   update_results:
     trigger: interval
     hours: 1

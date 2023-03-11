@@ -1,29 +1,39 @@
 # pylint: disable=too-many-lines
-
+import collections
+import pathlib
 import traceback
+from datetime import datetime
 
 import loguru
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app import constants
 from app.bot_helper import send
 from app.database import models
 from app.database.connection import SessionManager
 from app.schemas import contest as contest_schemas
+from app.schemas import course as course_schemas
 from app.utils import contest as contest_utils
 from app.utils import course as course_utils
+from app.utils import results as results_utils
 from app.utils import student as student_utils
 from app.utils import submission as submission_utils
 from app.utils import task as task_utils
 
 
-async def job(base_logger: 'loguru.Logger') -> None:
+async def job(base_logger: 'loguru.Logger', save_csv: bool = True) -> None:
     SessionManager().refresh()
     async with SessionManager().create_async_session() as session:
         courses = await course_utils.get_all_active_courses(session)
+        levels_by_course = [
+            await course_utils.get_course_levels(session, course.id)
+            for course in courses
+        ]
     base_logger.info(
         'Has {} courses',
     )
-    for course in courses:
+    filenames = []
+    for course, course_levels in zip(courses, levels_by_course):
         logger = base_logger.bind(
             course={'id': course.id, 'short_name': course.short_name}
         )
@@ -42,7 +52,40 @@ async def job(base_logger: 'loguru.Logger') -> None:
                 f'results for {course.short_name}: {exc}',
                 code=traceback.format_exc(),
             )
+
+        try:
+            course_results = await get_course_results(
+                course, course_levels, base_logger=logger
+            )
+        except Exception as exc:  # pylint: disable=broad-except
+            logger.exception(
+                'Error while getting course results for {}: {}',
+                course.short_name,
+                exc,
+            )
+            await send.send_traceback_message_safe(
+                logger=logger,
+                message=f'Error while getting course '
+                f'results for {course.short_name}: {exc}',
+                code=traceback.format_exc(),
+            )
             continue
+        filename = (
+            f'results_{course.short_name}_'
+            f'{datetime.now().strftime(constants.dt_format_filename)}.csv'
+        )
+        if save_csv:
+            await save_to_csv(course_results, filename)
+            filenames.append(filename)
+
+    try:
+        await send.send_results(filenames)
+    except Exception as exc:
+        base_logger.error('Error while sending results: {}', exc)
+        raise exc
+    finally:
+        for filename in filenames:
+            pathlib.Path(filename).unlink()
 
 
 async def update_course_results(
@@ -412,3 +455,127 @@ async def check_student_task_relation(  # pylint: disable=too-many-arguments
         )
         session.add(student_task)
     return student_task
+
+
+async def get_course_results(
+    course: models.Course,
+    course_levels: list[models.CourseLevels],
+    base_logger: 'loguru.Logger',
+) -> course_schemas.CourseResultsCSV:
+    SessionManager().refresh()
+    async with SessionManager().create_async_session() as session:
+        students_departments_results = []
+        for (
+            student,
+            student_course,
+            department,
+        ) in await student_utils.get_students_by_course_with_department(
+            session, course.id
+        ):
+            logger = base_logger.bind(
+                student={
+                    'id': student.id,
+                    'contest_login': student.contest_login,
+                }
+            )
+            student_course_levels = [
+                await course_utils.get_or_create_student_course_level(
+                    session, student.id, course.id, course_level.id
+                )
+                for course_level in course_levels
+            ]
+            await results_utils.update_student_course_results(
+                student,
+                course,
+                course_levels,
+                student_course,
+                student_course_levels,
+                base_logger=logger,
+                session=session,
+            )
+            await session.commit()
+            student_course_contest_data = (
+                await course_utils.get_student_course_contests_data(
+                    session, course.id, student.id
+                )
+            )
+            student_results = await results_utils.get_student_course_results(
+                student,
+                course,
+                course_levels,
+                student_course,
+                student_course_levels,
+                student_course_contest_data,
+                logger=logger,
+            )
+            students_departments_results.append(
+                (student, department, student_results)
+            )
+    course_results = course_schemas.CourseResultsCSV(
+        keys=['contest_login', 'fio', 'department'],
+        results=collections.defaultdict(dict),
+    )
+
+    keys_add = True
+
+    # pylint: disable=too-many-nested-blocks
+    for student, department, student_results in students_departments_results:
+        course_results.results[student.contest_login][
+            'contest_login'
+        ] = student.contest_login
+        course_results.results[student.contest_login]['fio'] = student.fio
+        course_results.results[student.contest_login][
+            'department'
+        ] = department.name
+        course_results.results[student.contest_login][
+            'score_sum'
+        ] = student_results.score_sum
+        course_results.results[student.contest_login][
+            'score_max'
+        ] = student_results.score_max
+        for contest_results in student_results.contests:
+            course_results.results[student.contest_login][
+                f'lecture_{contest_results.lecture}_score'
+            ] = contest_results.score
+
+            if contest_results.levels:
+                for level in contest_results.levels:
+                    course_results.results[student.contest_login][
+                        f'lecture_{contest_results.lecture}_level_{level.name}'
+                    ] = level.is_ok
+
+            if keys_add:
+                course_results.keys.append(
+                    f'lecture_{contest_results.lecture}_score'
+                )
+                if contest_results.levels:
+                    for level in contest_results.levels:
+                        course_results.keys.append(
+                            f'lecture_{contest_results.lecture}_'
+                            f'level_{level.name}'
+                        )
+        for course_level in student_results.course_levels:
+            course_results.results[student.contest_login][
+                f'level_{course_level.name}'
+            ] = course_level.is_ok
+            if keys_add:
+                course_results.keys.append(f'level_{course_level.name}')
+        keys_add = False
+
+    course_results.keys.append('score_sum')
+    course_results.keys.append('score_max')
+    return course_results
+
+
+async def save_to_csv(
+    course_results: course_schemas.CourseResultsCSV, filename: str
+) -> None:
+    with open(filename, 'w', encoding='utf-8') as f:
+        f.write(','.join(course_results.keys))
+        f.write('\n')
+        for data in course_results.results.values():
+            for i, key in enumerate(course_results.keys):
+                f.write(f'{data.get(key, "")}')
+                if i != len(course_results.keys) - 1:
+                    f.write(',')
+            f.write('\n')
