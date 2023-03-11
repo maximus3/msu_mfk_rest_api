@@ -178,6 +178,7 @@ class TestJob:
             student_course,
             created_contest,
             created_task,
+            created_contest_levels,
             created_zero_submission,
             created_zero_submission_2,
             mock_make_request_to_yandex_contest_v2,
