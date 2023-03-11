@@ -206,7 +206,7 @@ docker-migrate: ##@Application Migrate db in docker
 	docker exec $(APPLICATION_NAME) make migrate $(args)
 
 .PHONY: commit
-commit: format lint ##@Git Commit with message all files (with lint)
+commit: gen format lint ##@Git Commit with message all files (with lint)
 	$(eval MESSAGE := $(shell read -p "Commit message: " MESSAGE; echo $$MESSAGE))
 	@git add .
 	@git status
