@@ -3,7 +3,7 @@ import datetime
 import loguru
 import pytest
 
-import app.scheduler.update_results as update_results  # pylint: disable=consider-using-from-import
+from app.scheduler.update_results import job
 from app.utils import contest as contest_utils
 from app.utils import course as course_utils
 from app.utils import submission as submission_utils
@@ -19,7 +19,7 @@ class TestJob:
         # arrange
 
         # act
-        await update_results.job(base_logger=loguru.logger)
+        await job(base_logger=loguru.logger)
 
         # assert
         mock_bot.send_message.assert_not_called()
@@ -106,7 +106,7 @@ class TestJob:
         )
 
         # act
-        await update_results.job(base_logger=loguru.logger)
+        await job(base_logger=loguru.logger)
 
         # assert
         mock_bot.send_message.assert_not_called()

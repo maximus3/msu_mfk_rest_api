@@ -4,8 +4,11 @@ import loguru
 import pytest
 from sqlalchemy import select
 
-import app.scheduler.contest_register as contest_register  # pylint: disable=consider-using-from-import
 from app.database.models import StudentContest
+from app.scheduler.contest_register import (
+    check_students_for_contest_registration,
+    register_student,
+)
 
 
 pytestmark = pytest.mark.asyncio
@@ -44,7 +47,7 @@ class TestRegisterStudentHandler(BaseHandler):
             )
             is None
         )
-        result_check = await contest_register.register_student(
+        result_check = await register_student(
             session,
             created_contest,
             created_student,
@@ -120,7 +123,7 @@ class TestCheckStudentsForContestRegistrationHandler(BaseHandler):
                     )
                     is None
                 )
-        await contest_register.check_students_for_contest_registration(
+        await check_students_for_contest_registration(
             session,
             created_course,
             base_logger=loguru.logger,
@@ -167,7 +170,7 @@ class TestCheckStudentsForContestRegistrationHandler(BaseHandler):
             created_four_students_for_two_courses,
             [None, None, None, None],
         )
-        await contest_register.check_students_for_contest_registration(
+        await check_students_for_contest_registration(
             session, created_two_courses[0], base_logger=loguru.logger
         )
         await self.assert_four_relations(
@@ -176,7 +179,7 @@ class TestCheckStudentsForContestRegistrationHandler(BaseHandler):
             created_four_students_for_two_courses,
             [would_register, None, None, None],
         )
-        await contest_register.check_students_for_contest_registration(
+        await check_students_for_contest_registration(
             session, created_two_courses[1], base_logger=loguru.logger
         )
         await self.assert_four_relations(
@@ -213,7 +216,7 @@ class TestCheckStudentsForContestRegistrationHandler(BaseHandler):
             [None, None, None, None],
             True,
         )
-        await contest_register.check_students_for_contest_registration(
+        await check_students_for_contest_registration(
             session, created_two_courses[0], base_logger=loguru.logger
         )
         await self.assert_four_relations(
@@ -223,7 +226,7 @@ class TestCheckStudentsForContestRegistrationHandler(BaseHandler):
             [would_register, None, None, None],
             True,
         )
-        await contest_register.check_students_for_contest_registration(
+        await check_students_for_contest_registration(
             session, created_two_courses[1], base_logger=loguru.logger
         )
         await self.assert_four_relations(
