@@ -198,12 +198,3 @@ async def job(base_logger: 'loguru.Logger') -> None:
     finally:
         for filename in filenames:
             Path(filename).unlink()
-
-
-job_info = scheduler_schemas.JobInfo(
-    func=job,
-    name='contest_results_dump',
-    trigger='interval',
-    hours=3,
-    config=scheduler_schemas.JobConfig(send_logs=True),
-)

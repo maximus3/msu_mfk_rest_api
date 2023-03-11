@@ -1,0 +1,20 @@
+# Code generated automatically.
+
+from app.schemas import scheduler as scheduler_schemas
+
+{% for job_name in jobs %}from .{{ job_name }} import job as {{ job_name }}
+{% endfor %}
+
+
+list_of_jobs: list[scheduler_schemas.JobInfo] = [
+    {% for job_name in jobs %}scheduler_schemas.JobInfo(**{{ jobs[job_name] }},
+        func={{ job_name }},
+        name='{{ job_name }}',
+    ),
+    {% endfor %}
+]
+
+
+__all__ = [
+    'list_of_jobs',
+]

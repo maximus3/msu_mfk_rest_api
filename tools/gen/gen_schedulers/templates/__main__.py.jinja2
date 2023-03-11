@@ -26,8 +26,7 @@ def _job_info_wrapper(
         async def _wrapped(*args, **kwargs):  # type: ignore
             log_id = uuid.uuid4().hex
             log_file_name = (
-                settings.LOGGING_FILE_DIR
-                / f'scheduler/job-{job_info.name}-{log_id}.log'
+                settings.LOGGING_FILE_DIR / f'scheduler/job-{job_info.name}-{log_id}.log'
             )
             base_logger = loguru.logger.bind(uuid=log_id)
             if config.send_logs:

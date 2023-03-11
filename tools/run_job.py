@@ -2,7 +2,12 @@ import asyncio
 
 from loguru import logger
 
-from app.scheduler import list_of_jobs
+
+try:
+    from app.scheduler import list_of_jobs
+except ImportError:
+    logger.warning('No jobs found')
+    list_of_jobs = []
 
 
 def main(job_name: str) -> None:

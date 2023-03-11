@@ -6,7 +6,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.bot_helper import send
 from app.database.connection import SessionManager
 from app.database.models import Contest, Course, Student
-from app.schemas import scheduler as scheduler_schemas
 from app.utils.contest import add_student_to_contest, get_contests
 from app.utils.course import get_all_active_courses
 from app.utils.student import get_students_by_course_with_no_contest
@@ -119,14 +118,3 @@ async def job(
         )
         logger.info('Course: {}', course)
         await check_students_for_contest_registration(session, course, logger)
-
-
-job_info = scheduler_schemas.JobInfo(
-    **{
-        'func': job,
-        'trigger': 'interval',
-        'minutes': 10,
-        'name': 'contest_register',
-    },
-    config=scheduler_schemas.JobConfig(send_logs=True),
-)
