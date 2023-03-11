@@ -12,8 +12,8 @@ from app.schemas import gen as gen_schemas
 
 def make_data(
     jinja2_env: jinja2.Environment,
-    recreate_str: str = 'recreate',
     *_: tp.Any,
+    recreate_str: str = 'recreate',
     **__: tp.Any,
 ) -> tuple[pathlib.Path, dict[str, gen_schemas.DataForGen]]:
     """Generate models for sqladmin."""

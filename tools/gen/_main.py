@@ -33,12 +33,14 @@ def main(*args: tp.Any, **kwargs: tp.Any) -> None:
         },
     )
 
-    from ._list_of_gens import list_of_gens
+    from ._list_of_gens import (  # pylint: disable=import-outside-toplevel
+        list_of_gens,
+    )
 
     for gen_dict in list_of_gens:
         _gen(
-            gen_dict['name'],
-            *gen_dict['func'](
+            gen_dict['name'],  # type: ignore
+            *gen_dict['func'](  # type: ignore
                 jinja2_env=gen_dict['jinja2_env'], *args, **kwargs
             ),
         )
