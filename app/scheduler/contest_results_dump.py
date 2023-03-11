@@ -12,9 +12,7 @@ from app.bot_helper import send
 from app.bot_helper.send import send_results
 from app.database.connection import SessionManager
 from app.database.models import Course, CourseLevels
-from app.m3tqdm import tqdm
 from app.schemas import CourseResultsCSV
-from app.schemas import scheduler as scheduler_schemas
 from app.utils import course as course_utils
 from app.utils.course import (
     get_all_active_courses,
@@ -48,10 +46,11 @@ async def get_course_results(
     SessionManager().refresh()
     async with SessionManager().create_async_session() as session:
         students_departments_results = []
-        async for (student, student_course, department,) in tqdm(
-            await get_students_by_course_with_department(session, course.id),
-            name=job_info.name + '-students',
-        ):
+        for (
+            student,
+            student_course,
+            department,
+        ) in await get_students_by_course_with_department(session, course.id):
             logger = base_logger.bind(
                 student={
                     'id': student.id,
@@ -155,11 +154,7 @@ async def job(base_logger: 'loguru.Logger') -> None:
             await get_course_levels(session, course.id) for course in courses
         ]
     filenames = []
-    async for course, course_levels in tqdm(
-        zip(courses, levels_by_course),
-        total=len(courses),
-        name=job_info.name + '-courses',
-    ):
+    for course, course_levels in zip(courses, levels_by_course):
         # pylint: disable=duplicate-code
         logger = base_logger.bind(
             course={'id': course.id, 'short_name': course.short_name}
