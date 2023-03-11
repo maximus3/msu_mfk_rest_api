@@ -325,8 +325,8 @@ async def get_submission_from_yandex(
     return (
         await make_full_submissions(
             {
-                submission.id: ContestSubmission(
-                    id=submission.id,
+                submission.run_id: ContestSubmission(
+                    id=submission.run_id,
                     authorId=submission.author_id,
                     problemId='',
                     problemAlias='',

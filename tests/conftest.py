@@ -34,6 +34,8 @@ from tests.factory_lib import (
     StudentFactory,
     TaskFactory,
     UserFactory,
+SubmissionFactory,
+StudentTaskFactory,
 )
 from tests.utils import make_alembic_config
 
@@ -528,6 +530,73 @@ async def created_task(session, not_created_task):
     await session.refresh(not_created_task)
 
     yield not_created_task
+
+
+@pytest.fixture
+async def created_zero_student_task(session, created_task, created_student, created_contest, created_course):
+    not_created_student_task = StudentTaskFactory.build(
+        course_id=created_course.id,
+        contest_id=created_contest.id,
+        task_id=created_task.id,
+        student_id=created_student.id,
+        final_score=0,
+        best_score_before_finish=0,
+        best_score_no_deadline=0,
+        is_done=False,
+        best_score_before_finish_submission_id=None,
+        best_score_no_deadline_submission_id=None,
+    )
+    session.add(
+        not_created_student_task
+    )
+    await session.commit()
+    await session.refresh(not_created_student_task)
+
+    yield not_created_student_task
+
+
+@pytest.fixture
+async def created_zero_submission(session, created_task, created_contest, created_course, created_student, created_zero_student_task, student_contest):
+    not_created_submission = SubmissionFactory.build(
+        course_id=created_course.id,
+        contest_id=created_contest.id,
+        task_id=created_task.id,
+        student_id=created_student.id,
+        student_task_id=created_zero_student_task.id,
+        verdict='No report',
+        final_score=0,
+        score_no_deadline=0,
+        score_before_finish=0,
+        author_id=student_contest.author_id,
+    )
+
+    session.add(not_created_submission)
+    await session.commit()
+    await session.refresh(not_created_submission)
+
+    yield not_created_submission
+
+
+@pytest.fixture
+async def created_zero_submission_2(session, created_zero_submission):
+    not_created_submission = SubmissionFactory.build(
+        course_id=created_zero_submission.course_id,
+        contest_id=created_zero_submission.contest_id,
+        task_id=created_zero_submission.task_id,
+        student_id=created_zero_submission.student_id,
+        student_task_id=created_zero_submission.student_task_id,
+        verdict='No report',
+        final_score=0,
+        score_no_deadline=0,
+        score_before_finish=0,
+        author_id=created_zero_submission.author_id,
+    )
+
+    session.add(not_created_submission)
+    await session.commit()
+    await session.refresh(not_created_submission)
+
+    yield not_created_submission
 
 
 @pytest.fixture
