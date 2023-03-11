@@ -47,7 +47,7 @@ async def job(  # pylint: disable=too-many-statements
             for course in courses
         ]
     base_logger.info(
-        'Has {} courses',
+        'Has {} courses', len(courses)
     )
     filenames = []
     for course, course_levels in zip(courses, levels_by_course):
@@ -622,7 +622,7 @@ async def check_and_update_no_verdict_submissions(
             logger = base_logger.bind(
                 submission={
                     'id': submission.id,
-                    'author_id': submission.authorId,
+                    'author_id': submission.author_id,
                 },
                 course={'id': submission.course_id},
                 contest={'id': submission.contest_id},
@@ -665,5 +665,6 @@ async def check_and_update_no_verdict_submissions(
                         'yandex_contest_id': contest.yandex_contest_id,
                     },
                 ),
+                submission_model=submission,
                 session=session,
             )
