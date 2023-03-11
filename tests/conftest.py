@@ -406,6 +406,9 @@ async def student_contest(  # type: ignore
         contest_id=created_contest.id,
         course_id=created_contest.course_id,
         is_ok=False,
+        is_ok_no_deadline=False,
+        score=0,
+        tasks_done=0,
     )
     session.add(relation)
     await session.commit()
