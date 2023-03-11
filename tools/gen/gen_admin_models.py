@@ -1,6 +1,6 @@
 # pylint: disable=too-many-statements
 
-import logging
+from loguru import logger
 import pathlib
 
 import jinja2
@@ -15,8 +15,6 @@ def main(
     """Generate models for sqladmin."""
 
     recreate = recreate_str.lower() == 'recreate'
-
-    logger = logging.getLogger(__name__)
 
     settings = get_settings()
     template = jinja2_env.get_template('admin_model.py.jinja2')

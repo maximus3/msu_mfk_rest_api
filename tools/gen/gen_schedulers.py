@@ -1,6 +1,6 @@
 # pylint: disable=too-many-statements
 
-import logging
+from loguru import logger
 import pathlib
 import typing as tp
 
@@ -16,8 +16,6 @@ def make_data(
     pathlib.Path, dict[str, tuple[jinja2.Template, bool, dict[str, tp.Any]]]
 ]:
     """Generate schedulers."""
-
-    logger = logging.getLogger(__name__)
 
     settings = get_settings()
     init_template = jinja2_env.get_template('__init__.py.jinja2')
