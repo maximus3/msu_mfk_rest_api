@@ -158,7 +158,7 @@ lint: ###@Code Lint code
 	$(POETRY_RUN) safety check --full-report || echo "Safety check failed"
 
 .PHONY: check
-check: format lint test-mp ###@Code Format and lint code then run tests
+check: gen format lint test-mp ###@Code Format and lint code then run tests
 
 .PHONY: docker-up
 docker-up: ##@Application Docker up
