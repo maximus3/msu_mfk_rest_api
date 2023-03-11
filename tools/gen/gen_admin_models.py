@@ -1,9 +1,9 @@
 # pylint: disable=too-many-statements
 
-from loguru import logger
 import pathlib
 
 import jinja2
+from loguru import logger
 
 from app.config import get_settings
 from app.database import models

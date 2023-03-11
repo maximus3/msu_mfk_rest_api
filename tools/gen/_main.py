@@ -8,7 +8,7 @@ from .gen_admin_models import main as gen_admin_models
 from .gen_schedulers import make_data as make_data_gen_schedulers
 
 
-def main(*args: tp.Any, **kwargs: tp.Any):
+def main(*args: tp.Any, **kwargs: tp.Any) -> None:
     # gen_admin_models
     jinja2_env = jinja2.Environment(
         loader=jinja2.FileSystemLoader(
@@ -26,14 +26,14 @@ def main(*args: tp.Any, **kwargs: tp.Any):
     dir_for_create, data_for_gen = make_data_gen_schedulers(
         jinja2_env=jinja2_env, *args, **kwargs
     )
-    gen('gen_schedulers', dir_for_create, data_for_gen)
+    _gen('gen_schedulers', dir_for_create, data_for_gen)
 
 
-def gen(
+def _gen(
     gen_name: str,
     dir_for_create: pathlib.Path,
     data_for_gen: dict[str, tuple[jinja2.Template, bool, dict[str, tp.Any]]],
-):
+) -> None:
     if not data_for_gen:
         logger.info('No data for gen, skipping {}', gen_name)
         return

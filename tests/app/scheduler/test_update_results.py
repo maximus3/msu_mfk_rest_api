@@ -3,7 +3,7 @@ import datetime
 import loguru
 import pytest
 
-import app.scheduler.update_results as update_results
+import app.scheduler.update_results as update_results  # pylint: disable=consider-using-from-import
 from app.utils import contest as contest_utils
 from app.utils import course as course_utils
 from app.utils import submission as submission_utils

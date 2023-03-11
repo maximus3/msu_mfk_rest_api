@@ -4,7 +4,7 @@ import loguru
 import pytest
 from sqlalchemy import select
 
-import app.scheduler.contest_register as contest_register
+import app.scheduler.contest_register as contest_register  # pylint: disable=consider-using-from-import
 from app.database.models import StudentContest
 
 

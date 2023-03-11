@@ -1,10 +1,10 @@
 # pylint: disable=too-many-statements
 
-from loguru import logger
 import pathlib
 import typing as tp
 
 import jinja2
+from loguru import logger
 
 import tools.load_config
 from app.config import get_settings
