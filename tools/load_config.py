@@ -12,6 +12,6 @@ def get_config(filename: str | pathlib.Path) -> dict[tp.Any, tp.Any]:
         return yaml.safe_load(f)
 
 
-def main(filename: str | pathlib.Path | None = None):
+def main(filename: str | pathlib.Path | None = None) -> None:
     filename = filename or get_settings().CONFIG_FILENAME
     logger.info('Config: {}', get_config(filename))
