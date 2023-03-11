@@ -8,9 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.bot_helper import send
 from app.database import models
 from app.database.connection import SessionManager
-from app.m3tqdm import tqdm
 from app.schemas import contest as contest_schemas
-from app.schemas import scheduler as scheduler_schemas
 from app.utils import contest as contest_utils
 from app.utils import course as course_utils
 from app.utils import student as student_utils
@@ -25,10 +23,7 @@ async def job(base_logger: 'loguru.Logger') -> None:
     base_logger.info(
         'Has {} courses',
     )
-    async for course in tqdm(
-        courses,
-        name=job_info.name + '-courses',
-    ):
+    async for course in courses:
         logger = base_logger.bind(
             course={'id': course.id, 'short_name': course.short_name}
         )
@@ -78,10 +73,7 @@ async def update_course_results(
             f'Course {course.id} has {course.contest_count} '
             f'contest count, but got {len(contests)} contests'
         )
-    async for contest in tqdm(
-        contests,
-        name=job_info.name + '-contests',
-    ):
+    async for contest in contests:
         logger = base_logger.bind(
             contest={
                 'id': contest.id,
@@ -140,10 +132,7 @@ async def check_student_contest_relations(
                 base_logger=base_logger,
                 session=session,
             )
-    async for student, _, _ in tqdm(
-        students_sc_departments,
-        name=job_info.name + '-check_student_contest_relations',
-    ):
+    async for student, _, _ in students_sc_departments:
         logger = base_logger.bind(
             student={'id': student.id, 'contest_login': student.contest_login}
         )
@@ -423,12 +412,3 @@ async def check_student_task_relation(  # pylint: disable=too-many-arguments
         )
         session.add(student_task)
     return student_task
-
-
-job_info = scheduler_schemas.JobInfo(
-    func=job,
-    name='update_results',
-    trigger='interval',
-    hours=1,
-    config=scheduler_schemas.JobConfig(send_logs=True),
-)
