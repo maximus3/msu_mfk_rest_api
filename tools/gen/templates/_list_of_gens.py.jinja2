@@ -1,0 +1,22 @@
+# Code generated automatically.
+
+import pathlib
+
+import jinja2
+
+{% for name in gen_modules %}from .{{ name }} import make_data as {{ name }}
+{% endfor %}
+
+
+list_of_gens = [
+    {% for name in gen_modules %}{
+        'name': '{{ name }}',
+        'func': {{ name }},
+        'jinja2_env': jinja2.Environment(
+            loader=jinja2.FileSystemLoader(
+                pathlib.Path(__file__).parent / '{{ name }}' / 'templates'
+            )
+        ),
+    },
+    {% endfor %}
+]
