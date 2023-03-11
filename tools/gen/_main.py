@@ -34,7 +34,7 @@ def gen(
     dir_for_create: pathlib.Path,
     data_for_gen: dict[str, tuple[jinja2.Template, bool, dict[str, tp.Any]]],
 ):
-    if not len(data_for_gen):
+    if not data_for_gen:
         logger.info('No data for gen, skipping {}', gen_name)
         return
     dir_for_create.mkdir(exist_ok=True)
