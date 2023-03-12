@@ -232,7 +232,8 @@ git: check commit ##@Git Check and commit
 
 .PHONY: update
 update: pull dump-local docker-build ##@Application Update docker app
-	@make docker-stop nginx
+	@make docker-stop nginx grafana loki promtail
+	@make delete-container-data
 	@make docker
 	@make docker-migrate head
 

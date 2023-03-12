@@ -5,6 +5,13 @@ server:
   grpc_server_max_recv_msg_size: 6000000
   grpc_server_max_send_msg_size: 6000000
 
+query_scheduler:
+  max_outstanding_requests_per_tenant: 4096
+frontend:
+  max_outstanding_per_tenant: 4096
+query_range:
+  parallelise_shardable_queries: trues
+
 common:
   path_prefix: /loki
   storage:
@@ -30,6 +37,8 @@ limits_config:
   max_query_length: 0
   ingestion_rate_mb: 60
   ingestion_burst_size_mb: 85
+  split_queries_by_interval: 15m
+  max_query_parallelism: 32
 
 ruler:
   alertmanager_url: http://localhost:9093
