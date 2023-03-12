@@ -76,3 +76,9 @@ JOIN department d on sd.department_id = d.id
 JOIN course c on sc.course_id = c.id
 WHERE (sc.is_ok_final = true or sc.is_ok = true) and c.short_name = 'dl_autumn_2022'
 ORDER BY s.fio;
+
+-- check duplicate student contest
+SELECT course_id, contest_id, student_id, COUNT(*)
+FROM student_contest
+GROUP BY course_id, contest_id, student_id
+HAVING COUNT(*) > 1;
