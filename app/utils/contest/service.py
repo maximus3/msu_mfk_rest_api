@@ -300,7 +300,6 @@ async def make_full_submissions(
                 problemAlias=submission['problemAlias'],
                 verdict=submission['verdict'],
                 login=submission['participantInfo']['login'],
-                timeFromStart=submission['timeFromStart'],
                 submissionTime=datetime.fromisoformat(
                     submission['submissionTime']
                 ).replace(tzinfo=None),

@@ -60,7 +60,6 @@ class ContestFactory(Factory):
     link = fuzzy.FuzzyText(length=10, prefix='https://')
     tasks_count = fuzzy.FuzzyInteger(1, 10)
     score_max = fuzzy.FuzzyInteger(1, 10)
-    levels = {'count': 1, 'levels': [{'name': 'level1', 'score_need': 1}]}
     tags = ['NECESSARY']
     yandex_contest_id = fuzzy.FuzzyInteger(30000, 40000)
 
@@ -151,5 +150,4 @@ class SubmissionFactory(Factory):
     score_no_deadline = fuzzy.FuzzyFloat(0, 1)
     score_before_finish = fuzzy.FuzzyFloat(0, 1)
     submission_link = fuzzy.FuzzyText()
-    time_from_start = fuzzy.FuzzyInteger(1, 100)
     submission_time = Faker('date_time')

@@ -44,7 +44,6 @@ class Submission(BaseModel):
         sa.Float, nullable=False, default=0, server_default='0.0'
     )
     submission_link = sa.Column(sa.String, nullable=False)
-    time_from_start = sa.Column(sa.Integer, nullable=False)
     submission_time = sa.Column(sa.DateTime, nullable=False)
 
     def __repr__(self):  # type: ignore
