@@ -22,7 +22,6 @@ class SubmissionAdmin(ModelView, model=models.Submission):
         'score_no_deadline',
         'score_before_finish',
         'submission_link',
-        'time_from_start',
         'submission_time',
     ]
     column_list = [
@@ -39,7 +38,6 @@ class SubmissionAdmin(ModelView, model=models.Submission):
         'score_no_deadline',
         'score_before_finish',
         'submission_link',
-        'time_from_start',
         'submission_time',
     ]
     form_excluded_columns = ['id', 'dt_created', 'dt_updated']

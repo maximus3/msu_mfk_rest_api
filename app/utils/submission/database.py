@@ -71,7 +71,6 @@ async def add_submission(  # pylint: disable=too-many-arguments
         score_before_finish=score_before_finish,
         submission_link=f'https://admin.contest.yandex.ru/'
         f'submissions/{submission.id}/',
-        time_from_start=submission.timeFromStart,
         submission_time=submission.submissionTime,
     )
     session.add(submission_model)
