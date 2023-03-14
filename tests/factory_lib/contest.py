@@ -11,11 +11,11 @@ class ContestFactory(Factory):
         model = Contest
 
     course_id = Faker('uuid4')
-    yandex_contest_id = fuzzy.FuzzyInteger(1, 100)
+    yandex_contest_id = fuzzy.FuzzyInteger(1, 10000)
     deadline = Faker('date_time')
-    lecture = fuzzy.FuzzyInteger(1, 100)
+    lecture = fuzzy.FuzzyInteger(1, 10000)
     link = fuzzy.FuzzyText()
-    tasks_count = fuzzy.FuzzyInteger(1, 100)
+    tasks_count = fuzzy.FuzzyInteger(1, 10000)
     score_max = fuzzy.FuzzyFloat(0, 1)
     tags = []  # type: ignore
     name_format = fuzzy.FuzzyText()

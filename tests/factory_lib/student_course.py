@@ -14,6 +14,6 @@ class StudentCourseFactory(Factory):
     student_id = Faker('uuid4')
     score = fuzzy.FuzzyFloat(0, 1)
     score_no_deadline = fuzzy.FuzzyFloat(0, 1)
-    contests_ok = fuzzy.FuzzyInteger(1, 100)
+    contests_ok = fuzzy.FuzzyInteger(1, 10000)
     is_ok = fuzzy.FuzzyChoice([True, False])
     is_ok_final = fuzzy.FuzzyChoice([True, False])
