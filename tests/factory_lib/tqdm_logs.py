@@ -11,8 +11,8 @@ class TQDMLogsFactory(Factory):
         model = TQDMLogs
 
     name = fuzzy.FuzzyText()
-    current = fuzzy.FuzzyInteger(1, 100)
-    total = fuzzy.FuzzyInteger(1, 100)
+    current = fuzzy.FuzzyInteger(1, 10000)
+    total = fuzzy.FuzzyInteger(1, 10000)
     need_time = fuzzy.FuzzyText()
     need_time_for_all = fuzzy.FuzzyText()
     avg_data = fuzzy.FuzzyText()

@@ -24,6 +24,6 @@ class CourseFactory(Factory):
     register_start = Faker('date_time')
     register_end = Faker('date_time')
     score_max = fuzzy.FuzzyFloat(0, 1)
-    contest_count = fuzzy.FuzzyInteger(1, 100)
+    contest_count = fuzzy.FuzzyInteger(1, 10000)
     default_final_score_evaluation_formula = fuzzy.FuzzyText()
     is_archive = fuzzy.FuzzyChoice([True, False])
