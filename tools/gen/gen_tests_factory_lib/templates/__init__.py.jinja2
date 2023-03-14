@@ -1,0 +1,9 @@
+# Code generated automatically.
+
+{% for model in models %}from .{{ model.__tablename__ }} import {{ model.__name__ }}Factory
+{% endfor %}
+
+__all__ = [
+    {% for model in models %}'{{ model.__name__ }}Factory',
+    {% endfor %}
+]

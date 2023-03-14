@@ -1,0 +1,14 @@
+# Code generated automatically.
+# pylint: disable=duplicate-code
+
+from factory import Factory, Faker, fuzzy
+
+from app.database.models import {{ model.__name__ }}
+
+
+class {{ model.__name__ }}Factory(Factory):
+    class Meta:
+        model = {{ model.__name__ }}
+
+    {% for column_name in columns_with_types %}{{ column_name }} = {{ columns_with_types[column_name] }}
+    {% endfor %}

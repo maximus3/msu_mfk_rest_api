@@ -23,20 +23,7 @@ from app.creator import get_app
 from app.database.connection import SessionManager
 from app.schemas import contest as contest_schemas
 from app.utils import user
-from tests.factory_lib import (
-    ContestFactory,
-    ContestLevelsFactory,
-    CourseFactory,
-    DepartmentFactory,
-    StudentContestFactory,
-    StudentCourseFactory,
-    StudentDepartmentFactory,
-    StudentFactory,
-    StudentTaskFactory,
-    SubmissionFactory,
-    TaskFactory,
-    UserFactory,
-)
+from tests import factory_lib
 from tests.utils import make_alembic_config
 
 
@@ -130,13 +117,13 @@ async def client(  # type: ignore
 
 @pytest.fixture
 async def potential_user():  # type: ignore
-    yield UserFactory.build()
+    yield factory_lib.UserFactory.build()
 
 
 @pytest.fixture
 async def not_created_user(potential_user):  # type: ignore
     settings = get_settings()
-    yield UserFactory.build(
+    yield factory_lib.UserFactory.build(
         username=potential_user.username,
         password=settings.PWD_CONTEXT.hash(potential_user.password),
     )
@@ -163,10 +150,12 @@ def user_headers(user_token):
 
 @pytest.fixture
 async def potential_course():  # type: ignore
-    yield CourseFactory.build(
+    yield factory_lib.CourseFactory.build(
         default_final_score_evaluation_formula='max('
         '{best_score_before_finish}, '
-        '{best_score_no_deadline} / 2)'
+        '{best_score_no_deadline} / 2)',
+        is_open_registration=True,
+        is_archive=False,
     )
 
 
@@ -186,7 +175,10 @@ async def created_course(not_created_course, session):  # type: ignore
 
 @pytest.fixture
 async def created_two_courses(session):  # type: ignore
-    models = CourseFactory.create_batch(2)
+    models = factory_lib.CourseFactory.create_batch(2)
+    for model in models:
+        model.is_open_registration = True
+        model.is_archive = False
     session.add_all(models)
     await session.commit()
     await asyncio.gather(*[session.refresh(model) for model in models])
@@ -196,7 +188,10 @@ async def created_two_courses(session):  # type: ignore
 
 @pytest.fixture
 async def created_two_courses_with_archive(session):  # type: ignore
-    models = CourseFactory.create_batch(2)
+    models = factory_lib.CourseFactory.create_batch(2)
+    for model in models:
+        model.is_open_registration = True
+        model.is_archive = False
     models[0].is_archive = True
     session.add_all(models)
     await session.commit()
@@ -209,7 +204,10 @@ async def created_two_courses_with_archive(session):  # type: ignore
 async def created_two_courses_with_closed_registration(
     session,
 ):  # type: ignore
-    models = CourseFactory.create_batch(2)
+    models = factory_lib.CourseFactory.create_batch(2)
+    for model in models:
+        model.is_open_registration = True
+        model.is_archive = False
     models[0].is_open_registration = False
     session.add_all(models)
     await session.commit()
@@ -220,10 +218,10 @@ async def created_two_courses_with_closed_registration(
 
 @pytest.fixture
 async def created_four_contests_for_two_courses(session, created_two_courses):
-    models_1 = ContestFactory.create_batch(
+    models_1 = factory_lib.ContestFactory.create_batch(
         2, course_id=created_two_courses[0].id
     )
-    models_2 = ContestFactory.create_batch(
+    models_2 = factory_lib.ContestFactory.create_batch(
         2, course_id=created_two_courses[1].id
     )
     session.add_all(models_1)
@@ -237,8 +235,8 @@ async def created_four_contests_for_two_courses(session, created_two_courses):
 
 @pytest.fixture
 async def created_four_students_for_two_courses(session, created_two_courses):
-    models_1 = StudentFactory.create_batch(2)
-    models_2 = StudentFactory.create_batch(2)
+    models_1 = factory_lib.StudentFactory.create_batch(2)
+    models_2 = factory_lib.StudentFactory.create_batch(2)
     session.add_all(models_1)
     session.add_all(models_2)
     await session.commit()
@@ -248,13 +246,25 @@ async def created_four_students_for_two_courses(session, created_two_courses):
     models_relations = []
     for i in range(2):
         models_relations.append(
-            StudentCourseFactory.build(
-                student_id=models_1[i].id, course_id=created_two_courses[0].id
+            factory_lib.StudentCourseFactory.build(
+                student_id=models_1[i].id,
+                course_id=created_two_courses[0].id,
+                score=0,
+                score_no_deadline=0,
+                contests_ok=0,
+                is_ok=False,
+                is_ok_final=False,
             )
         )
         models_relations.append(
-            StudentCourseFactory.build(
-                student_id=models_2[i].id, course_id=created_two_courses[1].id
+            factory_lib.StudentCourseFactory.build(
+                student_id=models_2[i].id,
+                course_id=created_two_courses[1].id,
+                score=0,
+                score_no_deadline=0,
+                contests_ok=0,
+                is_ok=False,
+                is_ok_final=False,
             )
         )
     session.add_all(models_relations)
@@ -272,17 +282,27 @@ async def created_relations_one_student_on_one_contest(
 ):
     models = []
     models.append(
-        StudentContestFactory.create(
+        factory_lib.StudentContestFactory.create(
             course_id=created_two_courses[0].id,
             contest_id=created_four_contests_for_two_courses[0][0].id,
             student_id=created_four_students_for_two_courses[0][0].id,
+            tasks_done=0,
+            score=0,
+            score_no_deadline=0,
+            is_ok=False,
+            is_ok_no_deadline=False,
         )
     )
     models.append(
-        StudentContestFactory.create(
+        factory_lib.StudentContestFactory.create(
             course_id=created_two_courses[1].id,
             contest_id=created_four_contests_for_two_courses[1][0].id,
             student_id=created_four_students_for_two_courses[1][0].id,
+            tasks_done=0,
+            score=0,
+            score_no_deadline=0,
+            is_ok=False,
+            is_ok_no_deadline=False,
         )
     )
     session.add_all(models)
@@ -294,7 +314,7 @@ async def created_relations_one_student_on_one_contest(
 
 @pytest.fixture
 async def potential_department():  # type: ignore
-    yield DepartmentFactory.build()
+    yield factory_lib.DepartmentFactory.build()
 
 
 @pytest.fixture
@@ -313,7 +333,7 @@ async def created_department(not_created_department, session):  # type: ignore
 
 @pytest.fixture
 async def potential_student():  # type: ignore
-    yield StudentFactory.build()
+    yield factory_lib.StudentFactory.build()
 
 
 @pytest.fixture
@@ -334,8 +354,14 @@ async def created_student(not_created_student, session):  # type: ignore
 async def student_course(  # type: ignore
     created_student, created_course, session
 ):
-    relation = StudentCourseFactory.build(
-        student_id=created_student.id, course_id=created_course.id
+    relation = factory_lib.StudentCourseFactory.build(
+        student_id=created_student.id,
+        course_id=created_course.id,
+        score=0,
+        score_no_deadline=0,
+        contests_ok=0,
+        is_ok=False,
+        is_ok_final=False,
     )
     session.add(relation)
     await session.commit()
@@ -348,7 +374,7 @@ async def student_course(  # type: ignore
 async def student_department(  # type: ignore
     created_student, created_department, session
 ):
-    relation = StudentDepartmentFactory.build(
+    relation = factory_lib.StudentDepartmentFactory.build(
         student_id=created_student.id, department_id=created_department.id
     )
     session.add(relation)
@@ -360,7 +386,7 @@ async def student_department(  # type: ignore
 
 @pytest.fixture
 async def potential_contest(created_course):  # type: ignore
-    yield ContestFactory.build(course_id=created_course.id)
+    yield factory_lib.ContestFactory.build(course_id=created_course.id)
 
 
 @pytest.fixture
@@ -387,7 +413,7 @@ async def created_contest(
 
 @pytest.fixture
 async def created_two_contests(session, created_course):  # type: ignore
-    models = ContestFactory.create_batch(2)
+    models = factory_lib.ContestFactory.create_batch(2)
     for i in range(2):
         models[i].course_id = created_course.id
     session.add_all(models)
@@ -401,14 +427,15 @@ async def created_two_contests(session, created_course):  # type: ignore
 async def student_contest(  # type: ignore
     created_student, created_contest, session
 ):
-    relation = StudentContestFactory.build(
+    relation = factory_lib.StudentContestFactory.build(
         student_id=created_student.id,
         contest_id=created_contest.id,
         course_id=created_contest.course_id,
+        tasks_done=0,
+        score=0,
+        score_no_deadline=0,
         is_ok=False,
         is_ok_no_deadline=False,
-        score=0,
-        tasks_done=0,
     )
     session.add(relation)
     await session.commit()
@@ -421,7 +448,7 @@ async def student_contest(  # type: ignore
 async def student_contest_is_ok(  # type: ignore
     created_student, created_contest, session
 ):
-    relation = StudentContestFactory.build(
+    relation = factory_lib.StudentContestFactory.build(
         student_id=created_student.id,
         contest_id=created_contest.id,
         course_id=created_contest.course_id,
@@ -487,7 +514,7 @@ def mock_make_request_to_yandex_contest_v2(  # type: ignore  # TODO: remove v1
 
 @pytest.fixture
 async def created_two_departments(session):
-    models = DepartmentFactory.create_batch(2)
+    models = factory_lib.DepartmentFactory.create_batch(2)
     session.add_all(models)
     await session.commit()
     await asyncio.gather(*[session.refresh(model) for model in models])
@@ -497,15 +524,20 @@ async def created_two_departments(session):
 
 @pytest.fixture
 async def created_two_students_with_course(session, created_course):
-    models = StudentFactory.create_batch(2)
+    models = factory_lib.StudentFactory.create_batch(2)
     session.add_all(models)
     await session.commit()
     await asyncio.gather(*[session.refresh(model) for model in models])
 
-    relation_models = StudentCourseFactory.create_batch(2)
+    relation_models = factory_lib.StudentCourseFactory.create_batch(2)
     for i in range(2):
         relation_models[i].student_id = models[i].id
         relation_models[i].course_id = created_course.id
+        relation_models[i].score = 0
+        relation_models[i].score_no_deadline = 0
+        relation_models[i].contests_ok = 0
+        relation_models[i].is_ok = False
+        relation_models[i].is_ok_final = False
     session.add_all(relation_models)
 
     await session.commit()
@@ -518,7 +550,7 @@ async def not_created_task(session, created_contest, created_course):
     created_contest.score_max = 3
     created_course.score_max = 3
     await session.commit()
-    yield TaskFactory.build(
+    yield factory_lib.TaskFactory.build(
         contest_id=created_contest.id,
         score_max=3,
         is_zero_ok=True,
@@ -539,7 +571,7 @@ async def created_task(session, not_created_task):
 async def created_zero_student_task(
     session, created_task, created_student, created_contest, created_course
 ):
-    not_created_student_task = StudentTaskFactory.build(
+    not_created_student_task = factory_lib.StudentTaskFactory.build(
         course_id=created_course.id,
         contest_id=created_contest.id,
         task_id=created_task.id,
@@ -568,7 +600,7 @@ async def created_zero_submission(  # pylint: disable=too-many-arguments
     created_zero_student_task,
     student_contest,
 ):
-    not_created_submission = SubmissionFactory.build(
+    not_created_submission = factory_lib.SubmissionFactory.build(
         course_id=created_course.id,
         contest_id=created_contest.id,
         task_id=created_task.id,
@@ -590,7 +622,7 @@ async def created_zero_submission(  # pylint: disable=too-many-arguments
 
 @pytest.fixture
 async def created_zero_submission_2(session, created_zero_submission):
-    not_created_submission = SubmissionFactory.build(
+    not_created_submission = factory_lib.SubmissionFactory.build(
         course_id=created_zero_submission.course_id,
         contest_id=created_zero_submission.contest_id,
         task_id=created_zero_submission.task_id,
@@ -613,7 +645,7 @@ async def created_zero_submission_2(session, created_zero_submission):
 @pytest.fixture
 async def created_contest_levels(session, created_course, created_contest):
     models = [
-        ContestLevelsFactory.build(
+        factory_lib.ContestLevelsFactory.build(
             course_id=created_course.id,
             contest_id=created_contest.id,
             level_name='Зачет автоматом',
@@ -622,7 +654,7 @@ async def created_contest_levels(session, created_course, created_contest):
             ok_threshold=2,
             include_after_deadline=False,
         ),
-        ContestLevelsFactory.build(
+        factory_lib.ContestLevelsFactory.build(
             course_id=created_course.id,
             contest_id=created_contest.id,
             level_name='Допуск к зачету',
