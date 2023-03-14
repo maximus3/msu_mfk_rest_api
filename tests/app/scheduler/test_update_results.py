@@ -75,7 +75,6 @@ class TestJob:
                             'participantInfo': {
                                 'login': created_student.contest_login,
                             },
-                            'timeFromStart': 0,  # unused
                             'submissionTime': (
                                 created_contest.deadline
                                 + datetime.timedelta(days=1, seconds=1)
@@ -91,7 +90,6 @@ class TestJob:
                             'participantInfo': {
                                 'login': created_student.contest_login,
                             },
-                            'timeFromStart': 0,  # unused
                             'submissionTime': (
                                 created_contest.deadline
                                 - datetime.timedelta(days=1, seconds=2)
@@ -209,7 +207,6 @@ class TestJob:
                             'participantInfo': {
                                 'login': created_student.contest_login,
                             },
-                            'timeFromStart': 0,  # unused
                             'submissionTime': (
                                 created_contest.deadline
                                 + datetime.timedelta(days=1, seconds=1)
@@ -231,7 +228,6 @@ class TestJob:
                             'participantInfo': {
                                 'login': created_student.contest_login,
                             },
-                            'timeFromStart': 0,  # unused
                             'submissionTime': (
                                 created_contest.deadline
                                 - datetime.timedelta(days=1, seconds=2)
