@@ -207,9 +207,9 @@ docker-migrate: ##@Application Migrate db in docker
 
 .PHONY: commit
 commit: gen format lint ##@Git Commit with message all files (with lint)
-	$(eval MESSAGE := $(shell read -p "Commit message: " MESSAGE; echo $$MESSAGE))
 	@git add .
 	@git status
+	$(eval MESSAGE := $(shell read -p "Commit message: " MESSAGE; echo $$MESSAGE))
 	@git commit -m "$(MESSAGE)"
 
 .PHONY: commit-fast

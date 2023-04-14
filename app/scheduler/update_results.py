@@ -300,10 +300,11 @@ async def process_submission(  # noqa: C901 # pylint: disable=too-many-arguments
             submission={'id': submission.id, 'author_id': submission.authorId},
         )
         logger.warning(
-            'No student with such author id {}: student {}, '
+            'No student with such author id {} (login {}): student {}, '
             'student course {}, student contest {}. '
             'Submission {} will not be processed',
             submission.authorId,
+            submission.login,
             student,
             student_course,
             student_contest,
@@ -312,7 +313,8 @@ async def process_submission(  # noqa: C901 # pylint: disable=too-many-arguments
         await send.send_message_safe(
             logger=logger,
             message=f'No student with such author id '
-            f'{submission.authorId}: student {student}, '
+            f'{submission.authorId} (login {submission.login}): '
+            f'student {student}, '
             f'student course {student_course}, '
             f'student contest {student_contest}. '
             f'Submission {submission.id} (https://admin.contest.yandex.ru/'
