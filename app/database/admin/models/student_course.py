@@ -17,6 +17,7 @@ class StudentCourseAdmin(ModelView, model=models.StudentCourse):
         'contests_ok',
         'is_ok',
         'is_ok_final',
+        'allow_early_exam',
     ]
     column_list = [
         'id',
@@ -27,6 +28,7 @@ class StudentCourseAdmin(ModelView, model=models.StudentCourse):
         'contests_ok',
         'is_ok',
         'is_ok_final',
+        'allow_early_exam',
     ]
     form_excluded_columns = ['id', 'dt_created', 'dt_updated']
     form_include_pk = True
