@@ -82,6 +82,14 @@ class StudentCourse(BaseModel):
     is_ok = sa.Column(sa.Boolean, nullable=False, server_default='false')
     is_ok_final = sa.Column(sa.Boolean, nullable=False, server_default='false')
 
+    allow_early_exam = sa.Column(
+        sa.Boolean,
+        nullable=False,
+        default=False,
+        server_default='false',
+        doc='Is student allowed to pass exam early',
+    )
+
     def __repr__(self):  # type: ignore
         return (
             f'<StudentCourse student_id={self.student_id} '

@@ -17,3 +17,4 @@ class StudentCourseFactory(Factory):
     contests_ok = fuzzy.FuzzyInteger(1, 10000)
     is_ok = fuzzy.FuzzyChoice([True, False])
     is_ok_final = fuzzy.FuzzyChoice([True, False])
+    allow_early_exam = fuzzy.FuzzyChoice([True, False])
