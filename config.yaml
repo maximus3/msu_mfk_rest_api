@@ -19,8 +19,8 @@ scheduler:
     minutes: 10
     config:
       send_logs: true
-#  update_results:
-#    trigger: interval
-#    hours: 1
-#    config:
-#      send_logs: true
+  update_results:
+    trigger: interval
+    hours: 1
+    config:
+      send_logs: true
