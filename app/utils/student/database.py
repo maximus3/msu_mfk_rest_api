@@ -3,6 +3,7 @@ from uuid import UUID
 from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.database import models
 from app.database.models import (
     Department,
     Student,
@@ -11,6 +12,7 @@ from app.database.models import (
     StudentDepartment,
 )
 from app.schemas import RegisterRequest
+from app.schemas import group as group_schemas
 
 
 async def get_student(
@@ -54,6 +56,36 @@ async def get_students_by_course_with_no_contest(
             isouter=True,
         )
         .where(StudentContest.id.is_(None))
+    )
+    data = (await session.execute(query)).fetchall()
+    return [x[0] for x in data]
+
+
+async def get_students_by_course_with_no_group(
+    session: AsyncSession, course: models.Course, group: models.Group
+) -> list[Student]:
+    if group_schemas.GroupTag.EARLY_EXAM in group.tags:
+        student_course_request = and_(
+            models.StudentCourse.student_id == models.Student.id,
+            models.StudentCourse.allow_early_exam,
+        )
+    else:
+        student_course_request = (
+            models.StudentCourse.student_id == models.Student.id
+        )
+    query = (
+        select(models.Student, models.StudentCourse, models.StudentGroup)
+        .join(models.StudentCourse, student_course_request)
+        .where(models.StudentCourse.course_id == course.id)
+        .join(
+            models.StudentGroup,
+            and_(
+                models.StudentGroup.student_id == Student.id,
+                models.StudentGroup.group_id == group.id,
+            ),
+            isouter=True,
+        )
+        .where(models.StudentGroup.id.is_(None))
     )
     data = (await session.execute(query)).fetchall()
     return [x[0] for x in data]

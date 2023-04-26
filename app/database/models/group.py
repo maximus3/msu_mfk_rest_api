@@ -31,6 +31,12 @@ class Group(BaseModel):
         server_default='{}',
     )
 
+    def __repr__(self):  # type: ignore
+        return (
+            f'<Group name={self.name} '
+            f'yandex_group_id={self.yandex_group_id}>'
+        )
+
 
 class ContestGroup(BaseModel):
     """
