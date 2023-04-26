@@ -2,9 +2,9 @@
 
 from app.schemas import scheduler as scheduler_schemas
 
+from .contest_register_group import job as contest_register_group
 from .db_dump import job as db_dump
 from .ping import job as ping
-from .update_results import job as update_results
 
 
 list_of_jobs: list[scheduler_schemas.JobInfo] = [
@@ -23,9 +23,13 @@ list_of_jobs: list[scheduler_schemas.JobInfo] = [
         name='db_dump',
     ),
     scheduler_schemas.JobInfo(
-        **{'trigger': 'interval', 'hours': 1, 'config': {'send_logs': True}},
-        func=update_results,
-        name='update_results',
+        **{
+            'trigger': 'interval',
+            'minutes': 10,
+            'config': {'send_logs': True},
+        },
+        func=contest_register_group,
+        name='contest_register_group',
     ),
 ]
 
