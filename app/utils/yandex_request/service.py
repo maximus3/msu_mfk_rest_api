@@ -19,10 +19,11 @@ async def make_request_to_yandex_contest_api(  # pylint: disable=too-many-argume
     while retry_count > 0:
         async with AsyncClient() as client:
             logger.info(
-                'Making request to Yandex Contest API: {} {} (timeout: {})',
+                'Making request to Yandex Contest API: {} {} (timeout: {}, data: {})',
                 method,
                 f'{settings.YANDEX_CONTEST_API_URL}{endpoint}',
                 timeout,
+                data,
             )
             client.headers.update(
                 {

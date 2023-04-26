@@ -4,7 +4,7 @@ import pathlib
 import sys
 import traceback
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import loguru
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -126,7 +126,7 @@ if __name__ == '__main__':
     )
     scheduler = get_scheduler()
     for job in scheduler.get_jobs():
-        job.modify(next_run_time=datetime.now())
+        job.modify(next_run_time=datetime.now() + timedelta(seconds=10))
     scheduler.start()
     try:
         loguru.logger.info('Starting scheduler')

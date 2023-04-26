@@ -75,11 +75,11 @@ async def _create_group_by_course(
     name = (
         course.short_name
         + '-' * (len(tags) > 0)
-        + '_'.join(tags)
+        + '_'.join(sorted(tags))
         + '-' * (len(tags) > 0)
-        + str(uuid.uuid4())
     )
     name = name.replace('_', '-')
+
     group = await group_utils.create_group(session, course, name, tags, logger)
     return group
 
