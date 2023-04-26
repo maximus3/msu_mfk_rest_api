@@ -1,6 +1,7 @@
 # Code generated automatically.
 
 from .contest import ContestAdmin
+from .contest_group import ContestGroupAdmin
 from .contest_levels import ContestLevelsAdmin
 from .course import CourseAdmin
 from .course_levels import CourseLevelsAdmin
@@ -22,6 +23,7 @@ from .user import UserAdmin
 
 model_view_list = [
     ContestAdmin,
+    ContestGroupAdmin,
     ContestLevelsAdmin,
     CourseAdmin,
     CourseLevelsAdmin,

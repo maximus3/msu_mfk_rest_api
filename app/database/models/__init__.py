@@ -2,7 +2,7 @@ from .base import BaseModel
 from .contest import Contest, ContestLevels
 from .course import Course, CourseLevels
 from .department import Department
-from .group import Group, StudentGroup
+from .group import ContestGroup, Group, StudentGroup
 from .student import (
     Student,
     StudentContest,
@@ -21,6 +21,7 @@ from .user import User
 __all__ = [
     'BaseModel',
     'Contest',
+    'ContestGroup',
     'ContestLevels',
     'Course',
     'CourseLevels',

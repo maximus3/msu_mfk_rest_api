@@ -5,6 +5,7 @@ from app.database import models
 
 tablename_to_model = {
     'contest': models.Contest,
+    'contest_group': models.ContestGroup,
     'contest_levels': models.ContestLevels,
     'course': models.Course,
     'course_levels': models.CourseLevels,
