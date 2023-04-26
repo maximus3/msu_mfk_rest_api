@@ -76,7 +76,6 @@ async def _create_group_by_course(
         course.short_name
         + '-' * (len(tags) > 0)
         + '_'.join(sorted(tags))
-        + '-' * (len(tags) > 0)
     )
     name = name.replace('_', '-')
 

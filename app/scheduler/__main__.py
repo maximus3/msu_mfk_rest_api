@@ -126,7 +126,7 @@ if __name__ == '__main__':
     )
     scheduler = get_scheduler()
     for job in scheduler.get_jobs():
-        job.modify(next_run_time=datetime.now() + timedelta(seconds=10))
+        job.modify(next_run_time=datetime.now() + timedelta(seconds=30))
     scheduler.start()
     try:
         loguru.logger.info('Starting scheduler')
