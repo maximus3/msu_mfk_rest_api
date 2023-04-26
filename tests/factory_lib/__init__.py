@@ -1,6 +1,7 @@
 # Code generated automatically.
 
 from .contest import ContestFactory
+from .contest_group import ContestGroupFactory
 from .contest_levels import ContestLevelsFactory
 from .course import CourseFactory
 from .course_levels import CourseLevelsFactory
@@ -22,6 +23,7 @@ from .user import UserFactory
 
 __all__ = [
     'ContestFactory',
+    'ContestGroupFactory',
     'ContestLevelsFactory',
     'CourseFactory',
     'CourseLevelsFactory',

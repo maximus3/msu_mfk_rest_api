@@ -32,6 +32,33 @@ class Group(BaseModel):
     )
 
 
+class ContestGroup(BaseModel):
+    """
+    Relation between Contest and Group.
+
+    Many-to-many relation.
+    """
+
+    __tablename__ = 'contest_group'
+
+    group_id = sa.Column(
+        sa.ForeignKey('group.id', ondelete='CASCADE'),
+        nullable=False,
+        index=True,
+    )
+    contest_id = sa.Column(
+        sa.ForeignKey('contest.id', ondelete='CASCADE'),
+        nullable=False,
+        index=True,
+    )
+
+    def __repr__(self):  # type: ignore
+        return (
+            f'<ContestGroup contest_id={self.contest_id} '
+            f'group_id={self.group_id}>'
+        )
+
+
 class StudentGroup(BaseModel):
     """
     Relation between Student and Group.
