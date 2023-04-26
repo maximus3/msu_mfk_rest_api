@@ -46,7 +46,7 @@ async def make_request_to_yandex_contest_api(  # pylint: disable=too-many-argume
                 try:
                     response = await client.post(
                         f'{settings.YANDEX_CONTEST_API_URL}{endpoint}',
-                        data=data,
+                        json=data,
                         timeout=timeout,
                     )
                 except (httpx.ReadTimeout, httpx.ReadError):
