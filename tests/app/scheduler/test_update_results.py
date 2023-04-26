@@ -597,8 +597,8 @@ class TestJob:
                     rf'{task_base_student_1_submission_2.run_id}$': {
                         'json': [
                             {
-                                'runId': task_base_student_1_submission_2.run_id,
-                                'authorId': task_base_student_1_submission_2.author_id,
+                                'runId': task_base_student_1_submission_2.run_id,  # pylint: disable=line-too-long
+                                'authorId': task_base_student_1_submission_2.author_id,  # pylint: disable=line-too-long
                                 'problemId': task_base.yandex_task_id,
                                 'problemAlias': task_base.alias,
                                 'verdict': 'OK',

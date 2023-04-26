@@ -20,7 +20,7 @@ class LevelInfoElem(BaseModel):
     count_method: LevelCountMethod
     ok_threshold: float
     contest_ok_level_name: str | None
-    tags: list[contest_schemas.ContestTag] | None
+    tags: list[contest_schemas.ContestTag]
 
 
 class LevelInfo(BaseModel):
