@@ -153,3 +153,15 @@ class CourseLevels(BaseModel):
     ok_threshold = sa.Column(
         sa.Float, default=100, server_default='100', nullable=False
     )
+    level_info = sa.Column(
+        sa.JSON,
+        nullable=True,
+        doc='Info about how to calculate level. '
+        'Format: {"data": [{'
+        '"level_ok_method": *contests_ok/score_sum*,'
+        '"count_method": *percent/absolute*, '
+        '"ok_threshold": *ok_threshold*, '
+        '"contest_ok_level_name": *regex/choose*, '
+        '"tags": [*list*, *of*, *tags*, *of*, *contests*]'
+        '}]}',
+    )

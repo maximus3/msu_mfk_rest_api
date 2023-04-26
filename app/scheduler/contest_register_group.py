@@ -1,7 +1,6 @@
 # pylint: disable=duplicate-code
 
 import traceback
-import uuid
 
 import loguru
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -72,12 +71,8 @@ async def _create_group_by_course(
     tags: list[group_schemas.GroupTag],
     logger: 'loguru.Logger',
 ) -> models.Group:
-    name = (
-        course.short_name
-        + '-' * (len(tags) > 0)
-        + '_'.join(sorted(tags))
-    )
-    name = name.replace('_', '-')
+    name = course.short_name + '-' * (len(tags) > 0) + '_'.join(sorted(tags))
+    name = str(name.replace('_', '-'))
 
     group = await group_utils.create_group(session, course, name, tags, logger)
     return group

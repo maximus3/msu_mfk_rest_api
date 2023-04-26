@@ -4,7 +4,7 @@ import pathlib
 import sys
 import traceback
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import loguru
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -46,7 +46,6 @@ def _job_info_wrapper(
                 kwargs,
             )
             kwargs.update(base_logger=base_logger)
-            result = None
             try:
                 result = await func(*args, **kwargs)
             except Exception as exc:  # pylint: disable=broad-except
@@ -126,7 +125,7 @@ if __name__ == '__main__':
     )
     scheduler = get_scheduler()
     for job in scheduler.get_jobs():
-        job.modify(next_run_time=datetime.now() + timedelta(seconds=30))
+        job.modify(next_run_time=datetime.now())
     scheduler.start()
     try:
         loguru.logger.info('Starting scheduler')

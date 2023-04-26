@@ -16,6 +16,7 @@ class CourseLevelsAdmin(ModelView, model=models.CourseLevels):
         'contest_ok_level_name',
         'count_method',
         'ok_threshold',
+        'level_info',
     ]
     column_list = [
         'id',
@@ -25,6 +26,7 @@ class CourseLevelsAdmin(ModelView, model=models.CourseLevels):
         'contest_ok_level_name',
         'count_method',
         'ok_threshold',
+        'level_info',
     ]
     form_excluded_columns = ['id', 'dt_created', 'dt_updated']
     form_include_pk = True

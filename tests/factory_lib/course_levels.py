@@ -16,3 +16,4 @@ class CourseLevelsFactory(Factory):
     contest_ok_level_name = fuzzy.FuzzyText()
     count_method = fuzzy.FuzzyText()
     ok_threshold = fuzzy.FuzzyFloat(0, 1)
+    level_info = '{}'

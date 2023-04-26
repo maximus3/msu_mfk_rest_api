@@ -61,6 +61,10 @@ async def create(
         tags.append(ContestTag.NECESSARY)
     if contest_request.is_final:
         tags.append(ContestTag.FINAL)
+    if contest_request.is_usual:
+        tags.append(ContestTag.USUAL)
+    if contest_request.is_early_exam:
+        tags.append(ContestTag.EARLY_EXAM)
     contest = Contest(
         yandex_contest_id=contest_request.yandex_contest_id,
         lecture=contest_request.lecture,
