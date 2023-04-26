@@ -219,6 +219,7 @@ async def check_student_contest_relations(
                 await contest_utils.get_author_id(
                     student.contest_login,
                     contest.yandex_contest_id,
+                    student.token,
                     logger=logger,
                 ),
             )
@@ -230,7 +231,10 @@ async def check_student_contest_relations(
                 contest.id,
             )
             student_contest.author_id = await contest_utils.get_author_id(
-                student.contest_login, contest.yandex_contest_id, logger=logger
+                student.contest_login,
+                contest.yandex_contest_id,
+                student.token,
+                logger=logger,
             )
             session.add(student_contest)
 

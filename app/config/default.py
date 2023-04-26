@@ -42,6 +42,8 @@ class DefaultSettings(BaseSettings):
     BASE_DIR: Path = Path(__file__).resolve().parent.parent.parent
     CONFIG_FILENAME: str = 'config.yaml'
 
+    JWT_SECRET: str = Field('', env='JWT_SECRET')
+
     # to get a string like this run: "openssl rand -hex 32"
     SECRET_KEY: str = Field('', env='SECRET_KEY')
     SQLADMIN_SECRET_KEY: str = Field('', env='SQLADMIN_SECRET_KEY')

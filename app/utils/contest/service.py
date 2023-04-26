@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 
 import httpx
 import loguru
+from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database.models import Contest, Course, Student, StudentContest
@@ -17,6 +18,7 @@ from app.schemas import contest as contest_schemas
 from app.utils.common.datetime_utils import get_datetime_msk_tz
 from app.utils.yandex_request import make_request_to_yandex_contest_api
 
+from ...config import get_settings
 from ...database import models
 from .database import (
     add_student_contest_relation,
@@ -93,6 +95,7 @@ async def add_student_to_contest(
 async def get_author_id(
     login: str,
     yandex_contest_id: int,
+    student_oauth_token: str,
     logger: 'loguru.Logger',
 ) -> int:
     response = await make_request_to_yandex_contest_api(
@@ -100,7 +103,32 @@ async def get_author_id(
         logger=logger,
         method='GET',
     )
-    return int(response.json()[0]['id'])
+    data = response.json()
+    if not data:
+        logger.warning(
+            'No author id for login {} in contest {}, '
+            'trying to get by display name',
+            login,
+            yandex_contest_id,
+        )
+        settings = get_settings()
+        async with AsyncClient() as client:
+            response = await client.get(
+                url=f'https://login.yandex.ru/info?format=json&'
+                f'jwt_secret={settings.JWT_SECRET}&'
+                f'oauth_token={student_oauth_token}'
+            )
+        if response.status_code != 200:
+            logger.error('Error in request to login.yandex.ru')
+            raise RuntimeError('Error in request to login.yandex.ru')
+        display_name = response.json()['display_name']
+        response = await make_request_to_yandex_contest_api(
+            f'contests/{yandex_contest_id}/participants?login={display_name}',
+            logger=logger,
+            method='GET',
+        )
+        data = response.json()
+    return int(data[0]['id'])
 
 
 async def get_contest_info(
@@ -152,7 +180,10 @@ async def get_or_create_student_contest(
             contest.id,
             course.id,
             await get_author_id(
-                student.contest_login, contest.yandex_contest_id, logger=logger
+                student.contest_login,
+                contest.yandex_contest_id,
+                student.token,
+                logger=logger,
             ),
         )
     return sc
