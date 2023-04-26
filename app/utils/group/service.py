@@ -22,7 +22,7 @@ async def create_group(
     logger: 'loguru.Logger',
 ) -> models.Group:
     response = await yandex_request.make_request_to_yandex_contest_api(
-        'groups', logger=logger, method='POST', data={'name': name}
+        'groups/', logger=logger, method='POST', data={'name': name}
     )
 
     match response.status_code:
