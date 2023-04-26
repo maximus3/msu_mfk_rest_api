@@ -16,7 +16,7 @@ scheduler:
 #      send_logs: true
   contest_register_group:
     trigger: interval
-    minutes: 1
+    minutes: 10
     config:
       send_logs: true
 #  update_results:
