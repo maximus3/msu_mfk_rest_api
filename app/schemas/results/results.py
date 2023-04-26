@@ -44,6 +44,7 @@ class CourseResults(BaseModel):
     score_max: float
     is_ok: bool
     is_ok_final: bool
+    early_exam: bool
     perc_ok: int
     str_need: str
     course_levels: list[CourseLevelResults]
