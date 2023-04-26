@@ -116,14 +116,14 @@ async def get_author_id(
             response = await client.get(
                 url=f'https://login.yandex.ru/info?format=json&'
                 f'jwt_secret={settings.JWT_SECRET}&'
-                f'oauth_token={student_oauth_token}'
+                f'oauth_token={student_oauth_token}'  # TODO: bad practice, need header
             )
         if response.status_code != 200:
             logger.error('Error in request to login.yandex.ru')
             raise RuntimeError('Error in request to login.yandex.ru')
         display_name = response.json()['display_name']
         response = await make_request_to_yandex_contest_api(
-            f'contests/{yandex_contest_id}/participants?login={display_name}',
+            f'contests/{yandex_contest_id}/participants?display_name={display_name}',
             logger=logger,
             method='GET',
         )
