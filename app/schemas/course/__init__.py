@@ -1,5 +1,5 @@
 from .course import CourseBase, CourseNameRequest, CourseResponse
-from .levels import LevelCountMethod, LevelOkMethod
+from .levels import LevelCountMethod, LevelInfo, LevelInfoElem, LevelOkMethod
 from .results import CourseResultsCSV
 
 
@@ -10,4 +10,6 @@ __all__ = [
     'CourseNameRequest',
     'CourseResponse',
     'CourseResultsCSV',
+    'LevelInfo',
+    'LevelInfoElem',
 ]

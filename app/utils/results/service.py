@@ -105,7 +105,15 @@ async def get_student_course_results(  # pylint: disable=too-many-arguments
         perc_ok=0,  # TODO
         str_need=f'Набрано баллов: {student_course.score}/{course.score_max}'
         if course_schemas.LevelOkMethod.SCORE_SUM
-        in set(map(lambda x: x.level_ok_method, course_levels))
+        in set(
+            map(
+                lambda x: map(
+                    lambda y: y.level_ok_method,
+                    course_schemas.LevelInfo(data=x.level_info['data']).data,
+                ),
+                course_levels,
+            )
+        )
         else '',
         course_levels=[
             CourseLevelResults(
@@ -126,20 +134,16 @@ async def update_student_course_results(  # pylint: disable=too-many-statements,
     base_logger: 'loguru.Logger',
     session: AsyncSession,
 ) -> None:
-    for (
-        contest,
-        student_contest,
-    ) in await contest_utils.get_contests_with_relations(
+    contests_data_raw = await contest_utils.get_contests_with_relations(
         session,
         course.id,
         student.id,
-    ):
-        logger = base_logger.bind(
-            contest={
-                'id': contest.id,
-                'yandex_contest_id': contest.yandex_contest_id,
-            }
-        )
+    )
+    contests_data_all = []
+    for (
+        contest,
+        student_contest,
+    ) in contests_data_raw:
         contest_levels = await contest_utils.get_contest_levels(
             session, contest.id
         )
@@ -150,7 +154,21 @@ async def update_student_course_results(  # pylint: disable=too-many-statements,
             )
             for level in contest_levels
         ]
-
+        contests_data_all.append(
+            (contest, student_contest, contest_levels, student_contest_levels)
+        )
+    for (
+        contest,
+        student_contest,
+        contest_levels,
+        student_contest_levels,
+    ) in contests_data_all:
+        logger = base_logger.bind(
+            contest={
+                'id': contest.id,
+                'yandex_contest_id': contest.yandex_contest_id,
+            }
+        )
         await update_student_contest_levels_results(
             student,
             student_course,
@@ -169,16 +187,16 @@ async def update_student_course_results(  # pylint: disable=too-many-statements,
             100 * student_course.contests_ok / course.contest_count, 4
         )
 
-        await update_student_course_levels_results(
-            student,
-            student_course,
-            course_levels,
-            student_course_levels,
-            logger=logger,
-            session=session,
-        )
-
-        session.add(student_course)
+    await update_student_course_levels_results(
+        student,
+        student_course,
+        course_levels,
+        student_course_levels,
+        contests_data_all,
+        logger=base_logger,
+        session=session,
+    )
+    session.add(student_course)
 
 
 async def update_student_contest_levels_results(  # noqa: C901  # pylint: disable=too-many-arguments,too-many-branches, too-many-statements
@@ -289,12 +307,18 @@ async def update_student_contest_levels_results(  # noqa: C901  # pylint: disabl
                 f'{contest_level.level_ok_method} not found'
             )
         diffs[contest_level.level_name]['new'] = student_contest_level.is_ok
-        if contest_level.level_name == 'Зачет автоматом':  # TODO: remove?
+        if contest_level.level_name in (
+            'Зачет автоматом',
+            'Зачет',
+        ):  # TODO: remove?
             contests_ok_diff = (
                 0 if student_contest.is_ok else student_contest_level.is_ok
             )
             student_contest.is_ok = (
                 student_contest.is_ok or student_contest_level.is_ok
+            )
+            student_contest.is_ok_no_deadline = (
+                student_contest.is_ok_no_deadline or student_contest.is_ok
             )
         elif contest_level.level_name == 'Допуск к зачету':
             student_contest.is_ok_no_deadline = (
@@ -318,11 +342,19 @@ async def update_student_contest_levels_results(  # noqa: C901  # pylint: disabl
         )
 
 
-async def update_student_course_levels_results(  # pylint: disable=too-many-arguments
+async def update_student_course_levels_results(  # pylint: disable=too-many-arguments,too-many-nested-blocks,too-many-branches,too-many-statements  # noqa: C901
     student: models.Student,
     student_course: StudentCourse,
     course_levels: list[CourseLevels],
     student_course_levels: list[StudentCourseLevels],
+    contests_data_all: list[
+        tuple[
+            models.Contest,
+            models.StudentContest,
+            list[models.ContestLevels],
+            list[models.StudentContestLevels],
+        ]
+    ],
     logger: 'loguru.Logger',
     session: AsyncSession,
 ) -> None:
@@ -336,60 +368,107 @@ async def update_student_course_levels_results(  # pylint: disable=too-many-argu
             'old': student_course_level.is_ok,
             'new': None,
         }
-        if (
-            course_level.level_ok_method
-            == course_schemas.LevelOkMethod.CONTESTS_OK
-        ):
+        if not course_level.level_info:
+            logger.warning('level_info is empty, skipping')
+            continue
+        level_info = course_schemas.LevelInfo(
+            data=course_level.level_info['data']
+        )
+        for level_elem in level_info.data:
             if (
-                course_level.count_method
-                == course_schemas.LevelCountMethod.ABSOLUTE
+                level_elem.level_ok_method
+                == course_schemas.LevelOkMethod.CONTESTS_OK
             ):
-                student_course_level.is_ok = (
-                    student_course.contests_ok >= course_level.ok_threshold
-                )
+                count_ok_by_level_contests = 0
+                count_all_contests = 0
+                for (
+                    contest,
+                    _,
+                    contest_levels,
+                    student_contest_levels,
+                ) in contests_data_all:
+                    if not level_elem.tags or set(level_elem.tags) <= set(
+                        contest.tags
+                    ):
+                        count_all_contests += 1
+                        contest_level_names = [
+                            contest_level.level_name
+                            for contest_level in contest_levels
+                        ]
+                        if (
+                            level_elem.contest_ok_level_name
+                            not in contest_level_names
+                        ):
+                            logger.error(
+                                'Contest {} has no level {}',
+                                contest.yandex_contest_id,
+                                level_elem.contest_ok_level_name,
+                            )
+                            continue
+                        index_of_level_name = contest_level_names.index(
+                            level_elem.contest_ok_level_name
+                        )
+                        count_ok_by_level_contests += student_contest_levels[
+                            index_of_level_name
+                        ].is_ok
+                if (
+                    level_elem.count_method
+                    == course_schemas.LevelCountMethod.ABSOLUTE
+                ):
+                    student_course_level.is_ok = (
+                        count_ok_by_level_contests >= level_elem.ok_threshold
+                    )
+                elif (
+                    level_elem.count_method
+                    == course_schemas.LevelCountMethod.PERCENT
+                ):
+                    student_course_level.is_ok = (
+                        round(
+                            100
+                            * count_ok_by_level_contests
+                            / count_all_contests,
+                            4,
+                        )
+                        >= level_elem.ok_threshold
+                    )
+                else:
+                    raise RuntimeError(
+                        f'Course level count method '
+                        f'{level_elem.count_method} not found'
+                    )
             elif (
-                course_level.count_method
-                == course_schemas.LevelCountMethod.PERCENT
+                level_elem.level_ok_method
+                == course_schemas.LevelOkMethod.SCORE_SUM
             ):
-                student_course_level.is_ok = (
-                    student_course.contests_ok_percent
-                    >= course_level.ok_threshold
-                )
+                if (
+                    level_elem.count_method
+                    == course_schemas.LevelCountMethod.ABSOLUTE
+                ):
+                    student_course_level.is_ok = (
+                        student_course.score >= level_elem.ok_threshold
+                    )
+                elif (
+                    level_elem.count_method
+                    == course_schemas.LevelCountMethod.PERCENT
+                ):
+                    student_course_level.is_ok = (
+                        student_course.score_percent >= level_elem.ok_threshold
+                    )
+                else:
+                    raise RuntimeError(
+                        f'Course level count method '
+                        f'{level_elem.count_method} not found'
+                    )
             else:
                 raise RuntimeError(
-                    f'Course level count method '
-                    f'{course_level.count_method} not found'
+                    f'Course level ok method '
+                    f'{level_elem.level_ok_method} not found'
                 )
-        elif (
-            course_level.level_ok_method
-            == course_schemas.LevelOkMethod.SCORE_SUM
-        ):
-            if (
-                course_level.count_method
-                == course_schemas.LevelCountMethod.ABSOLUTE
-            ):
-                student_course_level.is_ok = (
-                    student_course.score >= course_level.ok_threshold
-                )
-            elif (
-                course_level.count_method
-                == course_schemas.LevelCountMethod.PERCENT
-            ):
-                student_course_level.is_ok = (
-                    student_course.score_percent >= course_level.ok_threshold
-                )
-            else:
-                raise RuntimeError(
-                    f'Course level count method '
-                    f'{course_level.count_method} not found'
-                )
-        else:
-            raise RuntimeError(
-                f'Course level ok method '
-                f'{course_level.level_ok_method} not found'
-            )
         diffs[course_level.level_name]['new'] = student_course_level.is_ok
-        if course_level.level_name == 'Зачет автоматом':  # TODO: remove?
+        if course_level.level_name in (
+            'Зачет автоматом',
+            'Зачет',
+        ):  # TODO: remove?
             student_course.is_ok = (
                 student_course.is_ok or student_course_level.is_ok
             )
@@ -406,113 +485,3 @@ async def update_student_course_levels_results(  # pylint: disable=too-many-argu
             student.contest_login,
             updated_levels,
         )
-
-
-async def update_sc_results_final(  # pylint: disable=too-many-statements,too-many-arguments,too-many-branches  # noqa: C901
-    student: Student,
-    course: Course,
-    course_levels: list[CourseLevels],
-    student_course: StudentCourse,
-    student_course_levels: list[StudentCourseLevels],
-    logger: 'loguru.Logger',
-    session: AsyncSession,
-) -> None:
-    course_score_sum = 0
-    course_score_sum_with_deadline = 0
-    contests_results = []
-    final_results = []
-
-    levels_result_dict: dict[str, bool] = {
-        level.level_name: True for level in course_levels
-    }
-
-    for (  # pylint: disable=too-many-nested-blocks
-        contest,
-        student_contest,
-    ) in await contest_utils.get_contests_with_relations(
-        session,
-        course.id,
-        student.id,
-    ):
-        if contest_schemas.ContestTag.FINAL in contest.tags:
-            final_results.append(student_contest.is_ok)
-        else:
-            contests_results.append(student_contest.is_ok_no_deadline)
-            course_score_sum += student_contest.score_no_deadline
-            course_score_sum_with_deadline += student_contest.score
-
-            if contest_schemas.ContestTag.NECESSARY in contest.tags:
-                for level in course_levels:
-                    if level.level_ok_method == 'contests_ok':
-                        level_names = (
-                            [
-                                contest_level['name']
-                                for contest_level in contest.levels['levels']
-                            ]
-                            if contest.levels
-                            else []
-                        )
-                        k = level_names.index(level.contest_ok_level_name)
-                        if k > -1:
-                            levels_result_dict[level.level_name] = (
-                                levels_result_dict[level.level_name]
-                                and student_contest.score
-                                >= contest.levels['levels'][k]['score_need']
-                            )
-                        else:
-                            levels_result_dict[level.level_name] = False
-                            logger.error(
-                                'Contest {} has no level {}',
-                                contest.name,
-                                level.name,
-                            )
-                    elif level.level_ok_method == 'score_sum':
-                        pass
-                    else:
-                        raise ValueError(
-                            f'Unknown level_ok_method: '
-                            f'{level.level_ok_method}',
-                        )
-
-    for level, sc_level in zip(course_levels, student_course_levels):
-        if level.level_ok_method == 'score_sum':
-            levels_result_dict[level.level_name] = (
-                student_course.score >= level.ok_threshold
-            )
-        if sc_level.is_ok != levels_result_dict[level.level_name]:
-            sc_level.is_ok = levels_result_dict[level.level_name]
-            session.add(sc_level)
-
-    count_contests = len(contests_results)
-    contests_ok = sum(contests_results)
-    contests_ok_percent = 100 * contests_ok / count_contests
-    score_percent = 100 * course_score_sum / course.score_max
-    if course.ok_method == 'contests_ok':
-        perc_ok = contests_ok_percent
-    elif course.ok_method == 'score_sum':
-        perc_ok = score_percent
-    else:
-        logger.error('Unknown ok_method: {}', course.ok_method)
-        raise ValueError(f'Unknown ok_method: {course.ok_method}')
-
-    is_ok = perc_ok >= course.ok_threshold_perc
-    if course.short_name == 'dl_autumn_2022':
-        is_ok = course_score_sum >= 5.5
-
-    is_ok = is_ok and (sum(final_results) > 0)  # TODO: one final only ok
-
-    if student_course.score < course_score_sum_with_deadline:
-        student_course.score = course_score_sum_with_deadline
-        session.add(student_course)
-    if student_course.contests_ok < contests_ok:
-        student_course.contests_ok = contests_ok
-        session.add(student_course)
-    if student_course.contests_ok_percent < contests_ok_percent:
-        student_course.contests_ok_percent = contests_ok_percent
-        session.add(student_course)
-    if student_course.score_percent < score_percent:
-        student_course.score_percent = score_percent
-        session.add(student_course)
-    if not student_course.is_ok_final and is_ok:
-        student_course.is_ok_final = is_ok
-        session.add(student_course)

@@ -116,10 +116,6 @@ async def update_course_results(
                 session, course.id
             )
         )
-        course_levels = await course_utils.get_course_levels(
-            session, course.id
-        )  # TODO: add types FINAL, NECESSARY contests for levels
-        course_levels.sort(key=lambda x: (x.count_method, x.ok_threshold))
     contests.sort(key=lambda x: x.lecture)
     course_score_sum = sum(contest.score_max for contest in contests)
     if course.score_max != course_score_sum:
@@ -166,7 +162,6 @@ async def update_course_results(
         submissions.sort(key=lambda x: x.id)
         await process_submissions(
             course,
-            course_levels,
             contest,
             contest_levels,
             submissions,
@@ -191,7 +186,7 @@ async def check_student_contest_relations(
                 base_logger=base_logger,
                 session=session,
             )
-    for student, _, _ in students_sc_departments:
+    for student, student_course, _ in students_sc_departments:
         logger = base_logger.bind(
             student={'id': student.id, 'contest_login': student.contest_login}
         )
@@ -200,6 +195,17 @@ async def check_student_contest_relations(
         )
 
         if student_contest is None:
+            if (
+                contest_schemas.ContestTag.USUAL not in contest.tags
+                and not student_course.allow_early_exam
+            ):
+                logger.info(
+                    'Student {} not allow_early_exam and usual not '
+                    'in contest tags: {}, no register',
+                    student.contest_login,
+                    contest.tags,
+                )
+                continue
             logger.info(
                 'Student {} has no relation with contest {}, creating',
                 student.id,
@@ -231,7 +237,6 @@ async def check_student_contest_relations(
 
 async def process_submissions(  # pylint: disable=too-many-arguments
     course: models.Course,
-    course_levels: list[models.CourseLevels],
     contest: models.Contest,
     contest_levels: list[models.ContestLevels],
     submissions: list[contest_schemas.ContestSubmissionFull],
@@ -250,7 +255,6 @@ async def process_submissions(  # pylint: disable=too-many-arguments
             )
         await process_submission(
             course,
-            course_levels,
             contest,
             contest_levels,
             task,
@@ -261,7 +265,6 @@ async def process_submissions(  # pylint: disable=too-many-arguments
 
 async def process_submission(  # noqa: C901 # pylint: disable=too-many-arguments,too-many-branches,too-many-statements # TODO
     course: models.Course,
-    course_levels: list[models.CourseLevels],
     contest: models.Contest,
     contest_levels: list[models.ContestLevels],
     task: models.Task,
@@ -275,7 +278,6 @@ async def process_submission(  # noqa: C901 # pylint: disable=too-many-arguments
         async with SessionManager().create_async_session() as session:
             return await process_submission(
                 course,
-                course_levels,
                 contest,
                 contest_levels,
                 task,
@@ -644,16 +646,12 @@ async def check_and_update_no_verdict_submissions(
             course = await course_utils.get_course_by_id(
                 session, submission.course_id
             )
-            course_levels = await course_utils.get_course_levels(
-                session, course.id
-            )
             contest_levels = await contest_utils.get_contest_levels(
                 session, contest.id
             )
             task = await task_utils.get_task_by_id(session, submission.task_id)
             await process_submission(
                 course,
-                course_levels=course_levels,
                 contest=contest,
                 contest_levels=contest_levels,
                 task=task,
