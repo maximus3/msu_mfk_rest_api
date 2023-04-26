@@ -5,8 +5,8 @@ Revises: 65aff99e85db
 Create Date: 2023-04-26 11:06:40.046179
 
 """
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 
 # revision identifiers, used by Alembic.
@@ -17,7 +17,15 @@ depends_on = None
 
 
 def upgrade() -> None:
-    op.add_column('course', sa.Column('have_early_exam', sa.Boolean(), server_default='false', nullable=False))
+    op.add_column(
+        'course',
+        sa.Column(
+            'have_early_exam',
+            sa.Boolean(),
+            server_default='false',
+            nullable=False,
+        ),
+    )
 
 
 def downgrade() -> None:

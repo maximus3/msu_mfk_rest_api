@@ -1,3 +1,5 @@
+# pylint: disable=duplicate-code
+
 import sqlalchemy as sa
 
 from .base import BaseModel
@@ -13,10 +15,7 @@ class Group(BaseModel):
         doc='Group name.',
     )
     yandex_group_id = sa.Column(
-        sa.Integer,
-        unique=True,
-        nullable=False,
-        doc='Group ID from yandex.'
+        sa.Integer, unique=True, nullable=False, doc='Group ID from yandex.'
     )
     course_id = sa.Column(
         sa.ForeignKey('course.id', ondelete='CASCADE'),
