@@ -116,6 +116,14 @@ class Course(BaseModel):
         doc='Is course in archive (not show in api)',
     )
 
+    have_early_exam = sa.Column(
+        sa.Boolean,
+        nullable=False,
+        default=False,
+        server_default='false',
+        doc='Is course have early exam',
+    )
+
     def __repr__(self) -> str:
         return f'<Course {self.short_name}>'
 
