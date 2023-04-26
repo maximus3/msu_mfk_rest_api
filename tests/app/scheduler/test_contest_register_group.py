@@ -117,7 +117,7 @@ class TestJob(BaseHandler):
             )
         mock_make_request_to_yandex_contest_v2(
             {
-                r'^groups$': {
+                r'^groups/$': {
                     'json': '{{"id": {randint}}}',
                     'status_code': 201,
                 },
