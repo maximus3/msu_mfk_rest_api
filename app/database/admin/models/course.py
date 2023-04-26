@@ -27,6 +27,7 @@ class CourseAdmin(ModelView, model=models.Course):
         'contest_count',
         'default_final_score_evaluation_formula',
         'is_archive',
+        'have_early_exam',
     ]
     column_list = [
         'id',
@@ -47,6 +48,7 @@ class CourseAdmin(ModelView, model=models.Course):
         'contest_count',
         'default_final_score_evaluation_formula',
         'is_archive',
+        'have_early_exam',
     ]
     form_excluded_columns = ['id', 'dt_created', 'dt_updated']
     form_include_pk = True
