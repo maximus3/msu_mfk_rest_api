@@ -96,11 +96,11 @@ async def get_author_id(
     logger: 'loguru.Logger',
 ) -> int:
     response = await make_request_to_yandex_contest_api(
-        f'contests/{yandex_contest_id}/participants' f'?login={login}',
+        f'contests/{yandex_contest_id}/participants?login={login}',
         logger=logger,
-        method='POST',
+        method='GET',
     )
-    return int(response.text)
+    return int(response.json()[0]['id'])
 
 
 async def get_contest_info(

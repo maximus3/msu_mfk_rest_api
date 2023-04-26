@@ -1,3 +1,5 @@
+import typing
+
 import httpx
 import loguru
 from httpx import AsyncClient, Response
@@ -5,10 +7,11 @@ from httpx import AsyncClient, Response
 from app.config import get_settings
 
 
-async def make_request_to_yandex_contest_api(
+async def make_request_to_yandex_contest_api(  # pylint: disable=too-many-arguments
     endpoint: str,
     logger: 'loguru.Logger',
     method: str = 'GET',
+    data: dict[str, typing.Any] | None = None,
     timeout: int | None = None,
     retry_count: int = 1,
 ) -> Response:
@@ -41,6 +44,7 @@ async def make_request_to_yandex_contest_api(
                 try:
                     response = await client.post(
                         f'{settings.YANDEX_CONTEST_API_URL}{endpoint}',
+                        data=data,
                         timeout=timeout,
                     )
                 except (httpx.ReadTimeout, httpx.ReadError):

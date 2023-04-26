@@ -41,8 +41,9 @@ class TestJob:
         # arrange
         _ = mock_make_request_to_yandex_contest_v2(
             {
-                f'contests/{created_contest.yandex_contest_id}/'
-                f'submissions?page=1&pageSize=100': {
+                rf'^contests\/'
+                rf'{created_contest.yandex_contest_id}\/'
+                rf'submissions\?page=1&pageSize=100$': {
                     'json': {
                         'count': 2,
                         'submissions': [
@@ -63,8 +64,10 @@ class TestJob:
                         ],
                     },
                 },
-                f'contests/{created_contest.yandex_contest_id}/'
-                f'submissions/multiple?runIds={1}&runIds={2}': {
+                rf'^contests\/'
+                rf'{created_contest.yandex_contest_id}\/'
+                rf'submissions\/multiple\?'
+                rf'runIds={1}&runIds={2}$': {
                     'json': [
                         {
                             'runId': 1,
@@ -98,9 +101,13 @@ class TestJob:
                         },
                     ],
                 },
-                f'contests/{created_contest.yandex_contest_id}/'
-                f'participants?login={created_student.contest_login}': {
-                    'text': '12345'
+                rf'^contests\/{created_contest.yandex_contest_id}\/'
+                rf'participants\?login={created_student.contest_login}$': {
+                    'json': [
+                        {
+                            'id': '12345',
+                        }
+                    ]
                 },
             }
         )
@@ -187,16 +194,16 @@ class TestJob:
         # arrange
         _ = mock_make_request_to_yandex_contest_v2(
             {
-                f'contests/{created_contest.yandex_contest_id}/'
-                f'submissions?page=1&pageSize=100': {
+                rf'^contests\/{created_contest.yandex_contest_id}\/'
+                rf'submissions\?page=1&pageSize=100$': {
                     'json': {
                         'count': 0,
                         'submissions': [],
                     },
                 },
-                f'contests/{created_contest.yandex_contest_id}/'
-                f'submissions/multiple?runIds='
-                f'{created_zero_submission.run_id}': {
+                rf'^contests\/{created_contest.yandex_contest_id}\/'
+                rf'submissions\/multiple\?runIds='
+                rf'{created_zero_submission.run_id}$': {
                     'json': [
                         {
                             'runId': created_zero_submission.run_id,
@@ -215,9 +222,9 @@ class TestJob:
                         },
                     ],
                 },
-                f'contests/{created_contest.yandex_contest_id}/'
-                f'submissions/multiple?runIds='
-                f'{created_zero_submission_2.run_id}': {
+                rf'^contests\/{created_contest.yandex_contest_id}\/'
+                rf'submissions\/multiple\?runIds='
+                rf'{created_zero_submission_2.run_id}$': {
                     'json': [
                         {
                             'runId': created_zero_submission_2.run_id,
@@ -236,9 +243,9 @@ class TestJob:
                         },
                     ],
                 },
-                f'contests/{created_contest.yandex_contest_id}/'
-                f'participants?login={created_student.contest_login}': {
-                    'text': str(created_zero_submission.author_id),
+                rf'^contests\/{created_contest.yandex_contest_id}\/'
+                rf'participants\?login={created_student.contest_login}$': {
+                    'json': [{'id': str(created_zero_submission.author_id)}],
                 },
             }
         )

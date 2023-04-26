@@ -3,6 +3,9 @@
 # pylint: disable=too-many-lines
 
 import asyncio
+import json
+import random
+import re
 import tempfile
 import typing as tp
 from asyncio import new_event_loop, set_event_loop
@@ -488,13 +491,23 @@ def mock_make_request_to_yandex_contest_v2(  # type: ignore  # TODO: remove v1
 ):
     # @functools.wraps
     def _wrapper(endpoints_to_result: dict):  # type: ignore
-        async def _request(endpoint, *args, **kwargs):
-            if endpoint not in endpoints_to_result:
+        async def _request(endpoint, *args, data=None, **kwargs):
+            key_to_search = None
+            for key in endpoints_to_result:
+                if re.match(key, endpoint):
+                    key_to_search = key
+                    break
+            if not key_to_search:
                 raise KeyError(f'No mock for endpoint {endpoint}')
+            json_data = endpoints_to_result[key_to_search].get('json')
+            randint = random.randint(1, 100)
+            if isinstance(json_data, str):
+                formatted_data = json_data.format(data=data, randint=randint)
+                json_data = json.loads(formatted_data)
             return httpx.Response(
-                endpoints_to_result[endpoint].get('status_code') or 200,
-                json=endpoints_to_result[endpoint].get('json'),
-                text=endpoints_to_result[endpoint].get('text'),
+                endpoints_to_result[key_to_search].get('status_code') or 200,
+                json=json_data,
+                text=endpoints_to_result[key_to_search].get('text'),
             )
 
         _ = [
@@ -505,6 +518,11 @@ def mock_make_request_to_yandex_contest_v2(  # type: ignore  # TODO: remove v1
             ),
             mocker.patch(
                 'app.utils.contest.service.make_request_to_yandex_contest_api',
+                side_effect=_request,
+            ),
+            mocker.patch(
+                'app.utils.group.service.yandex_request.'
+                'make_request_to_yandex_contest_api',
                 side_effect=_request,
             ),
         ]
