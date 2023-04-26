@@ -2,6 +2,8 @@
 
 import sqlalchemy as sa
 
+from app.schemas import group as group_schemas
+
 from .base import BaseModel
 
 
@@ -21,6 +23,12 @@ class Group(BaseModel):
         sa.ForeignKey('course.id', ondelete='CASCADE'),
         nullable=False,
         index=True,
+    )
+    tags = sa.Column(
+        sa.ARRAY(sa.Enum(group_schemas.GroupTag)),
+        nullable=False,
+        default=[],
+        server_default='{}',
     )
 
 

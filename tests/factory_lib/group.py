@@ -13,3 +13,4 @@ class GroupFactory(Factory):
     name = fuzzy.FuzzyText()
     yandex_group_id = fuzzy.FuzzyInteger(1, 10000)
     course_id = Faker('uuid4')
+    tags = []  # type: ignore

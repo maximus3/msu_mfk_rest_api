@@ -8,8 +8,8 @@ from app.database.admin import models_forms
 
 
 class GroupAdmin(ModelView, model=models.Group):
-    _column_list = ['id', 'name', 'yandex_group_id', 'course_id']
-    column_list = ['id', 'name', 'yandex_group_id', 'course_id']
+    _column_list = ['id', 'name', 'yandex_group_id', 'course_id', 'tags']
+    column_list = ['id', 'name', 'yandex_group_id', 'course_id', 'tags']
     form_excluded_columns = ['id', 'dt_created', 'dt_updated']
     form_include_pk = True
     name_plural = 'Groups'
