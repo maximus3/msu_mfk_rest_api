@@ -387,9 +387,7 @@ async def update_student_course_levels_results(  # pylint: disable=too-many-argu
                     contest_levels,
                     student_contest_levels,
                 ) in contests_data_all:
-                    if not level_elem.tags or set(level_elem.tags) <= set(
-                        contest.tags
-                    ):
+                    if set(level_elem.tags) <= set(contest.tags):
                         count_all_contests += 1
                         contest_level_names = [
                             contest_level.level_name
@@ -440,19 +438,36 @@ async def update_student_course_levels_results(  # pylint: disable=too-many-argu
                 level_elem.level_ok_method
                 == course_schemas.LevelOkMethod.SCORE_SUM
             ):
+                sum_score_by_tag_contests = 0
+                sum_score_all_tag_contests = 0
+                for (
+                    contest,
+                    student_contest,
+                    contest_levels,
+                    student_contest_levels,
+                ) in contests_data_all:
+                    if set(level_elem.tags) <= set(contest.tags):
+                        sum_score_by_tag_contests += student_contest.score
+                        sum_score_all_tag_contests += contest.score_max
                 if (
                     level_elem.count_method
                     == course_schemas.LevelCountMethod.ABSOLUTE
                 ):
                     student_course_level.is_ok = (
-                        student_course.score >= level_elem.ok_threshold
+                        sum_score_by_tag_contests >= level_elem.ok_threshold
                     )
                 elif (
                     level_elem.count_method
                     == course_schemas.LevelCountMethod.PERCENT
                 ):
                     student_course_level.is_ok = (
-                        student_course.score_percent >= level_elem.ok_threshold
+                        round(
+                            100
+                            * sum_score_by_tag_contests
+                            / sum_score_all_tag_contests,
+                            4,
+                        )
+                        >= level_elem.ok_threshold
                     )
                 else:
                     raise RuntimeError(
