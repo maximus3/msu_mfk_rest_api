@@ -102,6 +102,7 @@ async def get_student_course_results(  # pylint: disable=too-many-arguments
         score_max=course.score_max,
         is_ok=student_course.is_ok,
         is_ok_final=student_course.is_ok_final,
+        early_exam=student_course.allow_early_exam,
         perc_ok=0,  # TODO
         str_need=f'Набрано баллов: {student_course.score}/{course.score_max}'
         if course_schemas.LevelOkMethod.SCORE_SUM
