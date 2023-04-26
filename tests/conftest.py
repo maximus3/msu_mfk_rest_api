@@ -389,7 +389,9 @@ async def student_department(  # type: ignore
 
 @pytest.fixture
 async def potential_contest(created_course):  # type: ignore
-    yield factory_lib.ContestFactory.build(course_id=created_course.id)
+    yield factory_lib.ContestFactory.build(
+        course_id=created_course.id, tags=[contest_schemas.ContestTag.USUAL]
+    )
 
 
 @pytest.fixture
