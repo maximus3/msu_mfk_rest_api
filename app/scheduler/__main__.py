@@ -46,6 +46,7 @@ def _job_info_wrapper(
                 kwargs,
             )
             kwargs.update(base_logger=base_logger)
+            result = None
             try:
                 result = await func(*args, **kwargs)
             except Exception as exc:  # pylint: disable=broad-except
