@@ -27,13 +27,13 @@ async def create_group(
 
     match response.status_code:
         case 400:
-            message = 'Group name is invalid'
+            message = f'Group name is invalid: {response.text}'
             raise RuntimeError(message)
         case 401:
-            message = 'Yandex API key is invalid. Please check it in .env file'
+            message = f'Yandex API key is invalid. Please check it in .env file: {response.text}'
             raise RuntimeError(message)
         case 403:
-            message = 'Yandex API key does not have access to create groups'
+            message = f'Yandex API key does not have access to create groups: {response.text}'
             raise RuntimeError(message)
         case 201:
             yandex_group_id = response.json()['id']
