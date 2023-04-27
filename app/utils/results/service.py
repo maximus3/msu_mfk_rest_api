@@ -1,4 +1,5 @@
 # pylint: disable=too-many-lines
+import datetime
 import math
 
 import loguru
@@ -363,6 +364,13 @@ async def update_student_course_levels_results(  # pylint: disable=too-many-argu
     for course_level, student_course_level in zip(
         course_levels, student_course_levels
     ):
+        if course_level.result_update_end and datetime.datetime.now() > course_level.result_update_end:
+            logger.info(
+                'Results not updated for course '
+                'level {} because of result_update_end',
+                course_level.level_name,
+            )
+            continue
         if student_course.is_ok:
             continue
         diffs[course_level.level_name] = {

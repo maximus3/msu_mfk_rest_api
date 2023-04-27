@@ -137,6 +137,7 @@ class CourseLevels(BaseModel):
         index=True,
     )
     level_name = sa.Column(sa.String, nullable=False)
+    result_update_end = sa.Column(sa.DateTime, nullable=True)
     level_info = sa.Column(
         sa.JSON,
         nullable=False,
