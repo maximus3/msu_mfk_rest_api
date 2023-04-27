@@ -172,11 +172,16 @@ async def get_results_by_course(
     status_code=status.HTTP_200_OK,
 )
 async def fill_results(
+    request: Request,
     file: UploadFile,
     course_short_name: str,
     _: User = Depends(get_current_user),
     session: AsyncSession = Depends(SessionManager().get_async_session),
 ) -> FileResponse:
+    logger = loguru.logger.bind(
+        uuid=request['request_id'],
+        course={'short_name': course_short_name},
+    )
     course = await get_course_by_short_name(session, course_short_name)
     if course is None:
         raise HTTPException(
@@ -186,9 +191,10 @@ async def fill_results(
     with open('temp.pdf', 'wb') as f:
         f.write(await file.read())
     result_path = await fill_pdf(
-        'temp.pdf',
-        course.id,
-        session,
+        filename='temp.pdf',
+        course_id=course.id,
+        logger=logger,
+        session=session,
         result_filename=f'{course_short_name}_{file.filename}',
     )
     Path('temp.pdf').unlink()
@@ -211,7 +217,10 @@ async def fill_results_archive(  # pylint: disable=too-many-statements
     _: User = Depends(get_current_user),
     session: AsyncSession = Depends(SessionManager().get_async_session),
 ) -> FileResponse:
-    logger = loguru.logger.bind(uuid=request['request_id'])
+    logger = loguru.logger.bind(
+        uuid=request['request_id'],
+        course={'short_name': course_short_name},
+    )
 
     if not file_archive.filename.endswith('.zip'):
         raise HTTPException(
@@ -247,9 +256,10 @@ async def fill_results_archive(  # pylint: disable=too-many-statements
             logger.info('Filling {}', filename)
             try:
                 await fill_pdf(
-                    filename,
-                    course.id,
-                    session,
+                    filename=filename,
+                    course_id=course.id,
+                    logger=logger,
+                    session=session,
                     result_filename=f'{course_short_name}_{filename.name}',
                     result_path=results_path,
                 )

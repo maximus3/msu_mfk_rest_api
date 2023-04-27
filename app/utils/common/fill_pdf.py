@@ -91,7 +91,7 @@ async def fill_pdf(  # pylint: disable=too-many-statements,too-many-arguments
     writer = PdfFileWriter()
 
     num_pages = reader.getNumPages()
-    logger.info('filename have {} pages', num_pages)
+    logger.info('Filename have {} pages', num_pages)
 
     for page_num in range(num_pages):
 
