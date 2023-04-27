@@ -552,8 +552,6 @@ async def get_course_results(  # pylint: disable=too-many-statements
         results=collections.defaultdict(dict),
     )
 
-    keys_add = True
-
     # pylint: disable=too-many-nested-blocks
     for student, department, student_results in students_departments_results:
         course_results.results[student.contest_login][
@@ -569,6 +567,9 @@ async def get_course_results(  # pylint: disable=too-many-statements
         course_results.results[student.contest_login][
             'score_max'
         ] = student_results.score_max
+        course_results.results[student.contest_login][
+            'is_ok'
+        ] = student_results.is_ok
         for contest_results in student_results.contests:
             course_results.results[student.contest_login][
                 f'lecture_{contest_results.lecture}_score'
@@ -580,7 +581,10 @@ async def get_course_results(  # pylint: disable=too-many-statements
                         f'lecture_{contest_results.lecture}_level_{level.name}'
                     ] = level.is_ok
 
-            if keys_add:
+            if (
+                f'lecture_{contest_results.lecture}_score'
+                not in course_results.keys
+            ):
                 course_results.keys.append(
                     f'lecture_{contest_results.lecture}_score'
                 )
@@ -594,12 +598,12 @@ async def get_course_results(  # pylint: disable=too-many-statements
             course_results.results[student.contest_login][
                 f'level_{course_level.name}'
             ] = course_level.is_ok
-            if keys_add:
+            if f'level_{course_level.name}' not in course_results.keys:
                 course_results.keys.append(f'level_{course_level.name}')
-        keys_add = False
 
     course_results.keys.append('score_sum')
     course_results.keys.append('score_max')
+    course_results.keys.append('is_ok')
     return course_results
 
 
