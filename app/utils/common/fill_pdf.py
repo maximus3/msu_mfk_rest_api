@@ -78,7 +78,14 @@ async def fill_pdf(  # pylint: disable=too-many-statements,too-many-arguments
 ) -> Path:
     if session is None:
         async with SessionManager().create_async_session() as session:
-            return await fill_pdf(filename, course_id, session)
+            return await fill_pdf(
+                filename=filename,
+                course_id=course_id,
+                logger=logger,
+                session=session,
+                result_filename=result_filename,
+                result_path=result_path
+            )
 
     reader = PdfReader(filename)
     writer = PdfFileWriter()
