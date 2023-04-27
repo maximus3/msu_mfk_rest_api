@@ -363,7 +363,7 @@ async def update_student_course_levels_results(  # pylint: disable=too-many-argu
     for course_level, student_course_level in zip(
         course_levels, student_course_levels
     ):
-        if student_course_level.is_ok:
+        if student_course.is_ok:
             continue
         diffs[course_level.level_name] = {
             'old': student_course_level.is_ok,
@@ -372,154 +372,156 @@ async def update_student_course_levels_results(  # pylint: disable=too-many-argu
         if not course_level.level_info:
             logger.warning('level_info is empty, skipping')
             continue
-        level_info = course_schemas.LevelInfo(
-            data=course_level.level_info['data']
-        )
-        for level_elem in level_info.data:
-            if (
-                level_elem.level_ok_method
-                == course_schemas.LevelOkMethod.CONTESTS_OK
-            ):
-                count_ok_by_level_contests = 0
-                count_all_contests = 0
-                for (
-                    contest,
-                    _,
-                    contest_levels,
-                    student_contest_levels,
-                ) in contests_data_all:
-                    if set(level_elem.tags) <= set(contest.tags):
-                        count_all_contests += 1
-                        contest_level_names = [
-                            contest_level.level_name
-                            for contest_level in contest_levels
-                        ]
-                        if (
-                            level_elem.contest_ok_level_name
-                            not in contest_level_names
-                        ):
-                            logger.error(
-                                'Contest {} has no level {}',
-                                contest.yandex_contest_id,
-                                level_elem.contest_ok_level_name,
+        if not student_course_level.is_ok:
+            level_info = course_schemas.LevelInfo(
+                data=course_level.level_info['data']
+            )
+            for level_elem in level_info.data:
+                if (
+                    level_elem.level_ok_method
+                    == course_schemas.LevelOkMethod.CONTESTS_OK
+                ):
+                    count_ok_by_level_contests = 0
+                    count_all_contests = 0
+                    for (
+                        contest,
+                        _,
+                        contest_levels,
+                        student_contest_levels,
+                    ) in contests_data_all:
+                        if set(level_elem.tags) <= set(contest.tags):
+                            count_all_contests += 1
+                            contest_level_names = [
+                                contest_level.level_name
+                                for contest_level in contest_levels
+                            ]
+                            if (
+                                level_elem.contest_ok_level_name
+                                not in contest_level_names
+                            ):
+                                logger.error(
+                                    'Contest {} has no level {}',
+                                    contest.yandex_contest_id,
+                                    level_elem.contest_ok_level_name,
+                                )
+                                continue
+                            index_of_level_name = contest_level_names.index(
+                                level_elem.contest_ok_level_name
                             )
-                            continue
-                        index_of_level_name = contest_level_names.index(
-                            level_elem.contest_ok_level_name
+                            count_ok_by_level_contests += student_contest_levels[
+                                index_of_level_name
+                            ].is_ok
+                        else:
+                            logger.info(
+                                'Contest {} not included in matching '
+                                'because of tags level_elem {} not in '
+                                'contest tags {}',
+                                contest.yandex_contest_id,
+                                level_elem.tags,
+                                contest.tags
+                            )
+                    logger.info(
+                        'Matching student {} for level_elem {}. '
+                        'count_ok_by_level_contests={}, '
+                        'count_all_contests={}',
+                        student.contest_login,
+                        level_elem,
+                        count_ok_by_level_contests,
+                        count_all_contests
+                    )
+                    if (
+                        level_elem.count_method
+                        == course_schemas.LevelCountMethod.ABSOLUTE
+                    ):
+                        student_course_level.is_ok = (
+                            count_ok_by_level_contests >= level_elem.ok_threshold
                         )
-                        count_ok_by_level_contests += student_contest_levels[
-                            index_of_level_name
-                        ].is_ok
+                    elif (
+                        level_elem.count_method
+                        == course_schemas.LevelCountMethod.PERCENT
+                    ):
+                        student_course_level.is_ok = (
+                            round(
+                                100
+                                * count_ok_by_level_contests
+                                / count_all_contests,
+                                4,
+                            )
+                            >= level_elem.ok_threshold
+                        )
                     else:
-                        logger.info(
-                            'Contest {} not included in matching '
-                            'because of tags level_elem {} not in '
-                            'contest tags {}',
-                            contest.yandex_contest_id,
-                            level_elem.tags,
-                            contest.tags
+                        raise RuntimeError(
+                            f'Course level count method '
+                            f'{level_elem.count_method} not found'
                         )
-                logger.info(
-                    'Matching student {} for level_elem {}. '
-                    'count_ok_by_level_contests={}, '
-                    'count_all_contests={}',
-                    student.contest_login,
-                    level_elem,
-                    count_ok_by_level_contests,
-                    count_all_contests
-                )
-                if (
-                    level_elem.count_method
-                    == course_schemas.LevelCountMethod.ABSOLUTE
-                ):
-                    student_course_level.is_ok = (
-                        count_ok_by_level_contests >= level_elem.ok_threshold
-                    )
                 elif (
-                    level_elem.count_method
-                    == course_schemas.LevelCountMethod.PERCENT
+                    level_elem.level_ok_method
+                    == course_schemas.LevelOkMethod.SCORE_SUM
                 ):
-                    student_course_level.is_ok = (
-                        round(
-                            100
-                            * count_ok_by_level_contests
-                            / count_all_contests,
-                            4,
-                        )
-                        >= level_elem.ok_threshold
+                    sum_score_by_tag_contests = 0
+                    sum_score_all_tag_contests = 0
+                    for (
+                        contest,
+                        student_contest,
+                        contest_levels,
+                        student_contest_levels,
+                    ) in contests_data_all:
+                        if set(level_elem.tags) <= set(contest.tags):
+                            sum_score_by_tag_contests += student_contest.score
+                            sum_score_all_tag_contests += contest.score_max
+                        else:
+                            logger.info(
+                                'Contest {} not included in matching '
+                                'because of tags level_elem {} not in '
+                                'contest tags {}',
+                                contest.yandex_contest_id,
+                                level_elem.tags,
+                                contest.tags
+                            )
+                    logger.info(
+                        'Matching student {} for level_elem {}. '
+                        'sum_score_by_tag_contests={}, '
+                        'sum_score_all_tag_contests={}',
+                        student.contest_login,
+                        level_elem,
+                        sum_score_by_tag_contests,
+                        sum_score_all_tag_contests
                     )
+                    if (
+                        level_elem.count_method
+                        == course_schemas.LevelCountMethod.ABSOLUTE
+                    ):
+                        student_course_level.is_ok = (
+                            sum_score_by_tag_contests >= level_elem.ok_threshold
+                        )
+                    elif (
+                        level_elem.count_method
+                        == course_schemas.LevelCountMethod.PERCENT
+                    ):
+                        student_course_level.is_ok = (
+                            round(
+                                100
+                                * sum_score_by_tag_contests
+                                / sum_score_all_tag_contests,
+                                4,
+                            )
+                            >= level_elem.ok_threshold
+                        )
+                    else:
+                        raise RuntimeError(
+                            f'Course level count method '
+                            f'{level_elem.count_method} not found'
+                        )
                 else:
                     raise RuntimeError(
-                        f'Course level count method '
-                        f'{level_elem.count_method} not found'
+                        f'Course level ok method '
+                        f'{level_elem.level_ok_method} not found'
                     )
-            elif (
-                level_elem.level_ok_method
-                == course_schemas.LevelOkMethod.SCORE_SUM
-            ):
-                sum_score_by_tag_contests = 0
-                sum_score_all_tag_contests = 0
-                for (
-                    contest,
-                    student_contest,
-                    contest_levels,
-                    student_contest_levels,
-                ) in contests_data_all:
-                    if set(level_elem.tags) <= set(contest.tags):
-                        sum_score_by_tag_contests += student_contest.score
-                        sum_score_all_tag_contests += contest.score_max
-                    else:
-                        logger.info(
-                            'Contest {} not included in matching '
-                            'because of tags level_elem {} not in '
-                            'contest tags {}',
-                            contest.yandex_contest_id,
-                            level_elem.tags,
-                            contest.tags
-                        )
-                logger.info(
-                    'Matching student {} for level_elem {}. '
-                    'sum_score_by_tag_contests={}, '
-                    'sum_score_all_tag_contests={}',
-                    student.contest_login,
-                    level_elem,
-                    sum_score_by_tag_contests,
-                    sum_score_all_tag_contests
-                )
-                if (
-                    level_elem.count_method
-                    == course_schemas.LevelCountMethod.ABSOLUTE
-                ):
-                    student_course_level.is_ok = (
-                        sum_score_by_tag_contests >= level_elem.ok_threshold
-                    )
-                elif (
-                    level_elem.count_method
-                    == course_schemas.LevelCountMethod.PERCENT
-                ):
-                    student_course_level.is_ok = (
-                        round(
-                            100
-                            * sum_score_by_tag_contests
-                            / sum_score_all_tag_contests,
-                            4,
-                        )
-                        >= level_elem.ok_threshold
-                    )
-                else:
-                    raise RuntimeError(
-                        f'Course level count method '
-                        f'{level_elem.count_method} not found'
-                    )
-            else:
-                raise RuntimeError(
-                    f'Course level ok method '
-                    f'{level_elem.level_ok_method} not found'
-                )
-        diffs[course_level.level_name]['new'] = student_course_level.is_ok
+            diffs[course_level.level_name]['new'] = student_course_level.is_ok
         if course_level.level_name in (
             'Зачет автоматом',
             'Зачет',
+            'Досрочный зачет',
         ):  # TODO: remove?
             student_course.is_ok = (
                 student_course.is_ok or student_course_level.is_ok
