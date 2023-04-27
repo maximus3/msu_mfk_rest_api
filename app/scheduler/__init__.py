@@ -33,7 +33,11 @@ list_of_jobs: list[scheduler_schemas.JobInfo] = [
         name='contest_register_group',
     ),
     scheduler_schemas.JobInfo(
-        **{'trigger': 'interval', 'hours': 1, 'config': {'send_logs': True}},
+        **{
+            'trigger': 'interval',
+            'minutes': 10,
+            'config': {'send_logs': True},
+        },
         func=update_results,
         name='update_results',
     ),

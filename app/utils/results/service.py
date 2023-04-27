@@ -373,10 +373,13 @@ async def update_student_course_levels_results(  # pylint: disable=too-many-argu
             logger.warning('level_info is empty, skipping')
             continue
         if not student_course_level.is_ok:
+            is_ok = True
             level_info = course_schemas.LevelInfo(
                 data=course_level.level_info['data']
             )
+            count_levels = len(level_info.data)
             for level_elem in level_info.data:
+                count_levels += 1
                 if (
                     level_elem.level_ok_method
                     == course_schemas.LevelOkMethod.CONTESTS_OK
@@ -435,16 +438,18 @@ async def update_student_course_levels_results(  # pylint: disable=too-many-argu
                         level_elem.count_method
                         == course_schemas.LevelCountMethod.ABSOLUTE
                     ):
-                        student_course_level.is_ok = (
-                            count_ok_by_level_contests
+                        is_ok = (
+                            is_ok
+                            and count_ok_by_level_contests
                             >= level_elem.ok_threshold
                         )
                     elif (
                         level_elem.count_method
                         == course_schemas.LevelCountMethod.PERCENT
                     ):
-                        student_course_level.is_ok = (
-                            round(
+                        is_ok = (
+                            is_ok
+                            and round(
                                 100
                                 * count_ok_by_level_contests
                                 / count_all_contests,
@@ -494,16 +499,18 @@ async def update_student_course_levels_results(  # pylint: disable=too-many-argu
                         level_elem.count_method
                         == course_schemas.LevelCountMethod.ABSOLUTE
                     ):
-                        student_course_level.is_ok = (
-                            sum_score_by_tag_contests
+                        is_ok = (
+                            is_ok
+                            and sum_score_by_tag_contests
                             >= level_elem.ok_threshold
                         )
                     elif (
                         level_elem.count_method
                         == course_schemas.LevelCountMethod.PERCENT
                     ):
-                        student_course_level.is_ok = (
-                            round(
+                        is_ok = (
+                            is_ok
+                            and round(
                                 100
                                 * sum_score_by_tag_contests
                                 / sum_score_all_tag_contests,
@@ -521,6 +528,7 @@ async def update_student_course_levels_results(  # pylint: disable=too-many-argu
                         f'Course level ok method '
                         f'{level_elem.level_ok_method} not found'
                     )
+            student_course_level.is_ok = is_ok and (count_levels > 0)
             diffs[course_level.level_name]['new'] = student_course_level.is_ok
         if course_level.level_name in (
             'Зачет автоматом',
