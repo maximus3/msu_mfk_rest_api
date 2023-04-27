@@ -523,9 +523,16 @@ async def update_student_course_levels_results(  # pylint: disable=too-many-argu
             'Зачет',
             'Досрочный зачет',
         ):  # TODO: remove?
+            was = student_course.is_ok
             student_course.is_ok = (
                 student_course.is_ok or student_course_level.is_ok
             )
+            if was != student_course.is_ok:
+                logger.info(
+                    'Student {} updated course result is ok to {}',
+                    student.contest_login,
+                    student_course.is_ok
+                )
         session.add(student_course_level)
 
     session.add(student_course)
