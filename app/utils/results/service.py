@@ -410,6 +410,24 @@ async def update_student_course_levels_results(  # pylint: disable=too-many-argu
                         count_ok_by_level_contests += student_contest_levels[
                             index_of_level_name
                         ].is_ok
+                    else:
+                        logger.info(
+                            'Contest {} not included in matching '
+                            'because of tags level_elem {} not in '
+                            'contest tags {}',
+                            contest.yandex_contest_id,
+                            level_elem.tags,
+                            contest.tags
+                        )
+                logger.info(
+                    'Matching student {} for level_elem {}. '
+                    'count_ok_by_level_contests={}, '
+                    'count_all_contests={}',
+                    student.contest_login,
+                    level_elem,
+                    count_ok_by_level_contests,
+                    count_all_contests
+                )
                 if (
                     level_elem.count_method
                     == course_schemas.LevelCountMethod.ABSOLUTE
@@ -450,6 +468,24 @@ async def update_student_course_levels_results(  # pylint: disable=too-many-argu
                     if set(level_elem.tags) <= set(contest.tags):
                         sum_score_by_tag_contests += student_contest.score
                         sum_score_all_tag_contests += contest.score_max
+                    else:
+                        logger.info(
+                            'Contest {} not included in matching '
+                            'because of tags level_elem {} not in '
+                            'contest tags {}',
+                            contest.yandex_contest_id,
+                            level_elem.tags,
+                            contest.tags
+                        )
+                logger.info(
+                    'Matching student {} for level_elem {}. '
+                    'sum_score_by_tag_contests={}, '
+                    'sum_score_all_tag_contests={}',
+                    student.contest_login,
+                    level_elem,
+                    sum_score_by_tag_contests,
+                    sum_score_all_tag_contests
+                )
                 if (
                     level_elem.count_method
                     == course_schemas.LevelCountMethod.ABSOLUTE
