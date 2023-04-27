@@ -408,9 +408,11 @@ async def update_student_course_levels_results(  # pylint: disable=too-many-argu
                             index_of_level_name = contest_level_names.index(
                                 level_elem.contest_ok_level_name
                             )
-                            count_ok_by_level_contests += student_contest_levels[
-                                index_of_level_name
-                            ].is_ok
+                            count_ok_by_level_contests += (
+                                student_contest_levels[
+                                    index_of_level_name
+                                ].is_ok
+                            )
                         else:
                             logger.info(
                                 'Contest {} not included in matching '
@@ -418,7 +420,7 @@ async def update_student_course_levels_results(  # pylint: disable=too-many-argu
                                 'contest tags {}',
                                 contest.yandex_contest_id,
                                 level_elem.tags,
-                                contest.tags
+                                contest.tags,
                             )
                     logger.info(
                         'Matching student {} for level_elem {}. '
@@ -427,14 +429,15 @@ async def update_student_course_levels_results(  # pylint: disable=too-many-argu
                         student.contest_login,
                         level_elem,
                         count_ok_by_level_contests,
-                        count_all_contests
+                        count_all_contests,
                     )
                     if (
                         level_elem.count_method
                         == course_schemas.LevelCountMethod.ABSOLUTE
                     ):
                         student_course_level.is_ok = (
-                            count_ok_by_level_contests >= level_elem.ok_threshold
+                            count_ok_by_level_contests
+                            >= level_elem.ok_threshold
                         )
                     elif (
                         level_elem.count_method
@@ -476,7 +479,7 @@ async def update_student_course_levels_results(  # pylint: disable=too-many-argu
                                 'contest tags {}',
                                 contest.yandex_contest_id,
                                 level_elem.tags,
-                                contest.tags
+                                contest.tags,
                             )
                     logger.info(
                         'Matching student {} for level_elem {}. '
@@ -485,14 +488,15 @@ async def update_student_course_levels_results(  # pylint: disable=too-many-argu
                         student.contest_login,
                         level_elem,
                         sum_score_by_tag_contests,
-                        sum_score_all_tag_contests
+                        sum_score_all_tag_contests,
                     )
                     if (
                         level_elem.count_method
                         == course_schemas.LevelCountMethod.ABSOLUTE
                     ):
                         student_course_level.is_ok = (
-                            sum_score_by_tag_contests >= level_elem.ok_threshold
+                            sum_score_by_tag_contests
+                            >= level_elem.ok_threshold
                         )
                     elif (
                         level_elem.count_method
@@ -531,7 +535,7 @@ async def update_student_course_levels_results(  # pylint: disable=too-many-argu
                 logger.info(
                     'Student {} updated course result is ok to {}',
                     student.contest_login,
-                    student_course.is_ok
+                    student_course.is_ok,
                 )
         session.add(student_course_level)
 
