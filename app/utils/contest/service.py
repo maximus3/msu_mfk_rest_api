@@ -113,29 +113,45 @@ async def get_author_id(
         )
         settings = get_settings()
         async with AsyncClient() as client:
+            logger.info(
+                'Making request to Yandex API: '
+                'GET {} (student: {})',
+                f'https://login.yandex.ru/info',
+                login,
+            )
             response = await client.get(
                 url=f'https://login.yandex.ru/info?format=json&'
                 f'jwt_secret={settings.JWT_SECRET}&'
                 f'oauth_token={student_oauth_token}'  # TODO: bad practice, need header  # pylint: disable=line-too-long
             )
         if response.status_code != 200:
-            logger.error('Error in request to login.yandex.ru')
-            raise RuntimeError('Error in request to login.yandex.ru')
-        display_name = response.json()['display_name']
-        response = await make_request_to_yandex_contest_api(
-            f'contests/{yandex_contest_id}/participants?'
-            f'display_name={display_name}',
-            logger=logger,
-            method='GET',
-        )
-        data = response.json()
-        if not data:
-            logger.error(
-                'No author id for display_name {} in contest {}, '
-                'trying to get by POST register request',
-                display_name,
-                yandex_contest_id,
+            if response.status_code == 401:
+                logger.warning(
+                    'Request error 401 for OAuth token user {},'
+                    'trying to get by POST register request',
+                    login
+                )
+            else:
+                logger.error('Error in request to login.yandex.ru for user {}, status={}', login, response.status_code)
+                raise RuntimeError(f'Error in request to login.yandex.ru for user {login}, status={response.status_code}')
+            data = []
+        else:
+            display_name = response.json()['display_name']
+            response = await make_request_to_yandex_contest_api(
+                f'contests/{yandex_contest_id}/participants?'
+                f'display_name={display_name}',
+                logger=logger,
+                method='GET',
             )
+            data = response.json()
+            if not data:
+                logger.error(
+                    'No author id for display_name {} in contest {}, '
+                    'trying to get by POST register request',
+                    display_name,
+                    yandex_contest_id,
+                )
+        if not data:
             response = await make_request_to_yandex_contest_api(
                 f'contests/{yandex_contest_id}/participants?login={login}',
                 logger=logger,
