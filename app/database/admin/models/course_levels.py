@@ -8,8 +8,20 @@ from app.database.admin import models_forms
 
 
 class CourseLevelsAdmin(ModelView, model=models.CourseLevels):
-    _column_list = ['id', 'course_id', 'level_name', 'level_info']
-    column_list = ['id', 'course_id', 'level_name', 'level_info']
+    _column_list = [
+        'id',
+        'course_id',
+        'level_name',
+        'result_update_end',
+        'level_info',
+    ]
+    column_list = [
+        'id',
+        'course_id',
+        'level_name',
+        'result_update_end',
+        'level_info',
+    ]
     form_excluded_columns = ['id', 'dt_created', 'dt_updated']
     form_include_pk = True
     name_plural = 'CourseLevelss'

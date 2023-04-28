@@ -115,8 +115,8 @@ async def get_author_id(
         async with AsyncClient() as client:
             logger.info(
                 'Making request to Yandex API: '
-                'GET {} (student: {})',
-                f'https://login.yandex.ru/info',
+                'GET '
+                'https://login.yandex.ru/info (student: {})',
                 login,
             )
             response = await client.get(
@@ -129,11 +129,19 @@ async def get_author_id(
                 logger.warning(
                     'Request error 401 for OAuth token user {},'
                     'trying to get by POST register request',
-                    login
+                    login,
                 )
             else:
-                logger.error('Error in request to login.yandex.ru for user {}, status={}', login, response.status_code)
-                raise RuntimeError(f'Error in request to login.yandex.ru for user {login}, status={response.status_code}')
+                logger.error(
+                    'Error in request to login.yandex.ru '
+                    'for user {}, status={}',
+                    login,
+                    response.status_code,
+                )
+                raise RuntimeError(
+                    f'Error in request to login.yandex.ru for user '
+                    f'{login}, status={response.status_code}'
+                )
             data = []
         else:
             display_name = response.json()['display_name']

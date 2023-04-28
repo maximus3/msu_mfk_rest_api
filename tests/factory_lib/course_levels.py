@@ -12,4 +12,5 @@ class CourseLevelsFactory(Factory):
 
     course_id = Faker('uuid4')
     level_name = fuzzy.FuzzyText()
+    result_update_end = Faker('date_time')
     level_info = '{}'

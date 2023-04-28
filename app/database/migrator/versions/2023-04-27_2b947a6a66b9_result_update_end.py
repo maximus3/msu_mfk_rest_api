@@ -5,8 +5,8 @@ Revises: 7d6921caeb67
 Create Date: 2023-04-27 17:24:56.468480
 
 """
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 
 # revision identifiers, used by Alembic.
@@ -17,7 +17,10 @@ depends_on = None
 
 
 def upgrade() -> None:
-    op.add_column('course_levels', sa.Column('result_update_end', sa.DateTime(), nullable=True))
+    op.add_column(
+        'course_levels',
+        sa.Column('result_update_end', sa.DateTime(), nullable=True),
+    )
 
 
 def downgrade() -> None:

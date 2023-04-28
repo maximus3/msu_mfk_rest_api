@@ -470,6 +470,8 @@ class TestJob:
                     factory_lib.CourseLevelsFactory.build(
                         course_id=course.id,
                         level_name='Зачет',
+                        result_update_end=datetime.datetime.now()
+                        + datetime.timedelta(days=1),
                         level_info={
                             'data': [
                                 {
@@ -495,6 +497,8 @@ class TestJob:
                     factory_lib.CourseLevelsFactory.build(
                         course_id=course.id,
                         level_name='Зачет',
+                        result_update_end=datetime.datetime.now()
+                        + datetime.timedelta(days=1),
                         level_info={
                             'data': [
                                 {

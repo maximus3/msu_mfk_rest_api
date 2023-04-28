@@ -364,11 +364,21 @@ async def update_student_course_levels_results(  # pylint: disable=too-many-argu
     for course_level, student_course_level in zip(
         course_levels, student_course_levels
     ):
-        if course_level.result_update_end and datetime.datetime.now() > course_level.result_update_end:
+        logger.info(
+            'Start matching course_level {} for student {}',
+            course_level.level_name,
+            student.contest_login,
+        )
+        if (
+            course_level.result_update_end
+            and datetime.datetime.now() > course_level.result_update_end
+        ):
             logger.info(
                 'Results not updated for course '
-                'level {} because of result_update_end',
+                'level {} because of result_update_end {} > {}',
                 course_level.level_name,
+                datetime.datetime.now(),
+                course_level.result_update_end,
             )
             continue
         if student_course.is_ok:

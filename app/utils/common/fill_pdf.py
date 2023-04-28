@@ -84,7 +84,7 @@ async def fill_pdf(  # pylint: disable=too-many-statements,too-many-arguments
                 logger=logger,
                 session=session,
                 result_filename=result_filename,
-                result_path=result_path
+                result_path=result_path,
             )
 
     reader = PdfReader(filename)
