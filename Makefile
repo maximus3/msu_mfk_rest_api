@@ -236,6 +236,7 @@ update: pull dump-local docker-build ##@Application Update docker app
 	@make delete-container-data
 	@make docker
 	@make docker-migrate head
+	@make docker-prune-cache
 
 .PHONY: update-server
 update-server: ##@Application Update docker app on server
@@ -447,6 +448,10 @@ update-dev-branch: ##@Git Rebase dev on main branch
 .PHONY: delete-container-data
 delete-container-data: ##@Docker Prune containers
 	docker container prune -f
+
+.PHONY: docker-prune-cache
+docker-prune-cache: ##@Docker Prune docker cache
+	docker builder prune --filter until=24h -f
 
 .PHONY: ssh-tunnel
 ssh-tunnel: ##@Server SSH tunnel to server for grafana
