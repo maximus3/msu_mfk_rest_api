@@ -95,6 +95,15 @@ async def get_student_course_results(  # pylint: disable=too-many-arguments
         student.contest_login,
     )
 
+    level_ok_methods = set()
+    for x in course_levels:
+        level_ok_methods |= set(
+            map(
+                lambda y: y.level_ok_method,
+                course_schemas.LevelInfo(data=x.level_info['data']).data,
+            )
+        )
+
     return CourseResults(
         name=course.name,
         contests=contests,
@@ -106,16 +115,7 @@ async def get_student_course_results(  # pylint: disable=too-many-arguments
         early_exam=student_course.allow_early_exam,
         perc_ok=0,  # TODO
         str_need=f'Набрано баллов: {student_course.score}/{course.score_max}'
-        if course_schemas.LevelOkMethod.SCORE_SUM
-        in set(
-            map(
-                lambda x: map(
-                    lambda y: y.level_ok_method,
-                    course_schemas.LevelInfo(data=x.level_info['data']).data,
-                ),
-                course_levels,
-            )
-        )
+        if course_schemas.LevelOkMethod.SCORE_SUM in level_ok_methods
         else '',
         course_levels=[
             CourseLevelResults(

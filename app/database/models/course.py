@@ -149,6 +149,6 @@ class CourseLevels(BaseModel):
         '"count_method": *percent/absolute*, '
         '"ok_threshold": *ok_threshold*, '
         '"contest_ok_level_name": *name of level in contest levels or None*, '
-        '"tags": [*list*, *of*, *tags*, *of*, *contests*] oe None'
+        '"tags": [*list*, *of*, *tags*, *of*, *contests*]'
         '}]}',
     )
