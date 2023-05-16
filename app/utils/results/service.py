@@ -133,9 +133,10 @@ async def get_student_course_results(  # pylint: disable=too-many-arguments
         if level_name == 'Сертификат':
             course_levels_front.append(course_level_results)
             continue
-        if level_name == 'Досрочный зачет' and student_course.allow_early_exam:
-            course_levels_front.append(course_level_results)
-            was_ok_exam = was_ok_exam or course_level_results.is_ok
+        if level_name == 'Досрочный зачет':
+            if student_course.allow_early_exam:
+                course_levels_front.append(course_level_results)
+                was_ok_exam = was_ok_exam or course_level_results.is_ok
             continue
         if was_ok_exam:
             continue
