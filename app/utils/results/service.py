@@ -413,7 +413,7 @@ async def update_student_course_levels_results(  # pylint: disable=too-many-argu
                 course_level.result_update_end,
             )
             continue
-        if student_course.is_ok:
+        if student_course.is_ok and student_course_level.is_ok:
             continue
         diffs[course_level.level_name] = {
             'old': student_course_level.is_ok,
