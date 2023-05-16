@@ -103,27 +103,59 @@ async def get_student_course_results(  # pylint: disable=too-many-arguments
                 course_schemas.LevelInfo(data=x.level_info['data']).data,
             )
         )
+    real_score_sum = sum(
+        map(
+            lambda x: x.score_max if not x.is_final and x.is_necessary else 0,
+            contests,
+        )
+    )
+    level_names = list(map(lambda level: level.level_name, course_levels))
+    course_levels_front = []
+    was_ok_zachet = False
+    for level_name in [
+        'Досрочный зачет',
+        'Зачет автоматом',
+        'Зачет',
+        'Сертификат',
+    ]:
+        if level_name not in level_names:
+            continue
+        idx = level_names.index(level_name)
+        if student_course_levels[idx].is_ok > student_course.is_ok:
+            raise RuntimeError(
+                f'Student {student.contest_login} have '
+                f'difference in course results and course levels'
+            )
+        course_level_results = CourseLevelResults(
+            name=course_levels[idx].level_name,
+            is_ok=student_course_levels[idx].is_ok,
+        )
+        if level_name == 'Сертификат':
+            course_levels_front.append(course_level_results)
+            continue
+        if level_name == 'Досрочный зачет' and student_course.allow_early_exam:
+            course_levels_front.append(course_level_results)
+            was_ok_zachet = True
+            continue
+        if was_ok_zachet:
+            continue
+        course_levels_front.append(course_level_results)
+        was_ok_zachet = True
 
     return CourseResults(
         name=course.name,
         contests=contests,
         score_sum=student_course.score,
         score_sum_no_deadline=student_course.score_no_deadline,
-        score_max=course.score_max,
+        score_max=real_score_sum,
         is_ok=student_course.is_ok,
         is_ok_final=student_course.is_ok_final,
         early_exam=student_course.allow_early_exam,
         perc_ok=0,  # TODO
-        str_need=f'Набрано баллов: {student_course.score}/{course.score_max}'
+        str_need=f'Набрано баллов: {student_course.score}/{real_score_sum}'
         if course_schemas.LevelOkMethod.SCORE_SUM in level_ok_methods
         else '',
-        course_levels=[
-            CourseLevelResults(
-                name=level.level_name,
-                is_ok=sc_level.is_ok,
-            )
-            for level, sc_level in zip(course_levels, student_course_levels)
-        ],
+        course_levels=course_levels_front,
     )
 
 
