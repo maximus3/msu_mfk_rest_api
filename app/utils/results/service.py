@@ -111,7 +111,7 @@ async def get_student_course_results(  # pylint: disable=too-many-arguments
     )
     level_names = list(map(lambda level: level.level_name, course_levels))
     course_levels_front = []
-    was_ok_zachet = False
+    was_ok_exam = False
     for level_name in [
         'Досрочный зачет',
         'Зачет автоматом',
@@ -135,12 +135,12 @@ async def get_student_course_results(  # pylint: disable=too-many-arguments
             continue
         if level_name == 'Досрочный зачет' and student_course.allow_early_exam:
             course_levels_front.append(course_level_results)
-            was_ok_zachet = True
+            was_ok_exam = was_ok_exam or course_level_results.is_ok
             continue
-        if was_ok_zachet:
+        if was_ok_exam:
             continue
         course_levels_front.append(course_level_results)
-        was_ok_zachet = True
+        was_ok_exam = was_ok_exam or course_level_results.is_ok
 
     return CourseResults(
         name=course.name,
