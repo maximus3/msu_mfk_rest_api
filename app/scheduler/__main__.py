@@ -38,6 +38,13 @@ def _job_info_wrapper(
                     filter=lambda record: record['extra'].get('uuid')
                     == log_id,
                 )
+                await send.send_message_safe(
+                    logger=base_logger,
+                    message=f'Job {job_info.name} started '
+                    f'(args={args}, kwargs={kwargs}, '
+                    f'log_id={log_id})',
+                    level='info',
+                )
 
             base_logger.info(
                 'Job {} started (args={}, kwargs={})',
@@ -61,6 +68,12 @@ def _job_info_wrapper(
 
             if not config.send_logs:
                 return result
+
+            await send.send_message_safe(
+                logger=base_logger,
+                message=f'Job {job_info.name} finished (log_id={log_id})',
+                level='info',
+            )
 
             base_logger.remove(handler_id)
 
