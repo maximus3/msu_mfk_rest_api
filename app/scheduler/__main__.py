@@ -15,7 +15,7 @@ from app.scheduler import list_of_jobs
 from app.schemas import scheduler as scheduler_schemas
 
 
-def _job_info_wrapper(
+def _job_info_wrapper(  # pylint: disable=too-many-statements
     job_info: scheduler_schemas.JobInfo,
 ) -> scheduler_schemas.JobInfo:
     config = job_info.config or scheduler_schemas.JobConfig(send_logs=False)
@@ -83,7 +83,6 @@ def _job_info_wrapper(
                     f'job-{job_info.name}-{log_id}',
                     chat_id=settings.TG_LOG_SEND_CHAT_ID,
                 )
-                pathlib.Path(log_file_name).unlink()
             except Exception as send_exc:  # pylint: disable=broad-except
                 base_logger.exception(
                     'Error while sending log file: {}', send_exc
@@ -91,6 +90,16 @@ def _job_info_wrapper(
                 await send.send_traceback_message_safe(
                     logger=base_logger,
                     message=f'Error while sending log file: {send_exc}',
+                    code=traceback.format_exc(),
+                )
+
+            try:
+                pathlib.Path(log_file_name).unlink()
+            except Exception as exc:  # pylint: disable=broad-except
+                base_logger.exception('Error while deleting log file: {}', exc)
+                await send.send_traceback_message_safe(
+                    logger=base_logger,
+                    message=f'Error while deleting log file: {exc}',
                     code=traceback.format_exc(),
                 )
 
