@@ -13,7 +13,3 @@ bot_client = pyrogram.Client(
     _settings.TG_HELPER_APP_API_HASH,
     session_string=_settings.TG_HELPER_APP_SESSION_STRING,
 )
-try:
-    bot_client.start()
-except Exception:  # pylint: disable=broad-except
-    loguru.logger.warning('Failed to start bot_client')
