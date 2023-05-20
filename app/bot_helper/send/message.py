@@ -7,11 +7,12 @@ from app.bot_helper import bot
 from app.config import get_settings
 
 
-async def send_message(message: str, level: str = 'error') -> None:
+async def send_message(message: str, level: str = 'error', chat_id: str | None = None) -> None:
+    chat_id = chat_id or get_settings().TG_ERROR_CHAT_ID
     while len(message) > 0:
         try:
             await bot.bot.send_message(
-                chat_id=get_settings().TG_ERROR_CHAT_ID,
+                chat_id=chat_id,
                 text=message[:4000],
                 disable_notification=level != 'error',
                 parse_mode='HTML',
@@ -23,7 +24,7 @@ async def send_message(message: str, level: str = 'error') -> None:
                 'tag corresponding to start tag code'
             ):
                 await bot.bot.send_message(
-                    chat_id=get_settings().TG_ERROR_CHAT_ID,
+                    chat_id=chat_id,
                     text=message[:4000] + '</code>',
                     disable_notification=level != 'error',
                     parse_mode='HTML',
