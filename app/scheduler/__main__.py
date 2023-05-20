@@ -41,9 +41,9 @@ def _job_info_wrapper(  # pylint: disable=too-many-statements
                 await send.send_message_safe(
                     logger=base_logger,
                     message=f'Job {job_info.name} started '
-                    f'(args={args}, kwargs={kwargs}, '
-                    f'log_id={log_id})',
+                    f'(log_id={log_id})',
                     level='info',
+                    chat_id=get_settings().TG_LOG_SEND_CHAT_ID,
                 )
 
             base_logger.info(
@@ -73,6 +73,7 @@ def _job_info_wrapper(  # pylint: disable=too-many-statements
                 logger=base_logger,
                 message=f'Job {job_info.name} finished (log_id={log_id})',
                 level='info',
+                chat_id=get_settings().TG_LOG_SEND_CHAT_ID,
             )
 
             base_logger.remove(handler_id)
