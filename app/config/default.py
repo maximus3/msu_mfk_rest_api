@@ -64,7 +64,7 @@ class DefaultSettings(BaseSettings):
     YANDEX_API_KEY: str = Field('', env='YANDEX_API_KEY')
 
     TG_HELPER_BOT_TOKEN: str = Field('', env='TG_HELPER_BOT_TOKEN')
-    TG_HELPER_APP_API_ID: str = Field('', env='TG_HELPER_APP_API_ID')
+    TG_HELPER_APP_API_ID: int = Field(0, env='TG_HELPER_APP_API_ID')
     TG_HELPER_APP_API_HASH: str = Field('', env='TG_HELPER_APP_API_HASH')
     TG_HELPER_APP_SESSION_STRING: str = Field(
         '', env='TG_HELPER_APP_SESSION_STRING'
