@@ -1,5 +1,4 @@
 import aiogram
-import loguru
 import pyrogram
 
 from app.config import get_settings

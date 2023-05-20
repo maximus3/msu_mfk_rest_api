@@ -22,6 +22,8 @@ async def bot_client_fixture():
     """Bot client fixture"""
     _bot_client = Mock()
     _bot_client.send_document = AsyncMock()
+    _bot_client.__aenter__ = AsyncMock()
+    _bot_client.__aexit__ = AsyncMock()
     yield _bot_client
 
 

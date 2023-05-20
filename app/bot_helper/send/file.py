@@ -23,7 +23,7 @@ async def send_file(
             with open(filename, 'rb') as f:
                 async with bot.bot_client:
                     await bot.bot_client.send_document(
-                        chat_id=chat_id,
+                        chat_id=int(chat_id),
                         document=f,
                         caption=caption,
                         disable_notification=True,
