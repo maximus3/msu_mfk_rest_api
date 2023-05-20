@@ -21,11 +21,12 @@ async def send_file(
     except aiogram_exceptions.NetworkError as exc:
         if str(exc).startswith('File too large for uploading'):
             with open(filename, 'rb') as f:
-                await bot.bot_client.send_document(
-                    chat_id=chat_id,
-                    document=f,
-                    caption=caption,
-                    disable_notification=True,
-                )
+                async with bot.bot_client:
+                    await bot.bot_client.send_document(
+                        chat_id=chat_id,
+                        document=f,
+                        caption=caption,
+                        disable_notification=True,
+                    )
         else:
             raise exc
