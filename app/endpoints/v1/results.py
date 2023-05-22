@@ -188,16 +188,17 @@ async def fill_results(
             status_code=status.HTTP_404_NOT_FOUND,
             detail='Course not found',
         )
-    with open('temp.pdf', 'wb') as f:
+    tmp_filename = f'{request["request_id"]}.pdf'
+    with open(tmp_filename, 'wb') as f:
         f.write(await file.read())
     result_path = await fill_pdf(
-        filename='temp.pdf',
+        filename=tmp_filename,
         course_id=course.id,
         logger=logger,
         session=session,
         result_filename=f'{course_short_name}_{file.filename}',
     )
-    Path('temp.pdf').unlink()
+    Path(tmp_filename).unlink()
     return FileResponse(
         result_path,
         media_type='application/octet-stream',
@@ -234,18 +235,21 @@ async def fill_results_archive(  # pylint: disable=too-many-statements
             detail='Course not found',
         )
 
-    tmp_path = Path('temp')
+    tmp_dir_name = request['request_id']
+    tmp_path = Path(tmp_dir_name)
     if tmp_path.exists():
         shutil.rmtree(tmp_path)
     tmp_path.mkdir()
 
     # unarchive in temp folder
-    with open('temp.zip', 'wb') as f:
+    tmp_zip_filename = f'{request["request_id"]}.zip'
+    with open(tmp_zip_filename, 'wb') as f:
         f.write(await file_archive.read())
-    shutil.unpack_archive('temp.zip', 'temp')
-    Path('temp.zip').unlink()
+    shutil.unpack_archive(tmp_zip_filename, tmp_dir_name)
+    Path(tmp_zip_filename).unlink()
 
-    results_path = Path('temp_results')
+    tmp_results_dir_name = request['request_id'] + '_results'
+    results_path = Path(tmp_results_dir_name)
     if results_path.exists():
         shutil.rmtree(results_path)
     results_path.mkdir()
