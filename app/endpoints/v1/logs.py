@@ -27,9 +27,12 @@ async def get(  # pylint: disable=too-many-statements
     log_id: str | None = None,
     student_login: str | None = None,
     log_name: str | None = None,
+    path: str | None = None,
+    log_filters: list[logs_schemas.LogFilter] | None = None,
     log_file: str = 'app',
 ) -> logs_schemas.LogsResponse:
     settings = get_settings()
+    log_filters = log_filters or []
     response = logs_schemas.LogsResponse(items=[], count=0)
     if log_file == 'app':
         log_filename = settings.LOGGING_APP_FILE
@@ -50,27 +53,51 @@ async def get(  # pylint: disable=too-many-statements
                         json_data = json.loads(line)
                     except json.JSONDecodeError:
                         continue
-                    current_log_name = json_data.get('record', {}).get('name')
+
+                    record = json_data.get('record', {})
+                    extra = record.get('extra', {})
+
                     current_log_id = (
-                        json_data.get('record', {})
-                        .get('extra', {})
+                        extra
                         .get('uuid')
-                    )
-                    current_student_login = (
-                        json_data.get('record', {})
-                        .get('extra', {})
-                        .get('student', {})
-                        .get('contest_login')
                     )
                     if log_id and current_log_id != log_id:
                         continue
+
+                    current_student_login = (
+                        extra
+                        .get('student', {})
+                        .get('contest_login')
+                    )
                     if (
                         student_login
                         and current_student_login != student_login
                     ):
                         continue
+
+                    current_log_name = record.get('name')
                     if log_name and current_log_name != log_name:
                         continue
+
+                    current_log_path = (
+                        extra
+                        .get('request', {})
+                        .get('path')
+                    )
+                    if path and current_log_path != path:
+                        continue
+
+                    all_filters_ok = True
+                    for log_filter in log_filters:
+                        value = record
+                        for current_path in log_filter.json_path.split('.'):
+                            if not value:
+                                value = {}
+                            value = value.get(current_path)
+                        all_filters_ok = all_filters_ok or value == log_filter.value
+                    if not all_filters_ok:
+                        continue
+
                     response.items.append(json_data)
                     response.count += 1
                     if len(response.items) > last:
