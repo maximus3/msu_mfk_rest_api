@@ -42,17 +42,14 @@ api_router = APIRouter(
     status_code=status.HTTP_200_OK,
 )
 async def get_all_results(
-    request: Request,
+    _: Request,
     student_login: str,
-    _: User = Depends(get_current_user),
+    __: User = Depends(get_current_user),
     session: AsyncSession = Depends(SessionManager().get_async_session),
 ) -> JSONResponse:
     """
     Get student results for all courses.
     """
-    logger = loguru.logger.bind(
-        uuid=request['request_id'], student={'contest_login': student_login}
-    )
     headers = {'log_contest_login': student_login}
     student = await student_utils.get_student_or_raise(
         session, student_login, headers=headers
@@ -81,7 +78,7 @@ async def get_all_results(
                             session, course.id, student.id
                         )
                     ),
-                    logger=logger,
+                    logger=loguru.logger,
                 )
                 for course, student_course in await get_student_courses(
                     session, student.id
@@ -100,7 +97,7 @@ async def get_all_results(
 )
 @limiter.limit('5/10seconds')
 async def get_results_by_course(
-    request: Request,
+    request: Request,  # pylint: disable=unused-argument
     course_short_name: str,
     student_login: str,
     _: User = Depends(get_current_user),
@@ -109,8 +106,6 @@ async def get_results_by_course(
     Get student results for a specific course.
     """
     logger = loguru.logger.bind(
-        uuid=request['request_id'],
-        student={'contest_login': student_login},
         course={'short_name': course_short_name},
     )
     headers = {'log_contest_login': student_login}
@@ -179,7 +174,6 @@ async def fill_results(
     session: AsyncSession = Depends(SessionManager().get_async_session),
 ) -> FileResponse:
     logger = loguru.logger.bind(
-        uuid=request['request_id'],
         course={'short_name': course_short_name},
     )
     course = await get_course_by_short_name(session, course_short_name)
@@ -219,7 +213,6 @@ async def fill_results_archive(  # pylint: disable=too-many-statements
     session: AsyncSession = Depends(SessionManager().get_async_session),
 ) -> FileResponse:
     logger = loguru.logger.bind(
-        uuid=request['request_id'],
         course={'short_name': course_short_name},
     )
 

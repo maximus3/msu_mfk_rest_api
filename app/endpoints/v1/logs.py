@@ -20,7 +20,7 @@ api_router = APIRouter(
     '/app',
     status_code=status.HTTP_200_OK,
 )
-async def get(  # pylint: disable=too-many-statements
+async def get(  # pylint: disable=too-many-statements,too-many-arguments,too-many-nested-blocks,too-many-branches  # noqa: C901
     _: Request,
     __: User = Depends(get_current_user),
     last: int = 100,
@@ -57,17 +57,12 @@ async def get(  # pylint: disable=too-many-statements
                     record = json_data.get('record', {})
                     extra = record.get('extra', {})
 
-                    current_log_id = (
-                        extra
-                        .get('uuid')
-                    )
+                    current_log_id = extra.get('uuid')
                     if log_id and current_log_id != log_id:
                         continue
 
-                    current_student_login = (
-                        extra
-                        .get('student', {})
-                        .get('contest_login')
+                    current_student_login = extra.get('student', {}).get(
+                        'contest_login'
                     )
                     if (
                         student_login
@@ -79,11 +74,7 @@ async def get(  # pylint: disable=too-many-statements
                     if log_name and current_log_name != log_name:
                         continue
 
-                    current_log_path = (
-                        extra
-                        .get('request', {})
-                        .get('path')
-                    )
+                    current_log_path = extra.get('request', {}).get('path')
                     if path and current_log_path != path:
                         continue
 
@@ -94,7 +85,9 @@ async def get(  # pylint: disable=too-many-statements
                             if not value:
                                 value = {}
                             value = value.get(current_path)
-                        all_filters_ok = all_filters_ok or value == log_filter.value
+                        all_filters_ok = (
+                            all_filters_ok or value == log_filter.value
+                        )
                     if not all_filters_ok:
                         continue
 

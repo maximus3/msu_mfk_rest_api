@@ -13,6 +13,7 @@ from app.database.models import (
 )
 from app.schemas import RegisterRequest
 from app.schemas import group as group_schemas
+from app.schemas import register as register_schemas
 
 
 async def get_student(
@@ -105,11 +106,17 @@ async def get_students_by_course_with_department(
 
 
 async def create_student(
-    session: AsyncSession, data: RegisterRequest, department: Department
+    session: AsyncSession,
+    data: RegisterRequest,
+    headers_data: register_schemas.RegisterHeaders,
+    department: Department,
 ) -> Student:
     student = Student(
         fio=data.fio,
-        contest_login=data.contest_login,
+        contest_login=headers_data.contest_login,
+        tg_id=headers_data.tg_id,
+        tg_username=headers_data.tg_username,
+        bm_id=headers_data.bm_id,
         token=data.token,
     )
     session.add(student)
