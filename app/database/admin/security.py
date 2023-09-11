@@ -50,17 +50,15 @@ class SqlAdminAuthBackend(AuthenticationBackend):
         request.session.clear()
         return True
 
-    @SessionManager().with_session
     async def authenticate(  # pylint: disable=arguments-differ
         self,
         request: Request,
-        session: AsyncSession,
     ) -> bool:
         sqladmin_token = request.session.get('sqladmin_token')
         if not sqladmin_token:
             return False
 
-        user_model = await user.get_current_user(session, sqladmin_token)
+        user_model = await user.get_current_user(sqladmin_token)
 
         if not user_model:
             return False

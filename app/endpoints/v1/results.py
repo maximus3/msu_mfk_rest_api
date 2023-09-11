@@ -105,6 +105,8 @@ async def get_results_by_course(
     """
     Get student results for a specific course.
     """
+    # task = get_results_by_course_task.delay()
+    # return JSONResponse({'task_id': task.id})
     logger = loguru.logger.bind(
         course={'short_name': course_short_name},
     )
