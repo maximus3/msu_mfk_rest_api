@@ -16,7 +16,7 @@ POETRY_RUN = $(VENV_BIN)/poetry run
 
 # Manually define main variables
 
-APPLICATION_NAME = app_msu_mfk_rest_api
+APPLICATION_NAME = app
 
 ifndef APP_PORT
 override APP_PORT = 8090
@@ -256,7 +256,7 @@ dump: ##@Database Dump database from server
 	$(eval DB_USERNAME=$(shell cat deploy/db_username.txt))
 
 	echo "Dumping database to $(FILENAME)"
-	ssh -p $(PORT) $(USERNAME)@$(HOST) "docker exec postgres_msu_mfk_rest_api pg_dump -f $(FILENAME) -d $(DB_NAME) -U $(DB_USERNAME);docker cp postgres_msu_mfk_rest_api:$(FILENAME) $(FILENAME);docker exec postgres_msu_mfk_rest_api rm $(FILENAME);exit;"
+	ssh -p $(PORT) $(USERNAME)@$(HOST) "docker exec postgres pg_dump -f $(FILENAME) -d $(DB_NAME) -U $(DB_USERNAME);docker cp postgres:$(FILENAME) $(FILENAME);docker exec postgres rm $(FILENAME);exit;"
 	scp -P $(PORT) $(USERNAME)@$(HOST):$(FILENAME) db/$(FILENAME)
 	ssh -p $(PORT) $(USERNAME)@$(HOST) "rm $(FILENAME); exit;"
 	echo "Done"
@@ -266,9 +266,9 @@ dump-local: ##@Database Dump database local
 	$(eval FILENAME=backup_$(shell date +%Y%m%d_%H%M%S).sql)
 
 	echo "Dumping database to $(FILENAME)"
-	docker exec postgres_msu_mfk_rest_api pg_dump -f $(FILENAME) -d $(POSTGRES_DB) -U $(POSTGRES_USER)
-	docker cp postgres_msu_mfk_rest_api:$(FILENAME) db/$(FILENAME)
-	docker exec postgres_msu_mfk_rest_api rm $(FILENAME)
+	docker exec postgres pg_dump -f $(FILENAME) -d $(POSTGRES_DB) -U $(POSTGRES_USER)
+	docker cp postgres:$(FILENAME) db/$(FILENAME)
+	docker exec postgres rm $(FILENAME)
 	echo "Done"
 
 .PHONY: restore-local
@@ -279,9 +279,9 @@ restore-local: ##@Database Restore database local
 	$(eval DB_USERNAME=$(shell cat deploy/db_username.txt))
 
 	echo "Restoring local database from $(FILENAME)"
-	docker cp db/$(FILENAME) postgres_msu_mfk_rest_api:$(FILENAME)
-	docker exec postgres_msu_mfk_rest_api psql -d $(DB_NAME) -U $(DB_USERNAME) -f $(FILENAME)
-	docker exec postgres_msu_mfk_rest_api rm $(FILENAME)
+	docker cp db/$(FILENAME) postgres:$(FILENAME)
+	docker exec postgres psql -d $(DB_NAME) -U $(DB_USERNAME) -f $(FILENAME)
+	docker exec postgres rm $(FILENAME)
 	echo "Done"
 
 .PHONY: restore-server
@@ -296,7 +296,7 @@ restore-server: ##@Database Restore database on server
 
 	echo "Restoring database from $(FILENAME)"
 	scp -P $(PORT) db/$(FILENAME) $(USERNAME)@$(HOST):$(FILENAME)
-	ssh -p $(PORT) $(USERNAME)@$(HOST) "docker cp $(FILENAME) postgres_msu_mfk_rest_api:$(FILENAME); docker exec postgres_msu_mfk_rest_api psql -d $(DB_NAME) -U $(DB_USERNAME) -f (FILENAME); docker exec postgres_msu_mfk_rest_api rm $(FILENAME); rm (FILENAME); exit;"
+	ssh -p $(PORT) $(USERNAME)@$(HOST) "docker cp $(FILENAME) postgres:$(FILENAME); docker exec postgres psql -d $(DB_NAME) -U $(DB_USERNAME) -f (FILENAME); docker exec postgres rm $(FILENAME); rm (FILENAME); exit;"
 	echo "Done"
 
 .PHONY: file-copy
@@ -347,7 +347,7 @@ get-scheduler-logs: ##@Application Get scheduler logs
 	$(eval DB_USERNAME=$(shell cat deploy/db_username.txt))
 
 	echo "Get scheduler logs to $(FILENAME)"
-	ssh -p $(PORT) $(USERNAME)@$(HOST) "docker logs scheduler_msu_mfk_rest_api >& /tmp/$(FILENAME);exit;"
+	ssh -p $(PORT) $(USERNAME)@$(HOST) "docker logs scheduler >& /tmp/$(FILENAME);exit;"
 	scp -P $(PORT) $(USERNAME)@$(HOST):/tmp/$(FILENAME) logs/$(FILENAME)
 	ssh -p $(PORT) $(USERNAME)@$(HOST) "rm /tmp/$(FILENAME); exit;"
 	echo "Done"
