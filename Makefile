@@ -464,5 +464,13 @@ ssh-tunnel: ##@Server SSH tunnel to server for grafana
 test-load: ##@Testing Load tests
 	cd tests/load_tests && docker-compose up
 
+.PHONY: up-celery-worker
+up-celery-worker: ##@Application Up Celery Worker
+	$(POETRY_RUN) celery -A app.worker worker --loglevel=info --logfile=logs/celery.log
+
+.PHONY: up-celery-dashboard
+up-celery-dashboard: ##@Application Up Celery Dashboard
+	$(POETRY_RUN) celery --broker=$(CELERY_BROKER_URL) flower --port=5555
+
 %::
 	echo $(MESSAGE)

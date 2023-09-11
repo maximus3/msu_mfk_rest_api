@@ -12,3 +12,4 @@ bot_client = pyrogram.Client(
     _settings.TG_HELPER_APP_API_HASH,
     session_string=_settings.TG_HELPER_APP_SESSION_STRING,
 )
+bot_students = aiogram.Bot(token=_settings.TG_STUDENTS_BOT_TOKEN)

@@ -70,30 +70,27 @@ class TestVerifyPasswordHandler:
         assert not user.verify_password('password', hashed_wrong_password)
 
 
+@pytest.mark.usefixtures('migrated_postgres')
 class TestGetCurrentUserHandler:
-    async def test_get_current_user_no_token(self, session):
+    async def test_get_current_user_no_token(self):
         with pytest.raises(HTTPException):
-            await user.get_current_user(session, '')
+            await user.get_current_user('')
 
-    async def test_get_current_user_username_none(self, session):
+    async def test_get_current_user_username_none(self):
+        with pytest.raises(HTTPException):
+            await user.get_current_user(user.create_access_token(data={}))
+
+    async def test_get_current_user_user_none(self, potential_user):
         with pytest.raises(HTTPException):
             await user.get_current_user(
-                session, user.create_access_token(data={})
-            )
-
-    async def test_get_current_user_user_none(self, session, potential_user):
-        with pytest.raises(HTTPException):
-            await user.get_current_user(
-                session,
                 user.create_access_token(
                     data={'sub': potential_user.username}
                 ),
             )
 
-    async def test_get_current_user_ok(self, session, created_user):
+    async def test_get_current_user_ok(self, created_user):
         user_model = await user.get_current_user(
-            session,
             user.create_access_token(data={'sub': created_user.username}),
         )
         assert user_model is not None
-        assert user_model == created_user
+        assert user_model.id == created_user.id

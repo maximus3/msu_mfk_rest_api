@@ -116,6 +116,51 @@ services:
     networks:
       - app_network
 
+  redis:
+    image: 'redis:7'
+    container_name: redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+    networks:
+      - app_network
+
+  celery_worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: celery_worker
+    command: make up-celery-worker
+    env_file:
+      - .env
+    volumes:
+      - ./logs:/opt/app/logs
+    depends_on:
+      - app
+      - redis
+      - postgres
+    restart: unless-stopped
+    networks:
+      - app_network
+
+  celery_dashboard:
+    container_name: celery_dashboard
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: make up-celery-dashboard
+    ports:
+      - 5556:5555
+    env_file:
+      - .env
+    depends_on:
+      - app
+      - redis
+      - celery_worker
+    restart: unless-stopped
+    networks:
+      - app_network
+
   loki:
     container_name: loki
     image: grafana/loki:2.7.3

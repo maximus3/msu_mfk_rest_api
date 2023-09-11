@@ -54,7 +54,6 @@ def verify_password(
 
 
 async def get_current_user(
-    session: AsyncSession = Depends(SessionManager().get_async_session),
     token: str = Depends(get_settings().OAUTH2_SCHEME),
 ) -> User:
     credentials_exception = HTTPException(
@@ -74,7 +73,8 @@ async def get_current_user(
         token_data = TokenData(username=username)
     except JWTError as exc:
         raise credentials_exception from exc
-    user = await get_user(session, username=token_data.username)
+    async with SessionManager().create_async_session() as session:
+        user = await get_user(session, username=token_data.username)
     if user is None:
         raise credentials_exception
     return user

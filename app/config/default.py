@@ -73,6 +73,15 @@ class DefaultSettings(BaseSettings):
     TG_DB_DUMP_CHAT_ID: str = Field('', env='TG_DB_DUMP_CHAT_ID')
     TG_LOG_SEND_CHAT_ID: str = Field('', env='TG_LOG_SEND_CHAT_ID')
 
+    TG_STUDENTS_BOT_TOKEN: str = Field('', env='TG_STUDENTS_BOT_TOKEN')
+
+    CELERY_BROKER_URL: str = Field(
+        'redis://localhost:6379', env='CELERY_BROKER_URL'
+    )
+    CELERY_RESULT_BACKEND: str = Field(
+        'redis://localhost:6379', env='CELERY_RESULT_BACKEND'
+    )
+
     @property
     def database_settings(self) -> dict[str, str | int]:
         """
