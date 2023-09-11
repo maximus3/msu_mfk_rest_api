@@ -2,6 +2,7 @@ import loguru
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.schemas import DatabaseStatus, RegisterRequest
+from app.schemas import register as register_schemas
 from app.utils.course import (
     add_student_to_course,
     get_course,
@@ -12,7 +13,10 @@ from app.utils.student import create_student, get_student, get_student_by_token
 
 
 async def register_student_on_course(
-    session: AsyncSession, data: RegisterRequest, logger: 'loguru.Logger'
+    session: AsyncSession,
+    data: RegisterRequest,
+    headers_data: register_schemas.RegisterHeaders,
+    logger: 'loguru.Logger',
 ) -> tuple[DatabaseStatus, str]:
     department = await get_department(session, data.department)
     if department is None:
@@ -22,22 +26,25 @@ async def register_student_on_course(
         )
         return DatabaseStatus.NOT_FOUND, 'Department not found'
 
-    student = await get_student(session, data.contest_login)
+    student = await get_student(session, headers_data.contest_login)
     if student is None:
         logger.info(
-            'Student {} not exists, checking token', data.contest_login
+            'Student {} not exists, checking token',
+            headers_data.contest_login,
         )
         student = await get_student_by_token(session, data.token)
         if student is None:
             logger.info('No student with such login and token, creating')
-            student = await create_student(session, data, department)
+            student = await create_student(
+                session, data, headers_data, department
+            )
         else:
             logger.info(
                 'Student has another prev login: {}, changing to {}',
                 student.contest_login,
-                data.contest_login,
+                headers_data.contest_login,
             )
-            student.contest_login = data.contest_login
+            student.contest_login = headers_data.contest_login
 
     course = await get_course(session, data.course)
     if course is None:

@@ -4,7 +4,7 @@ import pytest
 from sqlalchemy import select
 
 from app.database.models import StudentDepartment
-from app.schemas import RegisterRequest
+from app.schemas import register as register_schemas
 from app.utils import student
 
 
@@ -237,12 +237,17 @@ class TestCreateStudentHandler:
     ):
         student_model = await student.create_student(
             session=session,
-            data=RegisterRequest(
+            data=register_schemas.RegisterRequest(
                 fio=potential_student.fio,
-                contest_login=potential_student.contest_login,
                 token=potential_student.token,
                 department=created_department.name,
                 course='ANY',
+            ),
+            headers_data=register_schemas.RegisterHeaders(
+                contest_login=potential_student.contest_login,
+                tg_id=potential_student.tg_id,
+                tg_username=potential_student.tg_username,
+                bm_id=potential_student.bm_id,
             ),
             department=created_department,
         )

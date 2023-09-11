@@ -12,4 +12,7 @@ class StudentFactory(Factory):
 
     fio = fuzzy.FuzzyText()
     contest_login = fuzzy.FuzzyText()
+    tg_id = fuzzy.FuzzyText()
+    tg_username = fuzzy.FuzzyText()
+    bm_id = fuzzy.FuzzyText()
     token = fuzzy.FuzzyText()

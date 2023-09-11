@@ -28,15 +28,11 @@ api_router = APIRouter(
     status_code=status.HTTP_201_CREATED,
 )
 async def create(
-    request: Request,
+    _: Request,
     contest_request: ContestCreateRequest,
-    _: User = Depends(get_current_user),
+    __: User = Depends(get_current_user),
     session: AsyncSession = Depends(SessionManager().get_async_session),
 ) -> ContestInfoResponse:
-    logger = loguru.logger.bind(
-        uuid=request['request_id'],
-        student={'contest_login': request.headers.get('log_contest_login')},
-    )
     course = await get_course_by_short_name(
         session, contest_request.course_short_name
     )
@@ -54,7 +50,7 @@ async def create(
             detail='Contest already exists',
         )
     contest_info = await get_contest_info(
-        contest_request.yandex_contest_id, logger=logger
+        contest_request.yandex_contest_id, logger=loguru.logger
     )
     tags = []
     if contest_request.is_necessary:

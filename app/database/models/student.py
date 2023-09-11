@@ -11,9 +11,16 @@ class Student(BaseModel):
 
     __tablename__ = 'student'
 
-    fio = sa.Column(sa.String)
-    contest_login = sa.Column(sa.String, unique=True, index=True)
-    token = sa.Column(sa.String, unique=True)
+    fio = sa.Column(sa.String, nullable=False)
+    contest_login = sa.Column(sa.String, unique=True, nullable=False)
+    tg_id = sa.Column(
+        sa.String, unique=True, nullable=False, doc='Telegram ID'
+    )
+    tg_username = sa.Column(sa.String, nullable=True, doc='Telegram Username')
+    bm_id = sa.Column(
+        sa.String, unique=True, nullable=False, doc='Bot Mother ID'
+    )
+    token = sa.Column(sa.String, unique=True, nullable=False)
 
     def __repr__(self):  # type: ignore
         return f'<Student {self.contest_login}>'

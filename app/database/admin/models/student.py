@@ -8,8 +8,24 @@ from app.database.admin import models_forms
 
 
 class StudentAdmin(ModelView, model=models.Student):
-    _column_list = ['id', 'fio', 'contest_login', 'token']
-    column_list = ['id', 'fio', 'contest_login', 'token']
+    _column_list = [
+        'id',
+        'fio',
+        'contest_login',
+        'tg_id',
+        'tg_username',
+        'bm_id',
+        'token',
+    ]
+    column_list = [
+        'id',
+        'fio',
+        'contest_login',
+        'tg_id',
+        'tg_username',
+        'bm_id',
+        'token',
+    ]
     form_excluded_columns = ['id', 'dt_created', 'dt_updated']
     form_include_pk = True
     name_plural = 'Students'

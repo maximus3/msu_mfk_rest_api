@@ -20,19 +20,33 @@ class TestRegisterHandler:
     def get_data(student, department, course):
         return {
             'fio': student.fio,
-            'contest_login': student.contest_login,
             'department': department.name,
             'course': course.name,
             'token': student.token,
+        }
+
+    @staticmethod
+    def _get_headers(student, user_headers):
+        return {
+            'log_contest_login': student.contest_login,
+            'log_tg_id': student.tg_id,
+            'log_tg_username': student.tg_username,
+            'log_bm_id': student.bm_id,
+            **user_headers,
         }
 
     async def test_register_no_auth(self, client):
         response = await client.post(self.get_url_application())
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
-    async def test_register_no_data(self, client, user_headers):
+    async def test_register_no_data(
+        self, client, user_headers, potential_student
+    ):
         response = await client.post(
-            self.get_url_application(), headers=user_headers
+            self.get_url_application(),
+            headers=self._get_headers(
+                student=potential_student, user_headers=user_headers
+            ),
         )
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
@@ -49,7 +63,11 @@ class TestRegisterHandler:
         )
         data.pop('fio')
         response = await client.post(
-            self.get_url_application(), headers=user_headers, json=data
+            self.get_url_application(),
+            headers=self._get_headers(
+                student=potential_student, user_headers=user_headers
+            ),
+            json=data,
         )
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
@@ -65,7 +83,9 @@ class TestRegisterHandler:
     ):
         response = await client.post(
             self.get_url_application(),
-            headers=user_headers,
+            headers=self._get_headers(
+                student=created_student, user_headers=user_headers
+            ),
             json=self.get_data(
                 created_student, created_department, created_course
             ),
@@ -88,12 +108,20 @@ class TestRegisterHandler:
             created_student, created_department, created_course
         )
         response = await client.post(
-            self.get_url_application(), headers=user_headers, json=data
+            self.get_url_application(),
+            headers=self._get_headers(
+                student=created_student, user_headers=user_headers
+            ),
+            json=data,
         )
         assert response.status_code == status.HTTP_201_CREATED
 
         response = await client.post(
-            self.get_url_application(), headers=user_headers, json=data
+            self.get_url_application(),
+            headers=self._get_headers(
+                student=created_student, user_headers=user_headers
+            ),
+            json=data,
         )
         assert response.status_code == status.HTTP_409_CONFLICT
         assert response.json() == {
@@ -110,7 +138,9 @@ class TestRegisterHandler:
     ):
         response = await client.post(
             self.get_url_application(),
-            headers=user_headers,
+            headers=self._get_headers(
+                student=potential_student, user_headers=user_headers
+            ),
             json=self.get_data(
                 potential_student, potential_department, created_course
             ),
@@ -128,7 +158,9 @@ class TestRegisterHandler:
     ):
         response = await client.post(
             self.get_url_application(),
-            headers=user_headers,
+            headers=self._get_headers(
+                student=potential_student, user_headers=user_headers
+            ),
             json=self.get_data(
                 potential_student, created_department, potential_course
             ),
@@ -146,7 +178,9 @@ class TestRegisterHandler:
     ):
         response = await client.post(
             self.get_url_application(),
-            headers=user_headers,
+            headers=self._get_headers(
+                student=potential_student, user_headers=user_headers
+            ),
             json=self.get_data(
                 potential_student, created_department, created_course
             ),
@@ -166,7 +200,9 @@ class TestRegisterHandler:
     ):
         response = await client.post(
             self.get_url_application(),
-            headers=user_headers,
+            headers=self._get_headers(
+                student=created_student, user_headers=user_headers
+            ),
             json=self.get_data(
                 created_student, created_department, created_course
             ),

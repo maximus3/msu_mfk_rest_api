@@ -8,9 +8,9 @@ import slowapi
 import slowapi.errors as slowapi_errors
 from fastapi import FastAPI
 from fastapi_pagination import add_pagination
+from starlette import requests
 from starlette.middleware import Middleware
 from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.requests import Request
 from starlette.responses import Response
 from uvicorn.protocols import utils
 
@@ -18,6 +18,15 @@ from app.config import DefaultSettings, get_settings
 from app.database.admin.creator import get_sqladmin
 from app.endpoints import list_of_routes
 from app.limiter import limiter
+
+
+def _get_log_data_from_headers(headers: requests.Headers) -> dict[str, str]:
+    return {
+        'contest_login': headers.get('log_contest_login'),
+        'bm_id': headers.get('log_bm_id'),
+        'tg_id': headers.get('log_tg_id'),
+        'tg_username': headers.get('log_tg_username'),
+    }
 
 
 def bind_routes(application: FastAPI, setting: DefaultSettings) -> None:
@@ -35,13 +44,19 @@ class UniqueIDMiddleware(BaseHTTPMiddleware):
     ):
         super().__init__(app)
 
-    async def dispatch(self, request: Request, call_next: tp.Any) -> Response:
+    async def dispatch(
+        self, request: requests.Request, call_next: tp.Any
+    ) -> Response:
         # do something with the request object, for example
         request.scope['request_id'] = uuid.uuid4().hex
         # process the request and get the response
         response = Response(status_code=500)
         try:
-            response = await call_next(request)
+            with loguru.logger.contextualize(
+                uuid=request['request_id'],
+                **_get_log_data_from_headers(request.headers),
+            ):
+                response = await call_next(request)
         except Exception as exc:
             raise exc
         finally:
