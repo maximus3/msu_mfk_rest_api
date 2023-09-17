@@ -16,6 +16,7 @@ class StudentAdmin(ModelView, model=models.Student):
         'tg_username',
         'bm_id',
         'token',
+        'yandex_id',
     ]
     column_list = [
         'id',
@@ -25,6 +26,7 @@ class StudentAdmin(ModelView, model=models.Student):
         'tg_username',
         'bm_id',
         'token',
+        'yandex_id',
     ]
     form_excluded_columns = ['id', 'dt_created', 'dt_updated']
     form_include_pk = True

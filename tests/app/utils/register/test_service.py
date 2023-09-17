@@ -20,6 +20,7 @@ class TestRegisterStudentOnCourse:
             tg_id=student.tg_id,
             tg_username=student.tg_username,
             bm_id=student.bm_id,
+            yandex_id=student.yandex_id,
         )
 
     async def test_register_student_on_course_already_registered(

@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.schemas import DatabaseStatus, RegisterRequest
 from app.schemas import register as register_schemas
+from app.utils import student as student_utils
 from app.utils.course import (
     add_student_to_course,
     get_course,
@@ -25,6 +26,21 @@ async def register_student_on_course(
             data.department,
         )
         return DatabaseStatus.NOT_FOUND, 'Department not found'
+
+    student_by_tg_id = await student_utils.get_student_by_tg_id(
+        session, headers_data.tg_id
+    )
+    if (
+        student_by_tg_id
+        and student_by_tg_id.yandex_id != headers_data.yandex_id
+    ):
+        return (
+            DatabaseStatus.MANY_TG_ACCOUNTS_ERROR,
+            'Кажется, вы пытаетесь зарегистрироваться на курс не через'
+            ' тот же аккаунт, через который регистрировались до этого.'
+            ' Если вы по каким-то причинам хотите поменять аккаунт, '
+            'то напишите в поддержку.',
+        )
 
     student = await get_student(session, headers_data.contest_login)
     if student is None:

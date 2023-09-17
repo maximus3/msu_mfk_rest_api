@@ -30,6 +30,13 @@ async def get_student_by_token(
     return await session.scalar(query)
 
 
+async def get_student_by_tg_id(
+    session: AsyncSession, tg_id: str
+) -> Student | None:
+    query = select(Student).where(Student.tg_id == tg_id)
+    return await session.scalar(query)
+
+
 async def get_students_by_course(
     session: AsyncSession, course_id: UUID
 ) -> list[Student]:
@@ -118,6 +125,7 @@ async def create_student(
         tg_username=headers_data.tg_username,
         bm_id=headers_data.bm_id,
         token=data.token,
+        yandex_id=headers_data.yandex_id,
     )
     session.add(student)
     await session.flush()
