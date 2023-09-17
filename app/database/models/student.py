@@ -21,6 +21,7 @@ class Student(BaseModel):
         sa.String, unique=True, nullable=False, doc='Bot Mother ID'
     )
     token = sa.Column(sa.String, unique=True, nullable=False)
+    yandex_id = sa.Column(sa.String, unique=True, nullable=False)
 
     def __repr__(self):  # type: ignore
         return f'<Student {self.contest_login}>'

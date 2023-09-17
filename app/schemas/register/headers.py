@@ -6,3 +6,4 @@ class RegisterHeaders(BaseModel):
     bm_id: str
     tg_id: str
     tg_username: str | None
+    yandex_id: str

@@ -248,6 +248,7 @@ class TestCreateStudentHandler:
                 tg_id=potential_student.tg_id,
                 tg_username=potential_student.tg_username,
                 bm_id=potential_student.bm_id,
+                yandex_id=potential_student.yandex_id,
             ),
             department=created_department,
         )

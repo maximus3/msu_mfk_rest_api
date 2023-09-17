@@ -16,3 +16,4 @@ class StudentFactory(Factory):
     tg_username = fuzzy.FuzzyText()
     bm_id = fuzzy.FuzzyText()
     token = fuzzy.FuzzyText()
+    yandex_id = fuzzy.FuzzyText()

@@ -32,6 +32,7 @@ class TestRegisterHandler:
             'log_tg_id': student.tg_id,
             'log_tg_username': student.tg_username,
             'log_bm_id': student.bm_id,
+            'log_yandex_id': student.yandex_id,
             **user_headers,
         }
 
@@ -210,4 +211,32 @@ class TestRegisterHandler:
         assert response.status_code == status.HTTP_201_CREATED
         assert response.json() == {
             'contest_login': created_student.contest_login
+        }
+
+    async def test_register_new_yandex_id(
+        self,
+        client,
+        user_headers,
+        created_student,
+        created_department,
+        created_course,
+    ):
+        headers = self._get_headers(
+            student=created_student, user_headers=user_headers
+        )
+        headers['log_yandex_id'] = headers['log_yandex_id'] + '_another'
+        response = await client.post(
+            self.get_url_application(),
+            headers=headers,
+            json=self.get_data(
+                created_student, created_department, created_course
+            ),
+        )
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert response.json() == {
+            'detail': 'Кажется, вы пытаетесь зарегистрироваться '
+            'на курс не через тот же аккаунт, через '
+            'который регистрировались до этого. Если вы '
+            'по каким-то причинам хотите поменять аккаунт, '
+            'то напишите в поддержку.',
         }

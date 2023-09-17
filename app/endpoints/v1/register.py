@@ -34,6 +34,7 @@ async def register(
         bm_id=request.headers['log_bm_id'],
         tg_id=request.headers['log_tg_id'],
         tg_username=request.headers.get('log_tg_username'),
+        yandex_id=request.headers['log_yandex_id'],
     )
     logger = loguru.logger.bind(
         course={'name': data.course},
@@ -44,6 +45,7 @@ async def register(
         'log_bm_id': request.headers['log_bm_id'],
         'log_tg_id': request.headers['log_tg_id'],
         'log_tg_username': request.headers.get('log_tg_username'),
+        'log_yandex_id': request.headers['log_yandex_id'],
     }
     result_status, message = await register_student_on_course(
         session, data, headers_data, logger=logger
@@ -70,6 +72,12 @@ async def register(
         result_status == DatabaseStatus.ERROR
         and message == 'Registration is closed'
     ):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=message,
+            headers=headers,
+        )
+    if result_status == DatabaseStatus.MANY_TG_ACCOUNTS_ERROR:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=message,
