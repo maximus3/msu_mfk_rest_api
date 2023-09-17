@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 
-from app import constants
+from app import constants, worker
 from app.bot_helper import send
 from app.database.connection import SessionManager
 from app.database.models import User
@@ -99,68 +99,17 @@ async def get_all_results(
 async def get_results_by_course(
     request: Request,  # pylint: disable=unused-argument
     course_short_name: str,
-    student_login: str,
     _: User = Depends(get_current_user),
 ) -> JSONResponse:
     """
     Get student results for a specific course.
     """
-    # task = get_results_by_course_task.delay()
-    # return JSONResponse({'task_id': task.id})
-    logger = loguru.logger.bind(
-        course={'short_name': course_short_name},
+    task = worker.get_results_by_course_task.delay(
+        course_short_name=course_short_name,
+        student_login=request.headers['log_contest_login'],
+        student_tg_id=request.headers['log_tg_id'],
     )
-    headers = {'log_contest_login': student_login}
-    async with SessionManager().create_async_session() as session:
-        student = await student_utils.get_student_or_raise(
-            session, student_login, headers=headers
-        )
-        course = await get_course_by_short_name(session, course_short_name)
-        if course is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail='Course not found',
-                headers=headers,
-            )
-        student_course = await course_utils.get_student_course(
-            session, student.id, course.id
-        )
-        if student_course is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail='Student not registered on course',
-                headers=headers,
-            )
-        levels_by_course = await get_course_levels(session, course.id)
-        student_course_levels = [
-            await get_or_create_student_course_level(
-                session, student.id, course.id, course_level.id
-            )
-            for course_level in levels_by_course
-        ]
-        student_course_contest_data = (
-            await course_utils.get_student_course_contests_data(
-                session, course.id, student.id
-            )
-        )
-
-    return JSONResponse(
-        StudentResults(
-            courses=[
-                await get_student_course_results(
-                    student,
-                    course,
-                    levels_by_course,
-                    student_course,
-                    student_course_levels,
-                    student_course_contest_data,
-                    logger=logger,
-                )
-            ],
-            fio=student.fio,
-        ).dict(),
-        headers=headers,
-    )
+    return JSONResponse({'task_id': task.id})
 
 
 @api_router.post(
