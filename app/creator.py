@@ -59,6 +59,11 @@ class UniqueIDMiddleware(BaseHTTPMiddleware):
             ):
                 response = await call_next(request)
         except Exception as exc:
+            with loguru.logger.contextualize(
+                uuid=request['request_id'],
+                **_get_log_data_from_headers(request.headers),
+            ):
+                loguru.logger.exception('Exception occurred')
             raise exc
         finally:
             request_info_dict = {
