@@ -296,7 +296,7 @@ restore-server: ##@Database Restore database on server
 
 	echo "Restoring database from $(FILENAME)"
 	scp -P $(PORT) db/$(FILENAME) $(USERNAME)@$(HOST):$(FILENAME)
-	ssh -p $(PORT) $(USERNAME)@$(HOST) "docker cp $(FILENAME) postgres:$(FILENAME); docker exec postgres psql -d $(DB_NAME) -U $(DB_USERNAME) -f (FILENAME); docker exec postgres rm $(FILENAME); rm (FILENAME); exit;"
+	ssh -p $(PORT) $(USERNAME)@$(HOST) "docker cp $(FILENAME) postgres:$(FILENAME); docker exec postgres psql -d $(DB_NAME) -U $(DB_USERNAME) -f $(FILENAME); docker exec postgres rm $(FILENAME); rm $(FILENAME); exit;"
 	echo "Done"
 
 .PHONY: file-copy
