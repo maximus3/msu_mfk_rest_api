@@ -52,32 +52,28 @@ class UniqueIDMiddleware(BaseHTTPMiddleware):
         request.scope['request_id'] = uuid.uuid4().hex
         # process the request and get the response
         response = Response(status_code=500)
+        request_info_dict = {
+            'request': {
+                'id': request['request_id'],
+                'method': request.method,
+                'scheme': request['scheme'],
+                'http_version': request['http_version'],
+                'path': utils.get_path_with_query_string(request.scope),
+                'client': utils.get_client_addr(request.scope),
+            },
+            'uuid': request['request_id'],
+            **_get_log_data_from_headers(request.headers),
+        }
         try:
-            with loguru.logger.contextualize(
-                uuid=request['request_id'],
-                **_get_log_data_from_headers(request.headers),
-            ):
+            with loguru.logger.contextualize(**request_info_dict):
                 response = await call_next(request)
         except Exception as exc:
-            with loguru.logger.contextualize(
-                uuid=request['request_id'],
-                **_get_log_data_from_headers(request.headers),
-            ):
+            with loguru.logger.contextualize(**request_info_dict):
                 loguru.logger.exception('Exception occurred')
             raise exc
         finally:
-            request_info_dict = {
-                'request': {
-                    'id': request['request_id'],
-                    'method': request.method,
-                    'scheme': request['scheme'],
-                    'http_version': request['http_version'],
-                    'path': utils.get_path_with_query_string(request.scope),
-                    'status_code': response.status_code,
-                    'client': utils.get_client_addr(request.scope),
-                },
-                'uuid': request['request_id'],
-                **_get_log_data_from_headers(request.headers),
+            request_info_dict['response'] = {
+                'status_code': response.status_code,
             }
             response.headers['log_id'] = request['request_id']
             contest_login = request.headers.get(
@@ -94,8 +90,9 @@ class UniqueIDMiddleware(BaseHTTPMiddleware):
             with loguru.logger.contextualize(**request_info_dict):
                 loguru.logger.info(
                     '{request[client]} - "{request[method]} {request[path]} '
-                    'HTTP/{request[http_version]}" {request[status_code]}',
+                    'HTTP/{request[http_version]}" {response[status_code]}',
                     request=request_info_dict['request'],
+                    response=request_info_dict['response'],
                 )
         return response
 
