@@ -26,6 +26,7 @@ def _get_log_data_from_headers(headers: requests.Headers) -> dict[str, str]:
         'bm_id': headers.get('log_bm_id'),
         'tg_id': headers.get('log_tg_id'),
         'tg_username': headers.get('log_tg_username'),
+        'yandex_id': headers.get('log_yandex_id'),
     }
 
 
@@ -71,6 +72,7 @@ class UniqueIDMiddleware(BaseHTTPMiddleware):
                     'client': utils.get_client_addr(request.scope),
                 },
                 'uuid': request['request_id'],
+                **_get_log_data_from_headers(request.headers),
             }
             response.headers['log_id'] = request['request_id']
             contest_login = request.headers.get(
