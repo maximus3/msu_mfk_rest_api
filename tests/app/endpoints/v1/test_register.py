@@ -28,11 +28,11 @@ class TestRegisterHandler:
     @staticmethod
     def _get_headers(student, user_headers):
         return {
-            'log_contest_login': student.contest_login,
-            'log_tg_id': student.tg_id,
-            'log_tg_username': student.tg_username,
-            'log_bm_id': student.bm_id,
-            'log_yandex_id': student.yandex_id,
+            'log-contest-login': student.contest_login,
+            'log-tg-id': student.tg_id,
+            'log-tg-username': student.tg_username,
+            'log-bm-id': student.bm_id,
+            'log-yandex-id': student.yandex_id,
             **user_headers,
         }
 
@@ -224,7 +224,7 @@ class TestRegisterHandler:
         headers = self._get_headers(
             student=created_student, user_headers=user_headers
         )
-        headers['log_yandex_id'] = headers['log_yandex_id'] + '_another'
+        headers['log-yandex-id'] = headers['log-yandex-id'] + '-another'
         response = await client.post(
             self.get_url_application(),
             headers=headers,
