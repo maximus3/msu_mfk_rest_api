@@ -9,7 +9,6 @@ import slowapi.errors as slowapi_errors
 from fastapi import FastAPI
 from fastapi_pagination import add_pagination
 from starlette import requests
-from starlette.concurrency import iterate_in_threadpool
 from starlette.middleware import Middleware
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import Response
@@ -65,14 +64,6 @@ class UniqueIDMiddleware(BaseHTTPMiddleware):
             'uuid': request['request_id'],
             **_get_log_data_from_headers(request.headers),
         }
-        with loguru.logger.contextualize(
-            body=(await request.body()).decode(), **request_info_dict
-        ):
-            loguru.logger.info(
-                '{request[client]} - "{request[method]} {request[path]} '
-                'HTTP/{request[http_version]}"',
-                request=request_info_dict['request'],
-            )
         try:
             with loguru.logger.contextualize(**request_info_dict):
                 response = await call_next(request)
@@ -96,20 +87,7 @@ class UniqueIDMiddleware(BaseHTTPMiddleware):
                         }
                     }
                 )
-            try:
-                response_body = [
-                    section async for section in response.body_iterator  # type: ignore  # pylint: disable=line-too-long
-                ][0].decode()
-                response.body_iterator = iterate_in_threadpool(  # type: ignore
-                    iter(response_body)
-                )
-            except Exception:  # pylint: disable=broad-except
-                with loguru.logger.contextualize(**request_info_dict):
-                    loguru.logger.exception('Error in getting body')
-                response_body = None
-            with loguru.logger.contextualize(
-                body=response_body, **request_info_dict
-            ):
+            with loguru.logger.contextualize(**request_info_dict):
                 loguru.logger.info(
                     '{request[client]} - "{request[method]} {request[path]} '
                     'HTTP/{request[http_version]}" {response[status_code]}',
