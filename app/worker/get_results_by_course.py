@@ -29,7 +29,7 @@ async def task(
     logger = loguru.logger.bind(
         course={'short_name': course_short_name},
     )
-    headers = {'log_contest_login': student_login}
+    headers = {'log-contest-login': student_login}
     async with SessionManager().create_async_session() as session:
         student = await student_utils.get_student_or_raise(
             session, student_login, headers=headers

@@ -50,7 +50,7 @@ async def get_all_results(
     """
     Get student results for all courses.
     """
-    headers = {'log_contest_login': student_login}
+    headers = {'log-contest-login': student_login}
     student = await student_utils.get_student_or_raise(
         session, student_login, headers=headers
     )
@@ -106,8 +106,8 @@ async def get_results_by_course(
     """
     task = worker.get_results_by_course_task.delay(
         course_short_name=course_short_name,
-        student_login=request.headers['log_contest_login'],
-        student_tg_id=request.headers['log_tg_id'],
+        student_login=request.headers['log-contest-login'],
+        student_tg_id=request.headers['log-tg-id'],
     )
     return JSONResponse({'task_id': task.id})
 

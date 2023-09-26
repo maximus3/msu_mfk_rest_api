@@ -30,22 +30,22 @@ async def register(
     session: AsyncSession = Depends(SessionManager().get_async_session),
 ) -> JSONResponse:
     headers_data = register_schemas.RegisterHeaders(
-        contest_login=request.headers['log_contest_login'],
-        bm_id=request.headers['log_bm_id'],
-        tg_id=request.headers['log_tg_id'],
-        tg_username=request.headers.get('log_tg_username'),
-        yandex_id=request.headers['log_yandex_id'],
+        contest_login=request.headers['log-contest-login'],
+        bm_id=request.headers['log-bm-id'],
+        tg_id=request.headers['log-tg-id'],
+        tg_username=request.headers.get('log-tg-username'),
+        yandex_id=request.headers['log-yandex-id'],
     )
     logger = loguru.logger.bind(
         course={'name': data.course},
         department={'name': data.department},
     )
     headers = {
-        'log_contest_login': request.headers['log_contest_login'],
-        'log_bm_id': request.headers['log_bm_id'],
-        'log_tg_id': request.headers['log_tg_id'],
-        'log_tg_username': request.headers.get('log_tg_username'),
-        'log_yandex_id': request.headers['log_yandex_id'],
+        'log-contest-login': request.headers['log-contest-login'],
+        'log-bm-id': request.headers['log-bm-id'],
+        'log-tg-id': request.headers['log-tg-id'],
+        'log-tg-username': request.headers.get('log-tg-username'),
+        'log-yandex-id': request.headers['log-yandex-id'],
     }
     result_status, message = await register_student_on_course(
         session, data, headers_data, logger=logger
