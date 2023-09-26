@@ -235,7 +235,35 @@ class TestRegisterHandler:
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert response.json() == {
             'detail': 'Кажется, вы пытаетесь зарегистрироваться '
-            'на курс не через тот же аккаунт, через '
+            'на курс не через тот же яндекс аккаунт, через '
+            'который регистрировались до этого. Если вы '
+            'по каким-то причинам хотите поменять аккаунт, '
+            'то напишите в поддержку.',
+        }
+
+    async def test_register_from_another_tg(
+        self,
+        client,
+        user_headers,
+        created_student,
+        created_department,
+        created_course,
+    ):
+        headers = self._get_headers(
+            student=created_student, user_headers=user_headers
+        )
+        headers['log-tg-id'] = headers['log-tg-id'] + '-another'
+        response = await client.post(
+            self.get_url_application(),
+            headers=headers,
+            json=self.get_data(
+                created_student, created_department, created_course
+            ),
+        )
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert response.json() == {
+            'detail': 'Кажется, вы пытаетесь зарегистрироваться '
+            'на курс не через тот же телеграм аккаунт, через '
             'который регистрировались до этого. Если вы '
             'по каким-то причинам хотите поменять аккаунт, '
             'то напишите в поддержку.',
