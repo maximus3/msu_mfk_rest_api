@@ -64,7 +64,7 @@ async def get_by_student(
     _: User = Depends(get_current_user),
     session: AsyncSession = Depends(SessionManager().get_async_session),
 ) -> responses.JSONResponse:
-    headers = {'log_contest_login': student_login}
+    headers = {'log-contest-login': student_login}
     student = await student_utils.get_student_or_raise(
         session, student_login, headers=headers
     )

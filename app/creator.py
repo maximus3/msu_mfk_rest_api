@@ -22,11 +22,11 @@ from app.limiter import limiter
 
 def _get_log_data_from_headers(headers: requests.Headers) -> dict[str, str]:
     return {
-        'contest_login': headers.get('log_contest_login'),
-        'bm_id': headers.get('log_bm_id'),
-        'tg_id': headers.get('log_tg_id'),
-        'tg_username': headers.get('log_tg_username'),
-        'yandex_id': headers.get('log_yandex_id'),
+        'contest_login': headers.get('log-contest-login'),
+        'bm_id': headers.get('log-bm-id'),
+        'tg_id': headers.get('log-tg-id'),
+        'tg_username': headers.get('log-tg-username'),
+        'yandex_id': headers.get('log-yandex-id'),
     }
 
 
@@ -75,10 +75,10 @@ class UniqueIDMiddleware(BaseHTTPMiddleware):
             request_info_dict['response'] = {
                 'status_code': response.status_code,
             }
-            response.headers['log_id'] = request['request_id']
+            response.headers['log-id'] = request['request_id']
             contest_login = request.headers.get(
-                'log_contest_login'
-            ) or response.headers.get('log_contest_login')
+                'log-contest-login'
+            ) or response.headers.get('log-contest-login')
             if contest_login:
                 request_info_dict.update(
                     {
