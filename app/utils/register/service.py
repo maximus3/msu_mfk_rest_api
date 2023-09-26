@@ -13,7 +13,7 @@ from app.utils.department import get_department
 from app.utils.student import create_student, get_student, get_student_by_token
 
 
-async def register_student_on_course(
+async def register_student_on_course(  # pylint: disable=too-many-return-statements
     session: AsyncSession,
     data: RegisterRequest,
     headers_data: register_schemas.RegisterHeaders,
@@ -37,12 +37,27 @@ async def register_student_on_course(
         return (
             DatabaseStatus.MANY_TG_ACCOUNTS_ERROR,
             'Кажется, вы пытаетесь зарегистрироваться на курс не через'
-            ' тот же аккаунт, через который регистрировались до этого.'
+            ' тот яндекс же аккаунт, через '
+            'который регистрировались до этого.'
             ' Если вы по каким-то причинам хотите поменять аккаунт, '
             'то напишите в поддержку.',
         )
 
     student = await get_student(session, headers_data.contest_login)
+
+    if student and (
+        student.tg_id != headers_data.tg_id
+        or student.bm_id != headers_data.bm_id
+    ):
+        return (
+            DatabaseStatus.MANY_TG_ACCOUNTS_ERROR,
+            'Кажется, вы пытаетесь зарегистрироваться на курс не через'
+            ' тот же телеграм аккаунт, через '
+            'который регистрировались до этого.'
+            ' Если вы по каким-то причинам хотите поменять аккаунт, '
+            'то напишите в поддержку.',
+        )
+
     if student is None:
         logger.info(
             'Student {} not exists, checking token',
