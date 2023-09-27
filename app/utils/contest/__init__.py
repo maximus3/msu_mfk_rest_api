@@ -2,6 +2,7 @@ from .database import (
     add_student_contest_relation,
     get_all_contests,
     get_contest_by_id,
+    get_contest_by_lecture,
     get_contest_by_yandex_contest_id,
     get_contest_levels,
     get_contests,
@@ -39,4 +40,5 @@ __all__ = [
     'get_or_create_student_contest_level',
     'get_submission_from_yandex',
     'get_contest_by_id',
+    'get_contest_by_lecture',
 ]

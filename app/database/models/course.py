@@ -51,6 +51,13 @@ class Course(BaseModel):
         '"choose": *list of options if type is choose else null*'
         '}]}',
     )
+    is_smart_suggests_allowed = sa.Column(
+        sa.Boolean,
+        nullable=False,
+        default=False,
+        server_default='false',
+        doc='Is allowed chat assistants requests for course.',
+    )
 
     is_active = sa.Column(
         sa.Boolean,

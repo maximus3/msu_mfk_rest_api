@@ -82,6 +82,11 @@ class DefaultSettings(BaseSettings):
         'redis://localhost:6379', env='CELERY_RESULT_BACKEND'
     )
 
+    CHAT_ASSISTANT_API_URL: str = Field(
+        'http://localhost',
+        env='CHAT_ASSISTANT_API_URL',
+    )
+
     @property
     def database_settings(self) -> dict[str, str | int]:
         """

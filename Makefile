@@ -472,5 +472,9 @@ up-celery-worker: ##@Application Up Celery Worker
 up-celery-dashboard: ##@Application Up Celery Dashboard
 	$(POETRY_RUN) celery --broker=$(CELERY_BROKER_URL) flower --port=5555
 
+.PHONY: get_pg_use_port
+get_pg_use_port: ##@Application Get apps using postgres port
+	sudo ss -lptn 'sport = :5432'
+
 %::
 	echo $(MESSAGE)

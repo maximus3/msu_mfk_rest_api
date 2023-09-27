@@ -22,6 +22,17 @@ async def get_task_by_id(session: AsyncSession, id_: UUID) -> models.Task:
     return await session.scalar(query)
 
 
+async def get_task_by_alias(
+    session: AsyncSession, contest_id: UUID, alias: str
+) -> models.Task:
+    query = (
+        select(models.Task)
+        .where(models.Task.contest_id == contest_id)
+        .where(models.Task.alias == alias)
+    )
+    return await session.scalar(query)
+
+
 async def get_student_task_relation(
     session: AsyncSession,
     student_id: UUID,
