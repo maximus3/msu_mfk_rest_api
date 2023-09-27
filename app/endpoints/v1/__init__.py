@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 
 from .auth import api_router as auth_router
+from .chat_assistant import api_router as chat_assistant_router
 from .contest import api_router as contest_router
 from .course import api_router as course_router
 from .department import api_router as department_router
@@ -23,6 +24,7 @@ router.include_router(course_router)
 router.include_router(department_router)
 router.include_router(results_router)
 router.include_router(contest_router)
+router.include_router(chat_assistant_router)
 
 
 __all__ = [

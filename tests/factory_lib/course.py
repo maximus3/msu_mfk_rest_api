@@ -17,6 +17,7 @@ class CourseFactory(Factory):
     lk_link = fuzzy.FuzzyText()
     info = fuzzy.FuzzyText(length=64)
     need_info_from_students = '{}'
+    is_smart_suggests_allowed = fuzzy.FuzzyChoice([True, False])
     is_active = fuzzy.FuzzyChoice([True, False])
     is_open = fuzzy.FuzzyChoice([True, False])
     code_word = fuzzy.FuzzyText()

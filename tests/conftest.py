@@ -533,6 +533,49 @@ def mock_make_request_to_yandex_contest_v2(  # type: ignore  # TODO: remove v1
 
 
 @pytest.fixture
+def mock_make_request(  # type: ignore
+    mocker,
+):
+    def _wrapper(urls_to_result: dict):  # type: ignore
+        async def _request(url, *args, data=None, **kwargs):
+            key_to_search = None
+            for key in urls_to_result:
+                if re.match(key, url):
+                    key_to_search = key
+                    break
+            if not key_to_search:
+                raise KeyError(f'No mock for url {url}')
+            json_data = urls_to_result[key_to_search].get('json')
+            randint = random.randint(1, 100)
+            if isinstance(json_data, str):
+                formatted_data = json_data.format(data=data, randint=randint)
+                json_data = json.loads(formatted_data)
+            return httpx.Response(
+                urls_to_result[key_to_search].get('status_code') or 200,
+                json=json_data,
+                text=urls_to_result[key_to_search].get('text'),
+            )
+
+        _ = [
+            mocker.patch(
+                'app.utils.external_request.service.make_request',
+                side_effect=_request,
+            ),
+            mocker.patch(
+                'app.utils.external_request.make_request',
+                side_effect=_request,
+            ),
+            mocker.patch(
+                'app.utils.chat_assistant.service.'
+                'external_request.make_request',
+                side_effect=_request,
+            ),
+        ]
+
+    return _wrapper
+
+
+@pytest.fixture
 async def created_two_departments(session):
     models = factory_lib.DepartmentFactory.create_batch(2)
     session.add_all(models)
