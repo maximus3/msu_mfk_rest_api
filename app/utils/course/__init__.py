@@ -1,6 +1,7 @@
 from .database import (
     add_student_to_course,
     get_all_active_courses,
+    get_all_active_courses_with_allowed_smart_suggests,
     get_all_courses_with_open_registration,
     get_course,
     get_course_by_id,
@@ -27,4 +28,5 @@ __all__ = [
     'get_or_create_student_course_level',
     'get_student_course_contests_data',
     'get_course_by_id',
+    'get_all_active_courses_with_allowed_smart_suggests',
 ]

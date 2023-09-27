@@ -33,6 +33,24 @@ async def get(
     return CourseResponse(items=courses)
 
 
+@api_router.get(
+    '/assistant-allowed',
+    response_model=CourseResponse,
+    status_code=status.HTTP_200_OK,
+    description='Active courses with allowed smart suggests',
+)
+async def get(
+    _: User = Depends(get_current_user),
+    session: AsyncSession = Depends(SessionManager().get_async_session),
+) -> CourseResponse:
+    courses = (
+        await course_utils.get_all_active_courses_with_allowed_smart_suggests(
+            session
+        )
+    )
+    return CourseResponse(items=courses)
+
+
 @api_router.post(
     '',
     response_model=CourseResponse,

@@ -48,6 +48,15 @@ async def get_all_courses_with_open_registration(
     return (await session.execute(query)).scalars().all()
 
 
+async def get_all_active_courses_with_allowed_smart_suggests(
+    session: AsyncSession,
+) -> list[Course]:
+    query = select(Course).where(
+        Course.is_smart_suggests_allowed, ~Course.is_archive
+    )
+    return (await session.execute(query)).scalars().all()
+
+
 async def get_student_course(
     session: AsyncSession, student_id: UUID, course_id: UUID
 ) -> StudentCourse | None:
