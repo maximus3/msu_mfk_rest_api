@@ -79,7 +79,7 @@ class TestChatAssistantHandler:
             response.status_code == status.HTTP_404_NOT_FOUND
         ), response.json()
         assert response.json() == {
-            'detail': f'Контест {potential_contest.lecture} не найден для курса {created_course.name}'
+            'detail': f'Контест {potential_contest.lecture} не найден для курса {created_course_assist_on.name}'
         }
 
     async def test_no_such_task(
