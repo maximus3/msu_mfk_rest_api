@@ -140,7 +140,7 @@ class TestChatAssistantHandler:
     ):
         mock_make_request(
             {
-                'http://localhost/api/chat_assistant': {
+                'http://localhost:5000/api/chat_assistant': {
                     'json': {'result': ''},
                 },
             }
@@ -175,7 +175,7 @@ class TestChatAssistantHandler:
     ):
         mock_make_request(
             {
-                'http://localhost/api/chat_assistant': {
+                'http://localhost:5000/api/chat_assistant': {
                     'json': {'result': 'result here'},
                 },
             }
