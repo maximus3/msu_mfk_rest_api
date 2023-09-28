@@ -83,7 +83,7 @@ class DefaultSettings(BaseSettings):
     )
 
     CHAT_ASSISTANT_API_URL: str = Field(
-        'http://localhost',
+        'http://localhost:5000',
         env='CHAT_ASSISTANT_API_URL',
     )
 
