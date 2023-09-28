@@ -1,4 +1,4 @@
-# pylint: disable=too-many-arguments
+# pylint: disable=too-many-arguments,line-too-long,redefined-outer-name
 
 import pytest
 from fastapi import status

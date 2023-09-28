@@ -39,7 +39,7 @@ async def get(
     status_code=status.HTTP_200_OK,
     description='Active courses with allowed smart suggests',
 )
-async def get(
+async def assistant_allowed(
     _: User = Depends(get_current_user),
     session: AsyncSession = Depends(SessionManager().get_async_session),
 ) -> CourseResponse:
