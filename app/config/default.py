@@ -83,7 +83,7 @@ class DefaultSettings(BaseSettings):
     )
 
     CHAT_ASSISTANT_API_URL: str = Field(
-        'http://localhost:5000',
+        'http://mfk_assistant:5000',
         env='CHAT_ASSISTANT_API_URL',
     )
 
