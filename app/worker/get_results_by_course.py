@@ -4,7 +4,6 @@ import functools
 import loguru
 
 from app.bot_helper import bot
-from app.database import models
 from app.database.connection import SessionManager
 from app.schemas import StudentResults
 from app.utils import course as course_utils
@@ -84,7 +83,8 @@ async def task(
             ],
             fio=student.fio,
         ),
-        student=student,
+        student_login=student.contest_login,
+        student_tg_id=student_tg_id,
     )
 
     return True
@@ -107,12 +107,13 @@ async def _send_error_message_404(
 
 async def _send_student_results(
     results: StudentResults,
-    student: models.Student,
+    student_login: str,
+    student_tg_id: str,
 ) -> None:
     await bot.bot_students.send_message(
-        chat_id=student.tg_id,
+        chat_id=student_tg_id,
         text=f'''
-Логин: {student.contest_login}
+Логин: {student_login}
 ФИО для проверки: {results.fio}
 ''',
     )
@@ -155,6 +156,6 @@ async def _send_student_results(
                     )
 
         await bot.bot_students.send_message(
-            chat_id=student.tg_id,
+            chat_id=student_tg_id,
             text=results_msg,  # TODO: check length
         )
