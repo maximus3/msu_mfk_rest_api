@@ -3,7 +3,7 @@
 import pytest
 from fastapi import status
 
-from app.config import get_settings
+from app import config
 from app.endpoints.v1 import prefix
 
 
@@ -33,7 +33,7 @@ async def created_course_assist_off(not_created_course, session):  # type: ignor
 class TestChatAssistantHandler:
     @staticmethod
     def get_url_application() -> str:
-        settings = get_settings()
+        settings = config.get_settings()
         return f'{settings.PATH_PREFIX}{prefix}/chat_assistant'
 
     async def test_no_auth(self, client):
@@ -138,9 +138,10 @@ class TestChatAssistantHandler:
         created_task,
         mock_make_request,
     ):
+        settings = config.get_settings()
         mock_make_request(
             {
-                'http://localhost:5000/api/chat_assistant': {
+                f'{settings.CHAT_ASSISTANT_API_URL}/api/chat_assistant': {
                     'json': {'result': ''},
                 },
             }
@@ -173,9 +174,10 @@ class TestChatAssistantHandler:
         created_task,
         mock_make_request,
     ):
+        settings = config.get_settings()
         mock_make_request(
             {
-                'http://localhost:5000/api/chat_assistant': {
+                f'{settings.CHAT_ASSISTANT_API_URL}/api/chat_assistant': {
                     'json': {'result': 'result here'},
                 },
             }
