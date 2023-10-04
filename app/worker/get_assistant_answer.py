@@ -6,10 +6,13 @@ from app.utils import chat_assistant as chat_assistant_utils
 
 
 async def task(
-    data: chat_assistant_schemas.ChatAssistantServerRequest,
+    data_raw: dict[str, str | int],
     student_tg_id: str,
     base_logger: 'loguru.Logger',
 ) -> bool:
+    data = chat_assistant_schemas.ChatAssistantServerRequest(
+        **data_raw,
+    )
     result = await chat_assistant_utils.get_chat_assistant_suggest(
         logger=base_logger,
         data=data,
