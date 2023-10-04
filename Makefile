@@ -232,7 +232,7 @@ git: check commit ##@Git Check and commit
 
 .PHONY: update
 update: pull db dump-local docker-build ##@Application Update docker app
-	@make docker-down
+	@make docker-stop
 	@make delete-container-data
 	@make docker
 	@make docker-migrate head

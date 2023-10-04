@@ -1,6 +1,3 @@
-import asyncio
-import functools
-
 import loguru
 
 from app.bot_helper import bot
@@ -11,23 +8,13 @@ from app.utils import results as results_utils
 from app.utils import student as student_utils
 
 
-def async_to_sync(func):  # type: ignore
-    @functools.wraps(func)
-    def wrapped(*args, **kwargs):  # type: ignore
-        return asyncio.run(func(*args, **kwargs))
-
-    return wrapped
-
-
-@async_to_sync
 async def task(
     course_short_name: str,
     student_login: str,
     student_tg_id: str,
+    base_logger: 'loguru.Logger',
 ) -> bool:
-    logger = loguru.logger.bind(
-        course={'short_name': course_short_name},
-    )
+    logger = base_logger
     headers = {'log-contest-login': student_login}
     async with SessionManager().create_async_session() as session:
         student = await student_utils.get_student_or_raise(
@@ -119,15 +106,17 @@ async def _send_student_results(
     )
 
     for course_results in results.courses:
-        results_msg = (
-            f'Курс: {course_results.name}\n{course_results.str_need}\n\n'
-        )
-        for course_level in course_results.course_levels:
-            results_msg += (
-                f'{course_level.name}: '
-                f'{"✅" if course_level.is_ok else "НЕТ❌"}\n'
-            )
-        results_msg += '\n'
+        results_msg = f'Курс: {course_results.name}\n'
+        if course_results.str_need:
+            results_msg += f'{course_results.str_need}\n'
+        if course_results.course_levels:
+            results_msg += '\n'
+            for course_level in course_results.course_levels:
+                results_msg += (
+                    f'{course_level.name}: '
+                    f'{"✅" if course_level.is_ok else "НЕТ❌"}\n'
+                )
+            results_msg += '\n'
         for contest_results in course_results.contests:
             results_msg += f'''
 - {contest_results.name}
@@ -143,12 +132,12 @@ async def _send_student_results(
             else:
                 results_msg += (
                     '-- Набрано баллов без учета дедлайна '
-                    f'{contest_results.score_no_deadline}'
+                    f'{contest_results.score_no_deadline}\n'
                 )
                 for contest_level in contest_results.levels:
                     need_score_msg = f'{contest_level.score_need} '
                     if contest_level.include_after_deadline:
-                        need_score_msg += 'без учета дедлайна)'
+                        need_score_msg += '(без учета дедлайна)'
                     results_msg += (
                         f'-- Необходимо баллов на {contest_level.name}: '
                         f'{need_score_msg}'
