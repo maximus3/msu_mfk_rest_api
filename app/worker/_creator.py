@@ -2,6 +2,7 @@
 
 import asyncio
 import functools
+import sys
 import traceback
 
 import celery
@@ -16,6 +17,16 @@ def get_celery() -> celery.Celery:
     _celery = celery.Celery(__name__)
     _celery.conf.broker_url = settings.CELERY_BROKER_URL
     _celery.conf.result_backend = settings.CELERY_RESULT_BACKEND
+
+    loguru.logger.remove()
+    loguru.logger.add(sink=sys.stderr, serialize=True, enqueue=True)
+    loguru.logger.add(
+        settings.LOGGING_WORKER_FILE,
+        rotation='500 MB',
+        serialize=True,
+        enqueue=True,
+    )
+
     return _celery
 
 
@@ -30,6 +41,11 @@ def async_to_sync(func):  # type: ignore
 def task_wrapper(func):  # type: ignore
     @functools.wraps(func)
     async def _wrapped(request_id: str, *args, **kwargs):  # type: ignore
+        # settings = config.get_settings()
+        # log_file_name = (
+        #         settings.LOGGING_FILE_DIR
+        #         / f'worker/task-{request_id}.log'
+        # )
         base_logger = loguru.logger.bind(uuid=request_id)
         base_logger.info(
             'Task started (args={}, kwargs={})',

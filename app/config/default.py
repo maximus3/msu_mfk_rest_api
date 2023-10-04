@@ -38,6 +38,7 @@ class DefaultSettings(BaseSettings):
     LOGGING_FILE_DIR = Path('logs')
     LOGGING_APP_FILE = LOGGING_FILE_DIR / 'logfile.log'
     LOGGING_SCHEDULER_FILE = LOGGING_FILE_DIR / 'scheduler_logfile.log'
+    LOGGING_WORKER_FILE = LOGGING_FILE_DIR / 'worker_logfile.log'
 
     BASE_DIR: Path = Path(__file__).resolve().parent.parent.parent
     CONFIG_FILENAME: str = 'config.yaml'
