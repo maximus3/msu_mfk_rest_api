@@ -7,6 +7,7 @@ from starlette.responses import JSONResponse
 from app import worker
 from app.database import models
 from app.database.connection import SessionManager
+from app.limiter import limiter
 from app.schemas import chat_assistant as chat_assistant_schemas
 from app.utils import contest as contest_utils
 from app.utils import course as course_utils
@@ -24,6 +25,8 @@ api_router = APIRouter(
     '',
     status_code=status.HTTP_200_OK,
 )
+# @limiter.limit('5/1day', key_func=lambda request: request.headers['log-tg-id'])
+@limiter.limit('100/5minute', key_func=lambda request: request.headers['log-tg-id'])
 async def chat_assistant(
     request: requests.Request,
     chat_assistant_request: chat_assistant_schemas.ChatAssistantRequest,
