@@ -2,11 +2,12 @@ import loguru
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import requests
+from starlette.responses import JSONResponse
 
+from app import worker
 from app.database import models
 from app.database.connection import SessionManager
 from app.schemas import chat_assistant as chat_assistant_schemas
-from app.utils import chat_assistant as chat_assistant_utils
 from app.utils import contest as contest_utils
 from app.utils import course as course_utils
 from app.utils import task as task_utils
@@ -21,18 +22,14 @@ api_router = APIRouter(
 
 @api_router.post(
     '',
-    response_model=chat_assistant_schemas.ChatAssistantResponse,
     status_code=status.HTTP_200_OK,
 )
 async def chat_assistant(
-    _: requests.Request,
+    request: requests.Request,
     chat_assistant_request: chat_assistant_schemas.ChatAssistantRequest,
-    __: models.User = Depends(user_utils.get_current_user),
+    _: models.User = Depends(user_utils.get_current_user),
     session: AsyncSession = Depends(SessionManager().get_async_session),
-) -> chat_assistant_schemas.ChatAssistantResponse:
-    logger = loguru.logger.bind(
-        course={'name': chat_assistant_request.course_name},
-    )
+) -> JSONResponse:
     course = await course_utils.get_course(
         session=session, name=chat_assistant_request.course_name
     )
@@ -73,19 +70,18 @@ async def chat_assistant(
         contest={'yandex_contest_id': contest.yandex_contest_id},
         task={'yandex_task_id': task.yandex_task_id},
     )
-    result = await chat_assistant_utils.get_chat_assistant_suggest(
-        logger=logger,
+
+    celery_task = worker.get_assistant_answer_task.delay(
         data=chat_assistant_schemas.ChatAssistantServerRequest(
             contest_number=chat_assistant_request.contest_number,
             task_number=chat_assistant_request.task_number,
             user_query=chat_assistant_request.user_query,
         ),
+        student_tg_id=request.headers['log-tg-id'],
+        request_id=request.scope['request_id'],
     )
-    if not result.result:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail='Error in getting answer, try again later.',
-        )
-    return chat_assistant_schemas.ChatAssistantResponse(
-        answer=result.result,
+    logger = logger.bind(
+        task_id=celery_task.id,
     )
+    logger.info('Task {} sent to celery', celery_task.id)
+    return JSONResponse({'task_id': celery_task.id})

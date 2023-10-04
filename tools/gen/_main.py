@@ -72,4 +72,4 @@ def _gen(
                     **data_for_gen.gen_kwargs,
                 )
             )
-        logger.info('Generated {}.', name)
+        logger.info('Generated {} for {}.', name, gen_name)

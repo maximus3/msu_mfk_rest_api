@@ -111,12 +111,12 @@ async def get_results_by_course(
         course_short_name=course_short_name,
         student_login=request.headers['log-contest-login'],
         student_tg_id=request.headers['log-tg-id'],
-        base_logger=logger,
+        request_id=request.scope['request_id'],
     )
     logger = logger.bind(
         task_id=task.id,
     )
-    logger.info('Task %s sent to celery', task.id)
+    logger.info('Task {} sent to celery', task.id)
     return JSONResponse({'task_id': task.id})
 
 
@@ -143,7 +143,7 @@ async def get_task_status(
         task_id=task_id,
     )
     result = AsyncResult(task_id)
-    logger.info('Current task status: %s', result.status)
+    logger.info('Current task status: {}', result.status)
     return JSONResponse(
         {
             'status': result.status,
