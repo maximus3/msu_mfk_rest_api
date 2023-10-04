@@ -76,7 +76,7 @@ async def chat_assistant(
             contest_number=chat_assistant_request.contest_number,
             task_number=chat_assistant_request.task_number,
             user_query=chat_assistant_request.user_query,
-        ),
+        ).dict(),
         student_tg_id=request.headers['log-tg-id'],
         request_id=request.scope['request_id'],
     )
