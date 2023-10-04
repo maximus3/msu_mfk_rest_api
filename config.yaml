@@ -24,3 +24,6 @@ scheduler:
     minutes: 10
     config:
       send_logs: true
+worker:
+  - get_assistant_answer
+  - get_results_by_course

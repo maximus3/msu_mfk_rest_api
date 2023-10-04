@@ -1,3 +1,5 @@
+# pylint: disable=duplicate-code
+
 import asyncio
 import functools
 import traceback
@@ -27,15 +29,15 @@ def async_to_sync(func):  # type: ignore
 
 def task_wrapper(func):  # type: ignore
     @functools.wraps(func)
-    async def _wrapped(  # type: ignore
-        base_logger: 'loguru.Logger', *args, **kwargs
-    ):
+    async def _wrapped(request_id: str, *args, **kwargs):  # type: ignore
+        base_logger = loguru.logger.bind(uuid=request_id)
         base_logger.info(
             'Task started (args={}, kwargs={})',
             args,
             kwargs,
         )
 
+        kwargs.update(base_logger=base_logger)
         try:
             result = await func(*args, **kwargs)
         except Exception as exc:  # pylint: disable=broad-except

@@ -1,0 +1,21 @@
+# Code generated automatically.
+
+from ._creator import async_to_sync, get_celery, task_wrapper
+
+{% for task_name in tasks %}from .{{ task_name }} import task as {{ task_name }}
+{% endfor %}
+
+celery_broker = get_celery()
+
+{% for task_name in tasks %}
+{{ task_name }}_task = celery_broker.task(name='{{ task_name }}')(
+    async_to_sync(task_wrapper({{ task_name }}))
+)
+{% endfor %}
+
+
+__all__ = [
+    'celery_broker',
+    {% for task_name in tasks %}'{{ task_name }}_task',
+    {% endfor %}
+]
