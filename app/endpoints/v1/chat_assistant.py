@@ -72,7 +72,7 @@ async def chat_assistant(
     )
 
     celery_task = worker.get_assistant_answer_task.delay(
-        data=chat_assistant_schemas.ChatAssistantServerRequest(
+        data_raw=chat_assistant_schemas.ChatAssistantServerRequest(
             contest_number=chat_assistant_request.contest_number,
             task_number=chat_assistant_request.task_number,
             user_query=chat_assistant_request.user_query,
