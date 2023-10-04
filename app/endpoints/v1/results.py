@@ -17,8 +17,8 @@ from app.database.models import User
 from app.limiter import limiter
 from app.schemas import StudentResults
 from app.utils import course as course_utils
+from app.utils import pdf
 from app.utils import student as student_utils
-from app.utils.common import fill_pdf
 from app.utils.course import (
     get_all_active_courses,
     get_course_by_short_name,
@@ -136,7 +136,7 @@ async def fill_results(
     tmp_filename = f'{request["request_id"]}.pdf'
     with open(tmp_filename, 'wb') as f:
         f.write(await file.read())
-    result_path = await fill_pdf(
+    result_path = await pdf.fill_pdf(
         filename=tmp_filename,
         course_id=course.id,
         logger=logger,
@@ -203,7 +203,7 @@ async def fill_results_archive(  # pylint: disable=too-many-statements
         if filename.suffix == '.pdf':
             logger.info('Filling {}', filename)
             try:
-                await fill_pdf(
+                await pdf.fill_pdf(
                     filename=filename,
                     course_id=course.id,
                     logger=logger,
