@@ -28,6 +28,8 @@ class SessionManager:  # pragma: no cover
     def __new__(cls) -> 'SessionManager':
         if not hasattr(cls, 'instance'):
             cls.instance = super(SessionManager, cls).__new__(cls)
+            cls.instance.engine = None
+            cls.instance.async_engine = None
         return cls.instance  # noqa
 
     def get_session_maker(self) -> sessionmaker:
@@ -40,6 +42,10 @@ class SessionManager:  # pragma: no cover
 
     def refresh(self) -> None:
         settings = get_settings()
+        if self.engine:
+            self.engine.dispose()
+        if self.async_engine:
+            self.async_engine.dispose()
         self.engine = sa.create_engine(
             settings.database_uri_sync,
             **self.ENGINE_KWARGS,
