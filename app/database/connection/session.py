@@ -17,24 +17,43 @@ class SessionManager:  # pragma: no cover
     """
 
     ENGINE_KWARGS = {
-        'max_overflow': 0,
-        'pool_size': 1,
+        'max_overflow': 8,
+        'pool_size': 8,
         'pool_timeout': 60,
     }
+
+    def __init__(self) -> None:
+        self.refresh()
 
     def __new__(cls) -> 'SessionManager':
         if not hasattr(cls, 'instance'):
             cls.instance = super(SessionManager, cls).__new__(cls)
         return cls.instance  # noqa
 
-    @contextmanager
-    def create_session(self, **kwargs: tp.Any) -> Session:
+    def get_session_maker(self) -> sessionmaker:
+        return sessionmaker(bind=self.engine)
+
+    def get_async_session_maker(self) -> sessionmaker:
+        return sessionmaker(
+            self.async_engine, class_=AsyncSession, expire_on_commit=False
+        )
+
+    def refresh(self) -> None:
         settings = get_settings()
-        engine = sa.create_engine(
+        self.engine = sa.create_engine(
             settings.database_uri_sync,
             **self.ENGINE_KWARGS,
         )
-        with sessionmaker(bind=engine)(**kwargs) as new_session:
+        self.async_engine = create_async_engine(
+            settings.database_uri,
+            future=True,
+            pool_pre_ping=True,
+            **self.ENGINE_KWARGS,
+        )
+
+    @contextmanager
+    def create_session(self, **kwargs: tp.Any) -> Session:
+        with self.get_session_maker()(**kwargs) as new_session:
             try:
                 yield new_session
                 new_session.commit()
@@ -43,21 +62,10 @@ class SessionManager:  # pragma: no cover
                 raise
             finally:
                 new_session.close()
-        engine.dispose()
 
     @asynccontextmanager
     async def create_async_session(self, **kwargs: tp.Any) -> AsyncSession:
-        settings = get_settings()
-        async_engine = create_async_engine(
-            settings.database_uri,
-            future=True,
-            pool_pre_ping=True,
-            **self.ENGINE_KWARGS,
-        )
-
-        async with sessionmaker(
-            async_engine, class_=AsyncSession, expire_on_commit=False
-        )(**kwargs) as new_session:
+        async with self.get_async_session_maker()(**kwargs) as new_session:
             try:
                 yield new_session
                 await new_session.commit()
