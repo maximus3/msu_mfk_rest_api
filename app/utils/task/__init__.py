@@ -4,6 +4,7 @@ from .database import (
     get_task,
     get_task_by_alias,
     get_task_by_id,
+    get_tasks_by_yandex_ids,
 )
 from .service import eval_expr
 
@@ -15,4 +16,5 @@ __all__ = [
     'eval_expr',
     'get_task_by_id',
     'get_task_by_alias',
+    'get_tasks_by_yandex_ids',
 ]

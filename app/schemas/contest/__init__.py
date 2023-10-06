@@ -1,4 +1,9 @@
-from .info import ContestInfoResponse, Task, YandexContestInfo
+from .info import (
+    ContestInfoResponse,
+    Task,
+    TaskInfoResponse,
+    YandexContestInfo,
+)
 from .levels import Level, LevelCountMethod, LevelOkMethod, Levels
 from .submission import ContestSubmission, ContestSubmissionFull
 from .tag import ContestTag
@@ -13,6 +18,7 @@ __all__ = [
     'Level',
     'Levels',
     'Task',
+    'TaskInfoResponse',
     'YandexContestInfo',
     'ContestInfoResponse',
 ]

@@ -24,11 +24,7 @@ list_of_jobs: list[scheduler_schemas.JobInfo] = [
         name='db_dump',
     ),
     scheduler_schemas.JobInfo(
-        **{
-            'trigger': 'interval',
-            'minutes': 10,
-            'config': {'send_logs': True},
-        },
+        **{'trigger': 'interval', 'minutes': 1, 'config': {'send_logs': True}},
         func=contest_register_group,
         name='contest_register_group',
     ),

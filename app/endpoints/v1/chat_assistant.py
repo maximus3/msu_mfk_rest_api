@@ -25,8 +25,12 @@ api_router = APIRouter(
     '',
     status_code=status.HTTP_200_OK,
 )
-@limiter.limit('10/1day', key_func=lambda request: request.headers['log-tg-id'])
-@limiter.limit('1/2minute', key_func=lambda request: request.headers['log-tg-id'])
+@limiter.limit(
+    '10/1day', key_func=lambda request: request.headers['log-tg-id']
+)
+@limiter.limit(
+    '1/2minute', key_func=lambda request: request.headers['log-tg-id']
+)
 async def chat_assistant(
     request: requests.Request,
     chat_assistant_request: chat_assistant_schemas.ChatAssistantRequest,

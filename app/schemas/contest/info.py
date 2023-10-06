@@ -16,6 +16,14 @@ class YandexContestInfo(BaseModel):
     tasks: list[Task]
 
 
+class TaskInfoResponse(BaseModel):
+    alias: str
+    yandex_task_id: str
+    name: str
+    is_zero_ok: bool
+    score_max: float
+
+
 class ContestInfoResponse(BaseModel):
     course_short_name: str
     yandex_contest_id: int
@@ -25,3 +33,4 @@ class ContestInfoResponse(BaseModel):
     tasks_count: int
     score_max: float
     is_necessary: bool
+    tasks: list[TaskInfoResponse]

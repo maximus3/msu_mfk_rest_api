@@ -81,3 +81,13 @@ async def add_student_task_relation(
     )
     session.add(student_task)
     return student_task
+
+
+async def get_tasks_by_yandex_ids(
+    session: AsyncSession,
+    yandex_task_ids: list[str],
+) -> list[models.Task]:
+    query = select(models.Task).where(
+        models.Task.yandex_task_id.in_(yandex_task_ids)
+    )
+    return (await session.execute(query)).scalars().all()
