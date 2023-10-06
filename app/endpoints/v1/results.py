@@ -92,7 +92,7 @@ async def get_all_results(
 
 
 @api_router.get(
-    '/by-course/{course_short_name}/{student_login}',
+    '/by-course/{course_short_name}',
     status_code=status.HTTP_200_OK,
 )
 @limiter.limit('5/10seconds')

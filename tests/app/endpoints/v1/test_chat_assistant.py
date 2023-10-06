@@ -36,6 +36,10 @@ class TestChatAssistantHandler:
         settings = config.get_settings()
         return f'{settings.PATH_PREFIX}{prefix}/chat_assistant'
 
+    @staticmethod
+    def get_headers(user_headers) -> dict[str, str]:
+        return {'log-tg-id': 'log-tg-id', **user_headers}
+
     async def test_no_auth(self, client):
         response = await client.post(self.get_url_application())
         assert (
@@ -47,7 +51,7 @@ class TestChatAssistantHandler:
     ):
         response = await client.post(
             self.get_url_application(),
-            headers=user_headers,
+            headers=self.get_headers(user_headers),
             json={
                 'course_name': potential_course.name,
                 'contest_number': 1,
@@ -66,7 +70,7 @@ class TestChatAssistantHandler:
     ):
         response = await client.post(
             self.get_url_application(),
-            headers=user_headers,
+            headers=self.get_headers(user_headers),
             json={
                 'course_name': created_course_assist_on.name,
                 'contest_number': potential_contest.lecture,
@@ -87,7 +91,7 @@ class TestChatAssistantHandler:
     ):
         response = await client.post(
             self.get_url_application(),
-            headers=user_headers,
+            headers=self.get_headers(user_headers),
             json={
                 'course_name': created_course_assist_on.name,
                 'contest_number': created_contest.lecture,
@@ -113,7 +117,7 @@ class TestChatAssistantHandler:
     ):
         response = await client.post(
             self.get_url_application(),
-            headers=user_headers,
+            headers=self.get_headers(user_headers),
             json={
                 'course_name': created_course_assist_off.name,
                 'contest_number': created_contest.lecture,
@@ -150,7 +154,7 @@ class TestChatAssistantHandler:
 
         response = await client.post(
             self.get_url_application(),
-            headers=user_headers,
+            headers=self.get_headers(user_headers),
             json={
                 'course_name': created_course_assist_on.name,
                 'contest_number': created_contest.lecture,
@@ -187,7 +191,7 @@ class TestChatAssistantHandler:
 
         response = await client.post(
             self.get_url_application(),
-            headers=user_headers,
+            headers=self.get_headers(user_headers),
             json={
                 'course_name': created_course_assist_on.name,
                 'contest_number': created_contest.lecture,
