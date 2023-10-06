@@ -3,11 +3,7 @@ import typing as tp
 from contextlib import asynccontextmanager, contextmanager
 
 import sqlalchemy as sa
-from sqlalchemy.ext.asyncio import (
-    AsyncEngine,
-    AsyncSession,
-    create_async_engine,
-)
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.config import get_settings
@@ -30,18 +26,6 @@ class SessionManager:  # pragma: no cover
         if not hasattr(cls, 'instance'):
             cls.instance = super(SessionManager, cls).__new__(cls)
         return cls.instance  # noqa
-
-    def refresh(self) -> None:
-        pass
-
-    def get_async_engine(self) -> AsyncEngine:
-        settings = get_settings()
-        return create_async_engine(
-            settings.database_uri,
-            future=True,
-            pool_pre_ping=True,
-            **self.ENGINE_KWARGS,
-        )
 
     @contextmanager
     def create_session(self, **kwargs: tp.Any) -> Session:

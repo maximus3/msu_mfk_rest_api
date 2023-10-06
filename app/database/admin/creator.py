@@ -13,7 +13,7 @@ def get_sqladmin(app: FastAPI) -> Admin:
 
     admin = Admin(
         app,
-        SessionManager().get_async_engine(),
+        SessionManager().async_engine,
         authentication_backend=SqlAdminAuthBackend(
             secret_key=get_settings().SQLADMIN_SECRET_KEY
         ),
