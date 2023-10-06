@@ -64,6 +64,7 @@ def _job_info_wrapper(  # pylint: disable=too-many-statements
                     message=f'Error in job {job_info.name}',
                     code=traceback.format_exc(),
                 )
+                raise
             base_logger.info('Job {} finished', job_info.name)
 
             if not config.send_logs:
