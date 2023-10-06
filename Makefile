@@ -476,5 +476,12 @@ up-celery-dashboard: ##@Application Up Celery Dashboard
 get-pg-use-port: ##@Application Get apps using postgres port
 	sudo ss -lptn 'sport = :5432'
 
+.PHONY: open-pg
+open-pg: ##@Database open psql in docker database
+	$(eval DB_NAME=$(shell cat deploy/db_name.txt))
+	$(eval DB_USERNAME=$(shell cat deploy/db_username.txt))
+
+	docker exec postgres psql -d $(DB_NAME) -U $(DB_USERNAME)
+
 %::
 	echo $(MESSAGE)
