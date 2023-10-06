@@ -38,6 +38,8 @@ async def get(  # pylint: disable=too-many-statements,too-many-arguments,too-man
         log_filename = settings.LOGGING_APP_FILE
     elif log_file == 'scheduler':
         log_filename = settings.LOGGING_SCHEDULER_FILE
+    elif log_file == 'worker':
+        log_filename = settings.LOGGING_WORKER_FILE
     else:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
