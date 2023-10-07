@@ -123,5 +123,7 @@ jobs:
         cd ~/${{ github.event.repository.name }};
         git pull;
         echo \"${{ secrets.ENV }}\" > .env;
+        make docker-stop postgres;
+        make db;
         make update;
         exit"

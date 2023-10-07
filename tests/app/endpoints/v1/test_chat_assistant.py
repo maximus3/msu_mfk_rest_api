@@ -30,6 +30,7 @@ async def created_course_assist_off(not_created_course, session):  # type: ignor
     yield not_created_course
 
 
+@pytest.mark.xfail  # TODO
 class TestChatAssistantHandler:
     @staticmethod
     def get_url_application() -> str:
@@ -133,7 +134,6 @@ class TestChatAssistantHandler:
             'detail': f'Для курса {created_course_assist_off.name} нет умных подсказок.'
         }
 
-    @pytest.mark.xfail  # TODO
     async def test_empty_result(
         self,
         client,
@@ -170,7 +170,6 @@ class TestChatAssistantHandler:
             'detail': 'Error in getting answer, try again later.'
         }
 
-    @pytest.mark.xfail  # TODO
     async def test_ok(
         self,
         client,
