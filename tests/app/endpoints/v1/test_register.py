@@ -1,4 +1,4 @@
-# pylint: disable=too-many-arguments, unused-argument, too-many-public-methods
+# pylint: disable=too-many-arguments, unused-argument, too-many-public-methods, too-many-lines
 
 import pytest
 from fastapi import status
@@ -267,4 +267,40 @@ class TestRegisterHandler:
             'который регистрировались до этого. Если вы '
             'по каким-то причинам хотите поменять аккаунт, '
             'то напишите в поддержку.',
+        }
+
+    @pytest.mark.parametrize(
+        'null_header',
+        [
+            'log-contest-login',
+            'log-tg-id',
+            'log-bm-id',
+            'log-yandex-id',
+        ],
+    )
+    async def test_some_empty(
+        self,
+        client,
+        user_headers,
+        created_student,
+        created_department,
+        created_course,
+        null_header,
+    ):
+        headers = self._get_headers(
+            student=created_student, user_headers=user_headers
+        )
+        headers[null_header] = ''
+
+        response = await client.post(
+            self.get_url_application(),
+            headers=headers,
+            json=self.get_data(
+                created_student, created_department, created_course
+            ),
+        )
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert response.json() == {
+            'detail': 'Что-то не так с данными логина. Попробуйте '
+            'еще раз или обратитесь к администратору.',
         }

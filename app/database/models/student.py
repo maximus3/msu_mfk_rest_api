@@ -1,4 +1,8 @@
+# pylint: disable=unused-argument,too-many-lines
+import typing
+
 import sqlalchemy as sa
+from sqlalchemy import CheckConstraint
 from sqlalchemy.dialects.postgresql import UUID
 
 from .base import BaseModel
@@ -22,6 +26,50 @@ class Student(BaseModel):
     )
     token = sa.Column(sa.String, unique=True, nullable=False)
     yandex_id = sa.Column(sa.String, unique=True, nullable=False)
+
+    __table_args__ = (
+        CheckConstraint(
+            'char_length(contest_login) > 0', name='contest_login_min_length'
+        ),
+        CheckConstraint('char_length(tg_id) > 0', name='tg_id_min_length'),
+        CheckConstraint('char_length(bm_id) > 0', name='bm_id_min_length'),
+        CheckConstraint('char_length(token) > 0', name='token_min_length'),
+        CheckConstraint(
+            'char_length(yandex_id) > 0', name='yandex_id_min_length'
+        ),
+    )
+
+    @sa.orm.validates('contest_login')
+    def validate_contest_login(
+        self, key: typing.Any, contest_login: str
+    ) -> str:
+        if not contest_login:
+            raise ValueError('contest_login too short')
+        return contest_login
+
+    @sa.orm.validates('tg_id')
+    def validate_tg_id(self, key: typing.Any, tg_id: str) -> str:
+        if not tg_id:
+            raise ValueError('tg_id too short')
+        return tg_id
+
+    @sa.orm.validates('bm_id')
+    def validate_bm_id(self, key: typing.Any, bm_id: str) -> str:
+        if not bm_id:
+            raise ValueError('bm_id too short')
+        return bm_id
+
+    @sa.orm.validates('token')
+    def validate_token(self, key: typing.Any, token: str) -> str:
+        if not token:
+            raise ValueError('token too short')
+        return token
+
+    @sa.orm.validates('yandex_id')
+    def validate_yandex_id(self, key: typing.Any, yandex_id: str) -> str:
+        if not yandex_id:
+            raise ValueError('yandex_id too short')
+        return yandex_id
 
     def __repr__(self):  # type: ignore
         return f'<Student {self.contest_login}>'
@@ -75,6 +123,7 @@ class StudentCourse(BaseModel):
     )
     score = sa.Column(
         sa.Float,
+        default=0.0,
         nullable=False,
         server_default='0.0',
         doc='Sum of contests scores',
@@ -86,9 +135,15 @@ class StudentCourse(BaseModel):
         server_default='0.0',
         doc='Sum of contests scores no deadline',
     )
-    contests_ok = sa.Column(sa.Integer, nullable=False, server_default='0')
-    is_ok = sa.Column(sa.Boolean, nullable=False, server_default='false')
-    is_ok_final = sa.Column(sa.Boolean, nullable=False, server_default='false')
+    contests_ok = sa.Column(
+        sa.Integer, default=0, nullable=False, server_default='0'
+    )
+    is_ok = sa.Column(
+        sa.Boolean, default=False, nullable=False, server_default='false'
+    )
+    is_ok_final = sa.Column(
+        sa.Boolean, default=False, nullable=False, server_default='false'
+    )
 
     allow_early_exam = sa.Column(
         sa.Boolean,
@@ -129,10 +184,16 @@ class StudentContest(BaseModel):
         nullable=False,
         index=True,
     )
-    author_id = sa.Column(sa.Integer, nullable=True)
-    tasks_done = sa.Column(sa.Integer, default=0, nullable=False)
+    author_id = sa.Column(sa.Integer, nullable=False, unique=True)
+    tasks_done = sa.Column(
+        sa.Integer, default=0, nullable=False, server_default='0'
+    )
     score = sa.Column(
-        sa.Float, default=0.0, nullable=False, doc='Sum of tasks final scores'
+        sa.Float,
+        default=0.0,
+        nullable=False,
+        server_default='0.0',
+        doc='Sum of tasks final scores',
     )
     score_no_deadline = sa.Column(
         sa.Float,

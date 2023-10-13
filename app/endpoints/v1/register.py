@@ -29,6 +29,18 @@ async def register(
     _: User = Depends(get_current_user),
     session: AsyncSession = Depends(SessionManager().get_async_session),
 ) -> JSONResponse:
+    if (
+        not request.headers['log-contest-login']
+        or not request.headers['log-bm-id']
+        or not request.headers['log-tg-id']
+        or not request.headers['log-yandex-id']
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail='Что-то не так с данными логина. '
+            'Попробуйте еще раз или обратитесь '
+            'к администратору.',
+        )
     headers_data = register_schemas.RegisterHeaders(
         contest_login=request.headers['log-contest-login'],
         bm_id=request.headers['log-bm-id'],
