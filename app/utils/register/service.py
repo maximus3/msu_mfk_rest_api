@@ -10,7 +10,7 @@ from app.utils.course import (
     is_student_registered_on_course,
 )
 from app.utils.department import get_department
-from app.utils.student import create_student, get_student, get_student_by_token
+from app.utils.student import create_student, get_student
 
 
 async def register_student_on_course(  # pylint: disable=too-many-return-statements
@@ -43,11 +43,10 @@ async def register_student_on_course(  # pylint: disable=too-many-return-stateme
             'то напишите в поддержку.',
         )
 
-    student = await get_student(session, headers_data.contest_login)
+    student_by_login = await get_student(session, headers_data.contest_login)
 
-    if student and (
-        student.tg_id != headers_data.tg_id
-        or student.bm_id != headers_data.bm_id
+    if student_by_login and (
+        not student_by_tg_id or student_by_login.id != student_by_tg_id.id
     ):
         return (
             DatabaseStatus.MANY_TG_ACCOUNTS_ERROR,
@@ -58,24 +57,29 @@ async def register_student_on_course(  # pylint: disable=too-many-return-stateme
             'то напишите в поддержку.',
         )
 
-    if student is None:
-        logger.info(
-            'Student {} not exists, checking token',
-            headers_data.contest_login,
-        )
-        student = await get_student_by_token(session, data.token)
-        if student is None:
-            logger.info('No student with such login and token, creating')
-            student = await create_student(
-                session, data, headers_data, department
-            )
-        else:
+    if student_by_tg_id:
+        if student_by_tg_id.contest_login != headers_data.contest_login:
             logger.info(
                 'Student has another prev login: {}, changing to {}',
-                student.contest_login,
+                student_by_tg_id.contest_login,
                 headers_data.contest_login,
             )
-            student.contest_login = headers_data.contest_login
+            student_by_tg_id.contest_login = headers_data.contest_login
+        if student_by_tg_id.token != data.token:
+            logger.info(
+                'Student has another prev token: {}, changing to {}',
+                student_by_tg_id.token,
+                data.token,
+            )
+            student_by_tg_id.token = data.token
+    else:
+        logger.info('No student with such login and token, creating')
+        student_by_tg_id = await create_student(
+            session, data, headers_data, department
+        )
+    await session.commit()
+
+    student = student_by_tg_id
 
     course = await get_course(session, data.course)
     if course is None:

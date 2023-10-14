@@ -304,3 +304,31 @@ class TestRegisterHandler:
             'detail': 'Что-то не так с данными логина. Попробуйте '
             'еще раз или обратитесь к администратору.',
         }
+
+    async def test_register_ok_change_login(
+        self,
+        client,
+        user_headers,
+        created_student,
+        created_department,
+        created_course,
+    ):
+        headers = self._get_headers(
+            student=created_student, user_headers=user_headers
+        )
+        data = self.get_data(
+            created_student, created_department, created_course
+        )
+        headers['log-contest-login'] = 'new_login'
+        data['token'] = 'new_token'
+
+        response = await client.post(
+            self.get_url_application(),
+            headers=headers,
+            json=data,
+        )
+        assert response.status_code == status.HTTP_201_CREATED
+        assert response.json() == {'contest_login': 'new_login'}
+        # TODO
+        # assert created_student.token == 'new_token'
+        # assert created_student.contest_login == 'new_login'
