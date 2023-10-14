@@ -5,6 +5,7 @@ from fastapi import status
 
 from app.config import get_settings
 from app.endpoints.v1 import prefix
+from app.utils import student as student_utils
 
 
 pytestmark = pytest.mark.asyncio
@@ -312,6 +313,7 @@ class TestRegisterHandler:
         created_student,
         created_department,
         created_course,
+        create_async_session,
     ):
         headers = self._get_headers(
             student=created_student, user_headers=user_headers
@@ -329,6 +331,51 @@ class TestRegisterHandler:
         )
         assert response.status_code == status.HTTP_201_CREATED
         assert response.json() == {'contest_login': 'new_login'}
-        # TODO
-        # assert created_student.token == 'new_token'
-        # assert created_student.contest_login == 'new_login'
+        async with create_async_session() as session:
+            student = await student_utils.get_student_by_tg_id(
+                session=session, tg_id=created_student.tg_id
+            )
+            assert student
+            assert student.id == created_student.id
+            assert student.token == 'new_token'
+            assert student.contest_login == 'new_login'
+            assert student.bm_id == created_student.bm_id
+
+    async def test_register_already_registered_change_login(
+        self,
+        client,
+        user_headers,
+        created_student,
+        created_course,
+        created_department,
+        student_course,
+        student_department,
+        create_async_session,
+    ):
+        headers = self._get_headers(
+            student=created_student, user_headers=user_headers
+        )
+        data = self.get_data(
+            created_student, created_department, created_course
+        )
+        headers['log-contest-login'] = 'new_login'
+        data['token'] = 'new_token'
+
+        response = await client.post(
+            self.get_url_application(),
+            headers=headers,
+            json=data,
+        )
+        assert response.status_code == status.HTTP_409_CONFLICT
+        assert response.json() == {
+            'detail': 'Student already registered on course'
+        }
+        async with create_async_session() as session:
+            student = await student_utils.get_student_by_tg_id(
+                session=session, tg_id=created_student.tg_id
+            )
+            assert student
+            assert student.id == created_student.id
+            assert student.token == 'new_token'
+            assert student.contest_login == 'new_login'
+            assert student.bm_id == created_student.bm_id
