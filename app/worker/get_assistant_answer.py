@@ -9,7 +9,7 @@ async def task(
     data_raw: dict[str, str | int],
     student_tg_id: str,
     base_logger: 'loguru.Logger',
-) -> bool:
+) -> list[str]:
     data = chat_assistant_schemas.ChatAssistantServerRequest(
         **data_raw,
     )
@@ -22,18 +22,9 @@ async def task(
             chat_id=student_tg_id,
             text='Error in getting answer, try again later.',
         )
+        return ['Error in getting answer, try again later.']
     await bot.bot_students.send_message(
         chat_id=student_tg_id,
         text=f'Ответ от умного помощника:\n{result.result}',
     )
-    return True
-
-
-async def _send_error_message(
-    student_tg_id: str,
-    detail: str,
-) -> None:
-    await bot.bot_students.send_message(
-        chat_id=student_tg_id,
-        text=detail,
-    )
+    return [result.result]

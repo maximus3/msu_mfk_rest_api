@@ -29,16 +29,16 @@ class DefaultSettings(BaseSettings):
     POSTGRES_PORT: int = Field('5432', env='POSTGRES_PORT')
     POSTGRES_PASSWORD: str = Field('pgpswd', env='POSTGRES_PASSWORD')
 
-    LOGGING_FORMAT = (
+    LOGGING_FORMAT: str = (
         '%(filename)s %(funcName)s [%(thread)d] '
         '[LINE:%(lineno)d]# %(levelname)-8s '
         '[%(asctime)s.%(msecs)03d] %(name)s: '
         '%(message)s'
     )
-    LOGGING_FILE_DIR = Path('logs')
-    LOGGING_APP_FILE = LOGGING_FILE_DIR / 'logfile.log'
-    LOGGING_SCHEDULER_FILE = LOGGING_FILE_DIR / 'scheduler_logfile.log'
-    LOGGING_WORKER_FILE = LOGGING_FILE_DIR / 'worker_logfile.log'
+    LOGGING_FILE_DIR: Path = Path('logs')
+    LOGGING_APP_FILE: Path = LOGGING_FILE_DIR / 'logfile.log'
+    LOGGING_SCHEDULER_FILE: Path = LOGGING_FILE_DIR / 'scheduler_logfile.log'
+    LOGGING_WORKER_FILE: Path = LOGGING_FILE_DIR / 'worker_logfile.log'
 
     BASE_DIR: Path = Path(__file__).resolve().parent.parent.parent
     CONFIG_FILENAME: str = 'config.yaml'
@@ -53,10 +53,10 @@ class DefaultSettings(BaseSettings):
         1440, env='ACCESS_TOKEN_EXPIRE_MINUTES'
     )
 
-    PWD_CONTEXT = CryptContext(schemes=['bcrypt'], deprecated='auto')
+    PWD_CONTEXT: CryptContext = CryptContext(schemes=['bcrypt'], deprecated='auto')
 
-    AUTH_URL = '/api/v1/user/authentication'
-    OAUTH2_SCHEME = OAuth2PasswordBearer(tokenUrl=AUTH_URL)
+    AUTH_URL: str = '/api/v1/user/authentication'
+    OAUTH2_SCHEME: OAuth2PasswordBearer = OAuth2PasswordBearer(tokenUrl=AUTH_URL)
 
     YANDEX_CONTEST_API_URL: str = Field(
         'https://api.contest.yandex.net/api/public/v2/',

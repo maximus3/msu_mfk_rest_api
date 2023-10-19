@@ -13,7 +13,7 @@ async def task(
     student_login: str,
     student_tg_id: str,
     base_logger: 'loguru.Logger',
-) -> bool:
+) -> list[str]:
     logger = base_logger
     headers = {'log-contest-login': student_login}
     async with SessionManager().create_async_session() as session:
@@ -24,22 +24,28 @@ async def task(
             session, course_short_name
         )
         if course is None:
-            await _send_error_message_404(
+            text = _get_error_message_404(
                 student_login=student_login,
-                student_tg_id=student_tg_id,
                 detail='Course not found',
             )
-            return False
+            await bot.bot_students.send_message(
+                chat_id=student_tg_id,
+                text=text,
+            )
+            return [text]
         student_course = await course_utils.get_student_course(
             session, student.id, course.id
         )
         if student_course is None:
-            await _send_error_message_404(
+            text = _get_error_message_404(
                 student_login=student_login,
-                student_tg_id=student_tg_id,
                 detail='Student not registered on course',
             )
-            return False
+            await bot.bot_students.send_message(
+                chat_id=student_tg_id,
+                text=text,
+            )
+            return [text]
         levels_by_course = await course_utils.get_course_levels(
             session, course.id
         )
@@ -55,7 +61,7 @@ async def task(
             )
         )
 
-    await _send_student_results(
+    result = _get_student_results_messages(
         results=StudentResults(
             courses=[
                 await results_utils.get_student_course_results(
@@ -71,40 +77,37 @@ async def task(
             fio=student.fio,
         ),
         student_login=student.contest_login,
-        student_tg_id=student_tg_id,
     )
+    for text in result:
+        await bot.bot_students.send_message(
+            chat_id=student_tg_id,
+            text=text,
+        )
+    return result
 
-    return True
 
-
-async def _send_error_message_404(
+def _get_error_message_404(
     student_login: str,
-    student_tg_id: str,
     detail: str,
-) -> None:
-    await bot.bot_students.send_message(
-        chat_id=student_tg_id,
-        text=f'''Кажется, что-то не так с твоим логином.
+) -> str:
+    return f'''Кажется, что-то не так с твоим логином.
 Текущий записанный логин: {student_login}
 Если что-то не так, пожалуйста, пройди регистрацию еще раз, чтобы система обновила твой логин.
 Если логин правильный - напиши нам вопрос через раздел "Другое".
-Подробности ошибки: {detail}''',
-    )
+Подробности ошибки: {detail}'''
 
 
-async def _send_student_results(
+def _get_student_results_messages(
     results: StudentResults,
     student_login: str,
-    student_tg_id: str,
-) -> None:
-    await bot.bot_students.send_message(
-        chat_id=student_tg_id,
-        text=f'''
+) -> list[str]:
+    messages = [
+        f'''
 Логин: {student_login}
 ФИО для проверки: {results.fio}
-''',
-    )
-
+'''.strip()
+    ]
+    # pylint: disable=too-many-nested-blocks
     for course_results in results.courses:
         results_msg = f'Курс: {course_results.name}\n'
         if course_results.str_need:
@@ -144,7 +147,6 @@ async def _send_student_results(
                         f', {"набрано✅" if contest_level.is_ok else "НЕТ❌"}\n'
                     )
 
-        await bot.bot_students.send_message(
-            chat_id=student_tg_id,
-            text=results_msg,  # TODO: check length
-        )
+        messages.append(results_msg.strip())  # TODO: check length
+
+    return messages
