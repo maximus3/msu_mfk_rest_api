@@ -9,6 +9,7 @@ from .logs import api_router as logs_router
 from .ping import api_router as ping_router
 from .register import api_router as register_router
 from .results import api_router as results_router
+from .task import api_router as task_router
 
 
 prefix = '/v1'
@@ -25,6 +26,7 @@ router.include_router(department_router)
 router.include_router(results_router)
 router.include_router(contest_router)
 router.include_router(chat_assistant_router)
+router.include_router(task_router)
 
 
 __all__ = [
