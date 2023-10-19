@@ -1,6 +1,5 @@
 import loguru
 
-from app.bot_helper import bot
 from app.database.connection import SessionManager
 from app.schemas import StudentResults
 from app.utils import course as course_utils
@@ -11,7 +10,6 @@ from app.utils import student as student_utils
 async def task(
     course_short_name: str,
     student_login: str,
-    student_tg_id: str,
     base_logger: 'loguru.Logger',
 ) -> list[str]:
     logger = base_logger
@@ -28,10 +26,6 @@ async def task(
                 student_login=student_login,
                 detail='Course not found',
             )
-            await bot.bot_students.send_message(
-                chat_id=student_tg_id,
-                text=text,
-            )
             return [text]
         student_course = await course_utils.get_student_course(
             session, student.id, course.id
@@ -40,10 +34,6 @@ async def task(
             text = _get_error_message_404(
                 student_login=student_login,
                 detail='Student not registered on course',
-            )
-            await bot.bot_students.send_message(
-                chat_id=student_tg_id,
-                text=text,
             )
             return [text]
         levels_by_course = await course_utils.get_course_levels(
@@ -78,11 +68,6 @@ async def task(
         ),
         student_login=student.contest_login,
     )
-    for text in result:
-        await bot.bot_students.send_message(
-            chat_id=student_tg_id,
-            text=text,
-        )
     return result
 
 

@@ -1,13 +1,11 @@
 import loguru
 
-from app.bot_helper import bot
 from app.schemas import chat_assistant as chat_assistant_schemas
 from app.utils import chat_assistant as chat_assistant_utils
 
 
 async def task(
     data_raw: dict[str, str | int],
-    student_tg_id: str,
     base_logger: 'loguru.Logger',
 ) -> list[str]:
     data = chat_assistant_schemas.ChatAssistantServerRequest(
@@ -18,13 +16,5 @@ async def task(
         data=data,
     )
     if not result.result:
-        await bot.bot_students.send_message(
-            chat_id=student_tg_id,
-            text='Error in getting answer, try again later.',
-        )
         return ['Error in getting answer, try again later.']
-    await bot.bot_students.send_message(
-        chat_id=student_tg_id,
-        text=f'Ответ от умного помощника:\n{result.result}',
-    )
     return [result.result]

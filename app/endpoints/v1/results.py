@@ -4,7 +4,6 @@ import traceback
 from pathlib import Path
 
 import loguru
-from celery.result import AsyncResult
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, status
 from fastapi.responses import FileResponse
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -110,7 +109,6 @@ async def get_results_by_course(
     task = worker.get_results_by_course_task.delay(
         course_short_name=course_short_name,
         student_login=request.headers['log-contest-login'],
-        student_tg_id=request.headers['log-tg-id'],
         request_id=request.scope['request_id'],
     )
     logger = logger.bind(
@@ -118,38 +116,6 @@ async def get_results_by_course(
     )
     logger.info('Task {} sent to celery', task.id)
     return JSONResponse({'task_id': task.id})
-
-
-@api_router.get(
-    '/task/status',
-    status_code=status.HTTP_200_OK,
-)
-async def get_task_status(
-    request: Request,  # pylint: disable=unused-argument
-    task_id: str,
-    _: User = Depends(get_current_user),
-) -> JSONResponse:
-    status_to_name = {
-        'PENDING': 'Ожидание выполнения задачи',
-        'STARTED': 'В работе',
-        'RETRY': 'В работе (повтор)',
-        'FAILURE': 'Ошибка при получении результатов, '
-        'попробуйте еще раз или напишите администратору.',
-        'SUCCESS': 'Результаты отправлены. Если сообщение с '
-        'результатами до сих пор вам не пришло, '
-        'пожалуйста, обратитесь к администратору.',
-    }
-    logger = loguru.logger.bind(
-        task_id=task_id,
-    )
-    result = AsyncResult(task_id)
-    logger.info('Current task status: {}', result.status)
-    return JSONResponse(
-        {
-            'status': result.status,
-            'description': status_to_name.get(result.status),
-        }
-    )
 
 
 @api_router.post(
