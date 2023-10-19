@@ -13,6 +13,8 @@ services:
       dockerfile: Dockerfile
     env_file:
       - .env
+    environment:
+      - POSTGRES_HOST=postgres
     volumes:
       - ./logs:/opt/app/logs
     ports:

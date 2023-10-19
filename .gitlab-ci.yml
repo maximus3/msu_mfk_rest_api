@@ -48,8 +48,6 @@ test:
     POSTGRES_PORT: 5432
   services:
     - name: postgres:14.5
-  before_script:
-    - printf "POSTGRES_HOST=postgres\n" >> .env
   script:
     - make test-mp
 
@@ -80,20 +78,20 @@ deploy:
   before_script:
     - apt-get update && apt-get install openssh-client -y
     - mkdir -p ~/.ssh
-    - cat $SSH_KEY > ~/.ssh/deploy_key
+    - echo "$SSH_KEY" | tr -d '\r' > ~/.ssh/deploy_key
     - chmod 600 ~/.ssh/deploy_key
-    - ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -p $SSH_PORT $SSH_USERNAME@$SSH_ADDRESS "echo "Ping" && exit"
+    - ssh -i ~/.ssh/deploy_key -p $SSH_PORT -o StrictHostKeyChecking=no $SSH_USERNAME@$SSH_ADDRESS "echo "Ping" && exit"
   script:
-    - echo "$CI_DEPLOY_USER $CI_DEPLOY_PASSWORD"
-    - ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -p $SSH_PORT $SSH_USERNAME@$SSH_ADDRESS "
+    - ssh -i ~/.ssh/deploy_key -p $SSH_PORT -o StrictHostKeyChecking=no $SSH_USERNAME@$SSH_ADDRESS "
         [ -e $CODE_FOLDER ] || (git clone https://$CI_DEPLOY_USER:$CI_DEPLOY_PASSWORD@$CI_SERVER_HOST/$CI_PROJECT_NAMESPACE/$REPO_NAME.git $CODE_FOLDER && 
         cd $CODE_FOLDER && git checkout $REPO_BRANCH && git pull) && exit"
 
     - scp -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -P $SSH_PORT $ENV $SSH_USERNAME@$SSH_ADDRESS:/home/$SSH_USERNAME/$CODE_FOLDER/.env
     - ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -p $SSH_PORT $SSH_USERNAME@$SSH_ADDRESS "
-        cd $CODE_FOLDER && 
-        git pull &&
-        make update &&
+        cd $CODE_FOLDER;
+        make docker-stop postgres;
+        make db;
+        make update;
         exit"
   only:
     - master
