@@ -546,7 +546,14 @@ async def get_course_results(  # pylint: disable=too-many-statements
                 (student, department, student_results)
             )
     course_results = course_schemas.CourseResultsCSV(
-        keys=['contest_login', 'fio', 'department'],
+        keys=[
+            'contest_login',
+            'fio',
+            'department',
+            'tg_id',
+            'tg_username',
+            'bm_id',
+        ],
         results=collections.defaultdict(dict),
     )
 
@@ -559,6 +566,11 @@ async def get_course_results(  # pylint: disable=too-many-statements
         course_results.results[student.contest_login][
             'department'
         ] = department.name
+        course_results.results[student.contest_login]['tg_id'] = student.tg_id
+        course_results.results[student.contest_login][
+            'tg_username'
+        ] = student.tg_username
+        course_results.results[student.contest_login]['bm_id'] = student.bm_id
         course_results.results[student.contest_login][
             'score_sum'
         ] = student_results.score_sum
