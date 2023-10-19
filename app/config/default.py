@@ -53,10 +53,14 @@ class DefaultSettings(BaseSettings):
         1440, env='ACCESS_TOKEN_EXPIRE_MINUTES'
     )
 
-    PWD_CONTEXT: CryptContext = CryptContext(schemes=['bcrypt'], deprecated='auto')
+    PWD_CONTEXT: CryptContext = CryptContext(
+        schemes=['bcrypt'], deprecated='auto'
+    )
 
     AUTH_URL: str = '/api/v1/user/authentication'
-    OAUTH2_SCHEME: OAuth2PasswordBearer = OAuth2PasswordBearer(tokenUrl=AUTH_URL)
+    OAUTH2_SCHEME: OAuth2PasswordBearer = OAuth2PasswordBearer(
+        tokenUrl=AUTH_URL
+    )
 
     YANDEX_CONTEST_API_URL: str = Field(
         'https://api.contest.yandex.net/api/public/v2/',
