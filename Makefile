@@ -105,7 +105,9 @@ downgrade:  ##@Database Downgrade migration on one revision
 
 .PHONY: db
 db: ##@Database Docker up db
-	docker-compose up -d postgres
+	docker-compose up -d --build postgres
+	docker exec postgres bash init_master.sh
+	docker-compose up -d --build postgres_slave
 
 .PHONY: test
 test: ##@Testing Runs pytest with coverage
@@ -187,7 +189,7 @@ docker-stop: ##@Application Docker stop some app
 
 .PHONY: docker-clean
 docker-clean: ##@Application Docker prune -f
-	docker image prune -f
+	docker image prune -a -f
 
 .PHONY: docker
 docker: docker-clean docker-build docker-up-d docker-clean ##@Application Docker prune, up, run and prune

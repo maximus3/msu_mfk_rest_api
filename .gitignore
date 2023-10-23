@@ -117,6 +117,10 @@ pgadmin/*
 pgdata/*
 db/*
 !db/README.md
+!db/postgres.conf
+!db/pg_hba.conf
+!db/init_master.sh
+!db/init_master.sql
 
 deploy/*
 !deploy/README.md
