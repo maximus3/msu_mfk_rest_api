@@ -121,6 +121,7 @@ db/*
 !db/pg_hba.conf
 !db/init_master.sh
 !db/init_master.sql
+!db/Dockerfile_slave
 
 deploy/*
 !deploy/README.md
