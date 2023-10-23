@@ -79,4 +79,6 @@ if __name__ == '__main__':  # pragma: no cover
         log_level='debug' if settings_for_application.DEBUG else 'info',
         log_config='log.ini',
         access_log=False,
+        forwarded_allow_ips='*',
+        proxy_headers=True,
     )
