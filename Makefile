@@ -107,7 +107,11 @@ downgrade:  ##@Database Downgrade migration on one revision
 db: ##@Database Docker up db
 	docker-compose up -d --build postgres
 	docker exec postgres bash init_master.sh
+	docker restart postgres
 	docker-compose up -d --build postgres_slave
+	docker exec postgres_slave bash init_slave.sh
+	docker restart postgres_slave
+	docker-compose up postgres_slave
 
 .PHONY: test
 test: ##@Testing Runs pytest with coverage

@@ -1,7 +1,0 @@
-FROM postgres:14.5
-
-#COPY db/slave_pgdata/slave_pgdata.tar.gz slave_pgdata.tar.gz
-#RUN tar -zxvf slave_pgdata.tar.gz -C /var/lib/postgresql/data/
-#RUN pg_basebackup --host=postgres --username=replicator --password $POSTGRES_REPLICATOR_PASSWORD --pgdata=/var/lib/postgresql/data --wal-method=stream --slot=replication_slot_slave1 --write-recovery-conf --progress --format=plain
-
-CMD ["postgres"]

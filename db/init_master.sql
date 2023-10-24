@@ -12,7 +12,7 @@ DO
 $$
 BEGIN
     IF NOT exists (SELECT * FROM pg_replication_slots WHERE slot_name = 'replication_slot_slave1') THEN
-        SELECT * FROM pg_create_physical_replication_slot('replication_slot_slave1');
+        SELECT pg_create_physical_replication_slot('replication_slot_slave1');
     END IF;
 END
 $$
