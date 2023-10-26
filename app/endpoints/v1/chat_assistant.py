@@ -60,17 +60,18 @@ async def chat_assistant(
             detail=f'Контест {chat_assistant_request.contest_number} '
             f'не найден для курса {course.name}',
         )
+    task_number = chat_assistant_request.task_number.split('.')[0]
     task = await task_utils.get_task_by_alias(
         session=session,
         contest_id=contest.id,
-        alias=str(chat_assistant_request.task_number),
+        alias=task_number,
     )
     if not task:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f'В контесте {chat_assistant_request.contest_number} '
             f'для курса {course.name} не найдена задача '
-            f'номер {chat_assistant_request.task_number}',
+            f'номер {task_number}',
         )
     logger = loguru.logger.bind(
         course={'name': course.name, 'short_name': course.short_name},
@@ -80,8 +81,8 @@ async def chat_assistant(
 
     celery_task = worker.get_assistant_answer_task.delay(
         data_raw=chat_assistant_schemas.ChatAssistantServerRequest(
-            contest_number=chat_assistant_request.contest_number,
-            task_number=chat_assistant_request.task_number,
+            contest_number=contest.lecture,
+            task_number=task.alias,
             user_query=chat_assistant_request.user_query,
         ).dict(),
         request_id=request.scope['request_id'],
