@@ -53,8 +53,8 @@ services:
     image: postgres:14.5
     command:
       - "postgres"
-      - "-c"
-      - "config_file=/etc/postgresql/postgresql.conf"
+      - "--config_file=/etc/postgresql/postgresql.conf"
+      - "--hba_file=/etc/postgresql/pg_hba.conf"
     environment:
       PGDATA: "/var/lib/postgresql/data/pgdata"
     env_file:
@@ -63,7 +63,6 @@ services:
        - db-data:/var/lib/postgresql/data
        - ./db/postgres.conf:/etc/postgresql/postgresql.conf
        - ./db/pg_hba.conf:/etc/postgresql/pg_hba.conf
-       - ./db/slave_pgdata:/slave_pgdata
        - ./db/init_master.sh:/init_master.sh
        - ./db/init_master.sql:/init_master.sql
     ports:
@@ -85,10 +84,11 @@ services:
 
   postgres_slave:
     container_name: postgres_slave
+    image: postgres:14.5
     command:
       - "postgres"
-      - "-c"
-      - "config_file=/etc/postgresql/postgresql.conf"
+      - "--config_file=/etc/postgresql/postgresql.conf"
+      - "--hba_file=/etc/postgresql/pg_hba.conf"
     environment:
       PGDATA: "/var/lib/postgresql/data/pgdata"
       POSTGRES_MASTER_SERVICE_HOST: postgres
