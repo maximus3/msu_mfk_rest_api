@@ -86,7 +86,7 @@ async def create(  # pylint: disable=too-many-statements
     session.add(course)
     await session.flush()
 
-    tasks_exists = await task_utils.get_tasks_by_yandex_ids(
+    all_tasks_exists = await task_utils.get_tasks_by_yandex_ids(
         session=session,
         yandex_task_ids=[task.yandex_task_id for task in contest_info.tasks],
     )
@@ -97,11 +97,25 @@ async def create(  # pylint: disable=too-many-statements
         is_zero_ok = False  # TODO: need change in db next
         score_max = 0  # TODO: need change in db next
 
+        tasks_exists = [
+            task_exist
+            for task_exist in all_tasks_exists
+            if task_exist.yandex_task_id == task.yandex_task_id
+        ]
+
         is_zero_ok_set = set(
             task_exist.is_zero_ok for task_exist in tasks_exists
         )
         score_max_set = set(
             task_exist.score_max for task_exist in tasks_exists
+        )
+        logger.info(
+            'Got {} task_exists for yandex_task_id={} '
+            'is_zero_ok_set={} score_max_set={}',
+            len(tasks_exists),
+            task.yandex_task_id,
+            is_zero_ok_set,
+            score_max_set,
         )
         if len(is_zero_ok_set) == 1:
             is_zero_ok = is_zero_ok_set.pop()
