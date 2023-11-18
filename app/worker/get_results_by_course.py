@@ -3,6 +3,7 @@ import loguru
 from app.database.connection import SessionManager
 from app.schemas import StudentResults
 from app.utils import course as course_utils
+from app.utils import department as department_utils
 from app.utils import results as results_utils
 from app.utils import student as student_utils
 
@@ -20,6 +21,9 @@ async def task(
         )
         course = await course_utils.get_course_by_short_name(
             session, course_short_name
+        )
+        department = await department_utils.get_department_by_student(
+            session, student.id
         )
         if course is None:
             text = _get_error_message_404(
@@ -65,6 +69,7 @@ async def task(
                 )
             ],
             fio=student.fio,
+            department=department.name,
         ),
         student_login=student.contest_login,
     )
@@ -90,6 +95,7 @@ def _get_student_results_messages(
         f'''
 Логин: {student_login}
 ФИО для проверки: {results.fio}
+Факультет: {results.department}
 '''.strip()
     ]
     # pylint: disable=too-many-nested-blocks

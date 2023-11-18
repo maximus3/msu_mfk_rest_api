@@ -12,6 +12,15 @@ from .gen_workers import make_data as gen_workers
 
 list_of_gens = [
     {
+        'name': 'gen_schedulers',
+        'func': gen_schedulers,
+        'jinja2_env': jinja2.Environment(
+            loader=jinja2.FileSystemLoader(
+                pathlib.Path(__file__).parent / 'gen_schedulers' / 'templates'
+            )
+        ),
+    },
+    {
         'name': 'gen_admin_models',
         'func': gen_admin_models,
         'jinja2_env': jinja2.Environment(
@@ -23,11 +32,13 @@ list_of_gens = [
         ),
     },
     {
-        'name': 'gen_schedulers',
-        'func': gen_schedulers,
+        'name': 'gen_tests_factory_lib',
+        'func': gen_tests_factory_lib,
         'jinja2_env': jinja2.Environment(
             loader=jinja2.FileSystemLoader(
-                pathlib.Path(__file__).parent / 'gen_schedulers' / 'templates'
+                pathlib.Path(__file__).parent
+                / 'gen_tests_factory_lib'
+                / 'templates'
             )
         ),
     },
@@ -37,17 +48,6 @@ list_of_gens = [
         'jinja2_env': jinja2.Environment(
             loader=jinja2.FileSystemLoader(
                 pathlib.Path(__file__).parent / 'gen_workers' / 'templates'
-            )
-        ),
-    },
-    {
-        'name': 'gen_tests_factory_lib',
-        'func': gen_tests_factory_lib,
-        'jinja2_env': jinja2.Environment(
-            loader=jinja2.FileSystemLoader(
-                pathlib.Path(__file__).parent
-                / 'gen_tests_factory_lib'
-                / 'templates'
             )
         ),
     },
