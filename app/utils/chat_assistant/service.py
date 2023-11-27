@@ -16,6 +16,7 @@ async def get_chat_assistant_suggest(
         method='POST',
         data=data.dict(),
     )
+    logger.info('Chat assistant answer: {}', response.json())
     return chat_assistant_schemas.ChatAssistantServerResponse(
         **response.json()
     )
