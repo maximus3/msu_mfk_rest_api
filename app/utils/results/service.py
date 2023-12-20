@@ -109,6 +109,12 @@ async def get_student_course_results(  # pylint: disable=too-many-arguments
             contests,
         )
     )
+    real_student_score = sum(
+        map(
+            lambda x: x.score if not x.is_final and x.is_necessary else 0,
+            contests,
+        )
+    )
     level_names = list(map(lambda level: level.level_name, course_levels))
     course_levels_front = []
     was_ok_exam = False
@@ -153,7 +159,7 @@ async def get_student_course_results(  # pylint: disable=too-many-arguments
         is_ok_final=student_course.is_ok_final,
         early_exam=student_course.allow_early_exam,
         perc_ok=0,  # TODO
-        str_need=f'Набрано баллов: {student_course.score}/{real_score_sum}'
+        str_need=f'Набрано баллов: {real_student_score}/{real_score_sum}'
         if course_schemas.LevelOkMethod.SCORE_SUM in level_ok_methods
         else '',
         course_levels=course_levels_front,
