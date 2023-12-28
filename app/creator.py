@@ -14,6 +14,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import Response
 from uvicorn.protocols import utils
 
+from app import constants
 from app.config import DefaultSettings, get_settings
 from app.database.admin.creator import get_sqladmin
 from app.endpoints import list_of_routes
@@ -125,9 +126,7 @@ def configure_logger(settings: DefaultSettings) -> None:
     )
     loguru.logger.add(
         settings.LOGGING_APP_FILE,
-        rotation='500 MB',
-        serialize=True,
-        enqueue=True,
+        **constants.LOGGER_PARAMS,
     )
     logging.getLogger('sqlalchemy.engine').setLevel('INFO')
 

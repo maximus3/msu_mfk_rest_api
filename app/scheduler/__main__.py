@@ -9,6 +9,7 @@ from datetime import datetime
 import loguru
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
+from app import constants
 from app.bot_helper import send
 from app.config import get_settings
 from app.scheduler import list_of_jobs
@@ -143,9 +144,7 @@ if __name__ == '__main__':
     loguru.logger.add(sink=sys.stderr, serialize=True, enqueue=True)
     loguru.logger.add(
         settings.LOGGING_SCHEDULER_FILE,
-        rotation='500 MB',
-        serialize=True,
-        enqueue=True,
+        **constants.LOGGER_PARAMS,
     )
     scheduler = get_scheduler()
     for job in scheduler.get_jobs():

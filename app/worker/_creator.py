@@ -8,7 +8,7 @@ import traceback
 import celery
 import loguru
 
-from app import config
+from app import config, constants
 from app.bot_helper import send
 
 
@@ -22,9 +22,7 @@ def get_celery() -> celery.Celery:
     loguru.logger.add(sink=sys.stderr, serialize=True, enqueue=True)
     loguru.logger.add(
         settings.LOGGING_WORKER_FILE,
-        rotation='500 MB',
-        serialize=True,
-        enqueue=True,
+        **constants.LOGGER_PARAMS,
     )
 
     return _celery
