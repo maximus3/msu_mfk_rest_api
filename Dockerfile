@@ -13,13 +13,15 @@ ENV PYTHONUNBUFFERED=on
 # set workdir as PYTHONPATH
 ENV PYTHONPATH=/opt/app
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential wget gnupg
+RUN apt-get update && apt-get install -y --no-install-recommends build-essential
 
 # for pg_dump
-# RUN sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt bullseye-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
-# RUN wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
-# RUN apt-get update && apt-get install -y postgresql-client-14
+RUN apt-get update && apt-get install -y wget gnupg libpq5
+RUN sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt bullseye-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+RUN wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
+RUN wget http://archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.0g-2ubuntu4_amd64.deb
+RUN dpkg -i libssl1.1_1.1.0g-2ubuntu4_amd64.deb
+RUN apt-get update && apt-get install -y postgresql-client-14
 
 RUN apt-get autoclean && apt-get autoremove \
     && rm -rf /var/lib/apt/lists/* \
