@@ -144,7 +144,7 @@ if __name__ == '__main__':
     loguru.logger.add(sink=sys.stderr, serialize=True, enqueue=True)
     loguru.logger.add(
         settings.LOGGING_SCHEDULER_FILE,
-        **constants.LOGGER_PARAMS,
+        **constants.LOGGER_PARAMS,  # type: ignore
     )
     scheduler = get_scheduler()
     for job in scheduler.get_jobs():

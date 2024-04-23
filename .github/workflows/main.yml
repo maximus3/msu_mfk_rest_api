@@ -36,7 +36,6 @@ jobs:
     #----------------------------------------------
     - name: Install Poetry and dependencies
       run: |
-        make env
         make venv
         make install
 
@@ -82,15 +81,12 @@ jobs:
     #----------------------------------------------
     - name: Install Poetry and dependencies
       run: |
-        make env
         make venv
         make install
 
     - name: Run tests
       run: |
-        printf "APP_HOST=localhost\n" >> .env
-        make db
-        sudo make test-mp
+        POSTGRES_HOST=postgres make test
 
   deploy:
 
@@ -100,30 +96,11 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - name: Get github URL
-      run: |
-        echo "GITHUB_URL=$(git remote get-url origin)" >> $GITHUB_ENV
-        echo "GITHUB_REPO=${{ github.repository }}" >> $GITHUB_ENV
+    - name: Notify start
+      run: sh ./ci/notify.sh "Starting deploy in PROD"
 
-    - name: Make dir .ssh
-      run: mkdir -p ~/.ssh
+    - name: Deploy
+      run: sh ./ci/deploy-github.sh
 
-    - name: Add deploy ssh key
-      run: echo "${{ secrets.SSH_KEY }}" | tr -d '\r' > ~/.ssh/deploy_key
-
-    - name: Allow use deploy key
-      run: sudo chmod 600 ~/.ssh/deploy_key
-
-    - name: Test connection and copy repo if not exists
-      run: ssh -i ~/.ssh/deploy_key -p ${{ secrets.SSH_PORT }} -o StrictHostKeyChecking=no ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_ADDRESS }} "[ -e ${{ github.event.repository.name }} ] || git clone git@github.com:$GITHUB_REPO.git; exit"
-
-    - name: SSH WORKS - replace files
-      run: |
-        ssh  -i ~/.ssh/deploy_key -p ${{ secrets.SSH_PORT }} -o StrictHostKeyChecking=no ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_ADDRESS }} "
-        cd ~/${{ github.event.repository.name }};
-        git pull;
-        echo \"${{ secrets.ENV }}\" > .env;
-        make docker-stop postgres;
-        make db;
-        make update;
-        exit"
+    - name: Notify ok
+      run: sh ./ci/notify.sh "Deploy in PROD success ✅"

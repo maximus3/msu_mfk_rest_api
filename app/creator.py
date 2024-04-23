@@ -126,7 +126,7 @@ def configure_logger(settings: DefaultSettings) -> None:
     )
     loguru.logger.add(
         settings.LOGGING_APP_FILE,
-        **constants.LOGGER_PARAMS,
+        **constants.LOGGER_PARAMS,  # type: ignore
     )
     logging.getLogger('sqlalchemy.engine').setLevel('INFO')
 

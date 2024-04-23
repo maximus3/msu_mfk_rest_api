@@ -22,7 +22,7 @@ def get_celery() -> celery.Celery:
     loguru.logger.add(sink=sys.stderr, serialize=True, enqueue=True)
     loguru.logger.add(
         settings.LOGGING_WORKER_FILE,
-        **constants.LOGGER_PARAMS,
+        **constants.LOGGER_PARAMS,  # type: ignore
     )
 
     return _celery

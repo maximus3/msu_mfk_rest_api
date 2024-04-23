@@ -1,8 +1,9 @@
 stages:
   - build
   - check
-#  - publish
+  - notify_ci_success
   - deploy
+  - notify
 
 
 variables:
@@ -13,7 +14,7 @@ variables:
   REPO_NAME: $CI_PROJECT_NAME
   REPO_URL: $CI_PROJECT_URL
   REPO_BRANCH: $CI_COMMIT_REF_NAME
-  CODE_FOLDER: $REPO_NAME-$REPO_BRANCH
+  CODE_FOLDER: $REPO_NAME
 
 
 build:
@@ -21,11 +22,10 @@ build:
   stage: build
   artifacts:
     paths:
-#      - .cache/pip
+      - .cache/pip
       - .venv/
-      - .env
+    expire_in: 2 hrs
   script:
-    - make env
     - make venv
     - make install
 
@@ -49,49 +49,59 @@ test:
   services:
     - name: postgres:14.5
   script:
-    - make test-mp
+    - POSTGRES_HOST=postgres make test
 
 
-#publish:
-#  image: docker:20.10.16
-#  stage: publish
-#  tags:
-#    - docker
-#  variables:
-#    DOCKER_HOST: tcp://docker:2375
-#    DOCKER_TLS_CERTDIR: ""
-#  services:
-#    - name: docker:20.10.16-dind
-#      command: ["--tls=false"]
-#  script:
-#    - docker build -t $TAG_COMMIT -t $TAG_LATEST .
-#    - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY
-#    - docker push $TAG_COMMIT
-#    - docker push $TAG_LATEST
-#  only:
-#    - master
+notify_ci_success:
+  image: ubuntu:20.04
+  stage: notify_ci_success
+  script:
+    - sh ./ci/notify.sh "CI/CD success ✅"
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      when: never
 
 
-deploy:
+deploy-dev:
   image: ubuntu:20.04
   stage: deploy
+  environment:
+    name: dev
   before_script:
-    - apt-get update && apt-get install openssh-client -y
-    - mkdir -p ~/.ssh
-    - echo "$SSH_KEY" | tr -d '\r' > ~/.ssh/deploy_key
-    - chmod 600 ~/.ssh/deploy_key
-    - ssh -i ~/.ssh/deploy_key -p $SSH_PORT -o StrictHostKeyChecking=no $SSH_USERNAME@$SSH_ADDRESS "echo "Ping" && exit"
+    - sh ./ci/notify.sh "Starting deploy in DEV"
   script:
-    - ssh -i ~/.ssh/deploy_key -p $SSH_PORT -o StrictHostKeyChecking=no $SSH_USERNAME@$SSH_ADDRESS "
-        [ -e $CODE_FOLDER ] || (git clone https://$CI_DEPLOY_USER:$CI_DEPLOY_PASSWORD@$CI_SERVER_HOST/$CI_PROJECT_NAMESPACE/$REPO_NAME.git $CODE_FOLDER && 
-        cd $CODE_FOLDER && git checkout $REPO_BRANCH && git pull) && exit"
+    - sh ./ci/deploy.sh
+    - sh ./ci/notify.sh "Deploy in DEV success ✅"
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      when: never
+    - if: '$CI_COMMIT_REF_NAME == "dev"'
+    - when: manual
+      allow_failure: true
 
-    - scp -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -P $SSH_PORT $ENV $SSH_USERNAME@$SSH_ADDRESS:/home/$SSH_USERNAME/$CODE_FOLDER/.env
-    - ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -p $SSH_PORT $SSH_USERNAME@$SSH_ADDRESS "
-        cd $CODE_FOLDER;
-        make docker-stop postgres;
-        make db;
-        make update;
-        exit"
-  only:
-    - master
+
+deploy-prod:
+  image: ubuntu:20.04
+  stage: deploy
+  environment:
+    name: prod
+  before_script:
+    - sh ./ci/notify.sh "Starting deploy in PROD"
+  script:
+    - sh ./ci/deploy.sh
+    - sh ./ci/notify.sh "Deploy in PROD success ✅"
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      when: never
+    - if: '$CI_COMMIT_REF_NAME == "master"'
+
+
+notify_error:
+  image: ubuntu:20.04
+  stage: notify
+  script:
+    - sh ./ci/notify.sh "CI/CD failed ❌"
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      when: never
+    - when: on_failure

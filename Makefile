@@ -6,12 +6,23 @@ VENV = .venv
 ifeq ($(OS),Windows_NT)
     PYTHON_EXECUTABLE = python
     VENV_BIN = $(VENV)/Scripts
+    DOCKER_COMPOSE = docker-compose
+    DOCKER = docker
 else
     PYTHON_EXECUTABLE = python3.10
     VENV_BIN = $(VENV)/bin
+    ifeq ($(shell uname -s),Darwin)
+        # DOCKER_COMPOSE = nerdctl compose
+        # DOCKER = nerdctl
+        DOCKER_COMPOSE = docker-compose
+        DOCKER = docker
+    else
+        DOCKER_COMPOSE = docker-compose
+        DOCKER = docker
+    endif
 endif
 
-POETRY_VERSION=1.2
+POETRY_VERSION=1.6
 POETRY_RUN = $(VENV_BIN)/poetry run
 
 # Manually define main variables
@@ -101,11 +112,11 @@ revision:  ##@Database Create new revision file automatically with prefix (ex. 2
 
 .PHONY: downgrade
 downgrade:  ##@Database Downgrade migration on one revision
-	alembic downgrade -1
+	$(POETRY_RUN) alembic downgrade -1
 
 .PHONY: db
 db: ##@Database Docker up db
-	docker-compose up -d postgres
+	$(DOCKER_COMPOSE) up -d postgres
 
 .PHONY: test
 test: ##@Testing Runs pytest with coverage
@@ -148,62 +159,75 @@ format: ###@Code Formats all files
 	$(POETRY_RUN) black --line-length 79 --target-version py310 --skip-string-normalization $(CODE)
 	$(POETRY_RUN) unify --in-place --recursive $(CODE)
 
-.PHONY: lint
-lint: ###@Code Lint code
+.PHONY: flake8
+flake8: ###@Code Run flake8
 	$(POETRY_RUN) flake8 --jobs 4 --statistics --show-source $(CODE)
-	$(POETRY_RUN) pylint $(CODE)
+
+.PHONY: mypy
+mypy: ###@Code Run mypy
 	$(POETRY_RUN) mypy $(CODE)
+
+
+.PHONY: fast-lint
+fast-lint: flake8 mypy ###@Code Fast lint code (without pylint)
 	$(POETRY_RUN) black --line-length 79 --target-version py310 --skip-string-normalization --check $(CODE)
 	$(POETRY_RUN) pytest --dead-fixtures --dup-fixtures
-	$(POETRY_RUN) safety check --full-report || echo "Safety check failed"
+	$(POETRY_RUN) safety check --full-report || echo "Safety check finished full-report"
+
+.PHONY: lint
+lint: fast-lint ###@Code Lint code
+	$(POETRY_RUN) pylint $(CODE)
 
 .PHONY: check
 check: gen format lint test-mp ###@Code Format and lint code then run tests
 
 .PHONY: docker-up
 docker-up: ##@Application Docker up
-	docker-compose up --remove-orphans
+	$(DOCKER_COMPOSE) up --remove-orphans
 
 .PHONY: docker-up-d
 docker-up-d: ##@Application Docker up detach
-	docker-compose up -d --remove-orphans
-	docker-compose up -d --force-recreate nginx
+	$(DOCKER_COMPOSE) up -d --remove-orphans
+	$(DOCKER_COMPOSE) up -d --force-recreate nginx
 
 .PHONY: docker-build
 docker-build: ##@Application Docker build
-	docker-compose build
+	$(DOCKER_COMPOSE) build
 
 .PHONY: docker-up-build
 docker-up-build: ##@Application Docker up detach with build
-	docker-compose up -d --build --remove-orphans
+	$(DOCKER_COMPOSE) up -d --build --remove-orphans
 
 .PHONY: docker-down
 docker-down: ##@Application Docker down
-	docker-compose down
+	$(DOCKER_COMPOSE) down
 
 .PHONY: docker-stop
 docker-stop: ##@Application Docker stop some app
-	docker-compose stop $(args)
+	$(DOCKER_COMPOSE) stop $(args)
 
 .PHONY: docker-clean
 docker-clean: ##@Application Docker prune -f
-	docker image prune -f
+	$(DOCKER) image prune -f
 
 .PHONY: docker
 docker: docker-clean docker-build docker-up-d docker-clean ##@Application Docker prune, up, run and prune
 
 .PHONY: open
 open: ##@Docker Open container in docker
-	docker exec -it $(args) /bin/bash
+	$(DOCKER) exec -it $(args) /bin/bash
 
 .PHONY: docker-run
 docker-run: ##@Docker Run sh in paused docker container
-	docker run --rm -it --entrypoint bash $(args)
-
+	$(DOCKER) run --rm -it --entrypoint bash $(args)
 
 .PHONY: docker-migrate
 docker-migrate: ##@Application Migrate db in docker
-	docker exec $(APPLICATION_NAME) make migrate $(args)
+	$(DOCKER) exec $(APPLICATION_NAME) make migrate $(args)
+
+.PHONY: docker-downgrade
+docker-downgrade: ##@Application Downgrade db in docker
+	$(DOCKER) exec $(APPLICATION_NAME) make downgrade $(args)
 
 .PHONY: commit
 commit: gen format lint ##@Git Commit with message all files (with lint)
@@ -266,9 +290,9 @@ dump-local: ##@Database Dump database local
 	$(eval FILENAME=backup_$(shell date +%Y%m%d_%H%M%S).sql)
 
 	echo "Dumping database to $(FILENAME)"
-	docker exec postgres pg_dump -f $(FILENAME) -d $(POSTGRES_DB) -U $(POSTGRES_USER)
-	docker cp postgres:$(FILENAME) db/$(FILENAME)
-	docker exec postgres rm $(FILENAME)
+	$(DOCKER) exec postgres pg_dump -f $(FILENAME) -d $(POSTGRES_DB) -U $(POSTGRES_USER)
+	$(DOCKER) cp postgres:$(FILENAME) db/$(FILENAME)
+	$(DOCKER) exec postgres rm $(FILENAME)
 	echo "Done"
 
 .PHONY: restore-local
@@ -279,9 +303,9 @@ restore-local: ##@Database Restore database local
 	$(eval DB_USERNAME=$(shell cat deploy/db_username.txt))
 
 	echo "Restoring local database from $(FILENAME)"
-	docker cp db/$(FILENAME) postgres:$(FILENAME)
-	docker exec postgres psql -d $(DB_NAME) -U $(DB_USERNAME) -f $(FILENAME)
-	docker exec postgres rm $(FILENAME)
+	$(DOCKER) cp db/$(FILENAME) postgres:$(FILENAME)
+	$(DOCKER) exec postgres psql -d $(DB_NAME) -U $(DB_USERNAME) -f $(FILENAME)
+	$(DOCKER) exec postgres rm $(FILENAME)
 	echo "Done"
 
 .PHONY: restore-server
@@ -354,7 +378,7 @@ get-scheduler-logs: ##@Application Get scheduler logs
 
 .PHONY: run-job
 run-job: docker-build ##@Application Run scheduler job in docker
-	docker-compose run --rm --entrypoint make scheduler run-job-local $(args)
+	$(DOCKER_COMPOSE) run --rm --entrypoint make scheduler run-job-local $(args)
 
 .PHONY: run-job-local
 run-job-local: ##@Application Run scheduler job local
@@ -447,11 +471,11 @@ update-dev-branch: ##@Git Rebase dev on main branch
 
 .PHONY: delete-container-data
 delete-container-data: ##@Docker Prune containers
-	docker container prune -f
+	$(DOCKER) container prune -f
 
 .PHONY: docker-prune-cache
 docker-prune-cache: ##@Docker Prune docker cache
-	docker builder prune --filter until=24h -f
+	$(DOCKER) builder prune --filter until=24h -f
 
 .PHONY: ssh-tunnel
 ssh-tunnel: ##@Server SSH tunnel to server for grafana
@@ -472,16 +496,20 @@ up-celery-worker: ##@Application Up Celery Worker
 up-celery-dashboard: ##@Application Up Celery Dashboard
 	$(POETRY_RUN) celery --broker=$(CELERY_BROKER_URL) flower --url_prefix=flower --port=5555 --basic_auth=$(CELERY_USER):$(CELERY_PASSWORD)
 
-.PHONY: get-pg-use-port
-get-pg-use-port: ##@Application Get apps using postgres port
-	sudo ss -lptn 'sport = :5432'
-
 .PHONY: open-pg
 open-pg: ##@Database open psql in docker database
 	$(eval DB_NAME=$(shell cat deploy/db_name.txt))
 	$(eval DB_USERNAME=$(shell cat deploy/db_username.txt))
 
-	docker exec postgres psql -d $(DB_NAME) -U $(DB_USERNAME)
+	$(DOCKER) exec -it postgres psql -d $(DB_NAME) -U $(DB_USERNAME)
+
+.PHONY: open-pg-env
+open-pg-env: ##@Database open psql in docker database
+	$(DOCKER) exec -it postgres psql -d $(POSTGRES_DB) -U $(POSTGRES_USER)
+
+.PHONY: get-pg-use-port
+get-pg-use-port: ##@Application Get apps using postgres port
+	sudo ss -lptn 'sport = :5432'
 
 %::
 	echo $(MESSAGE)
