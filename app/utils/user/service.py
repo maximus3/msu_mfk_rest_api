@@ -73,8 +73,15 @@ async def get_current_user(
         token_data = TokenData(username=username)
     except JWTError as exc:
         raise credentials_exception from exc
-    async with SessionManager().create_async_session() as session:
-        user = await get_user(session, username=token_data.username)
+    try:
+        async with SessionManager().create_async_session() as session:
+            user = await get_user(session, username=token_data.username)
+    except Exception as exc:  # pylint: disable=broad-except
+        loguru.logger.error('Got get_user exception: type "{}", message "{}"', type(exc), str(exc))
+        raise HTTPException(
+            status_code=429,
+            detail='Too many requests',
+        )
     if user is None:
         raise credentials_exception
     return user
