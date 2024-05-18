@@ -559,27 +559,27 @@ async def get_course_results(  # pylint: disable=too-many-statements
 
     # pylint: disable=too-many-nested-blocks
     for student, department, student_results in students_departments_results:
-        course_results.results[student.contest_login][
-            'contest_login'
-        ] = student.contest_login
+        course_results.results[student.contest_login]['contest_login'] = (
+            student.contest_login
+        )
         course_results.results[student.contest_login]['fio'] = student.fio
-        course_results.results[student.contest_login][
-            'department'
-        ] = department.name
+        course_results.results[student.contest_login]['department'] = (
+            department.name
+        )
         course_results.results[student.contest_login]['tg_id'] = student.tg_id
-        course_results.results[student.contest_login][
-            'tg_username'
-        ] = student.tg_username
+        course_results.results[student.contest_login]['tg_username'] = (
+            student.tg_username
+        )
         course_results.results[student.contest_login]['bm_id'] = student.bm_id
-        course_results.results[student.contest_login][
-            'score_sum'
-        ] = student_results.score_sum
-        course_results.results[student.contest_login][
-            'score_max'
-        ] = student_results.score_max
-        course_results.results[student.contest_login][
-            'is_ok'
-        ] = student_results.is_ok
+        course_results.results[student.contest_login]['score_sum'] = (
+            student_results.score_sum
+        )
+        course_results.results[student.contest_login]['score_max'] = (
+            student_results.score_max
+        )
+        course_results.results[student.contest_login]['is_ok'] = (
+            student_results.is_ok
+        )
         for contest_results in student_results.contests:
             course_results.results[student.contest_login][
                 f'lecture_{contest_results.lecture}_score'

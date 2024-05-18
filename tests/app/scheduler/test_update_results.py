@@ -971,7 +971,11 @@ class TestJob:
             ]
             assert list(
                 map(lambda x: x.is_ok, student_1_contest_base_levels)
-            ) == [False, True, True]
+            ) == [
+                False,
+                True,
+                True,
+            ]
 
             student_2_contest_base_levels = [
                 await contest_utils.get_or_create_student_contest_level(
@@ -981,7 +985,11 @@ class TestJob:
             ]
             assert list(
                 map(lambda x: x.is_ok, student_2_contest_base_levels)
-            ) == [True, True, True]
+            ) == [
+                True,
+                True,
+                True,
+            ]
 
             student_1_contest_early_final_levels = [
                 await contest_utils.get_or_create_student_contest_level(

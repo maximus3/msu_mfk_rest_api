@@ -80,11 +80,11 @@ def _get_error_message_404(
     student_login: str,
     detail: str,
 ) -> str:
-    return f'''Кажется, что-то не так с твоим логином.
+    return f"""Кажется, что-то не так с твоим логином.
 Текущий записанный логин: {student_login}
 Если что-то не так, пожалуйста, пройди регистрацию еще раз, чтобы система обновила твой логин.
 Если логин правильный - напиши нам вопрос через раздел "Другое".
-Подробности ошибки: {detail}'''
+Подробности ошибки: {detail}"""
 
 
 def _get_student_results_messages(
@@ -92,11 +92,11 @@ def _get_student_results_messages(
     student_login: str,
 ) -> list[str]:
     messages = [
-        f'''
+        f"""
 Логин: {student_login}
 ФИО для проверки: {results.fio}
 Факультет: {results.department}
-'''.strip()
+""".strip()
     ]
     # pylint: disable=too-many-nested-blocks
     for course_results in results.courses:
@@ -112,12 +112,12 @@ def _get_student_results_messages(
                 )
             results_msg += '\n'
         for contest_results in course_results.contests:
-            results_msg += f'''
+            results_msg += f"""
 - {contest_results.name}
 -- {contest_results.link}
 -- Дедлайн: {contest_results.deadline}
 -- Набрано баллов {contest_results.score} из {contest_results.score_max}
-'''
+"""
             if contest_results.is_final:
                 results_msg += (
                     '-- Контест зачтен '

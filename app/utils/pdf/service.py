@@ -94,7 +94,6 @@ async def fill_pdf(  # pylint: disable=too-many-statements,too-many-arguments
     logger.info('Filename have {} pages', num_pages)
 
     for page_num in range(num_pages):
-
         list_of_students: dict[str, list[list[float | str]]] = {
             'num': [],
             'fio': [],

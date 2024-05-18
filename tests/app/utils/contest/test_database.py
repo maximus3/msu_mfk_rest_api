@@ -202,7 +202,6 @@ class TestGetOkAuthorIdsHandler:
         )
 
     async def test_get_ok_author_ids_has(self, session, student_contest_is_ok):
-
         assert sorted(
             await contest.get_ok_author_ids(
                 session=session,

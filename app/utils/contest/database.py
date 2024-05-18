@@ -179,7 +179,7 @@ async def get_ok_author_ids(
         .where(StudentContest.contest_id == contest_id)
         .where(StudentContest.is_ok)
     )
-    return [author_id for author_id, in await session.execute(query)]
+    return [author_id for (author_id,) in await session.execute(query)]
 
 
 async def get_contest_levels(
