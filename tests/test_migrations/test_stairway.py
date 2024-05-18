@@ -4,6 +4,7 @@ methods, typos and many other errors.
 Does not require any maintenance - you just add it once to check 80% of typos
 and mistakes in migrations forever.
 """
+
 from types import SimpleNamespace
 
 import pytest

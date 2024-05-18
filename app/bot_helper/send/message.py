@@ -22,7 +22,7 @@ async def send_message(
             message = message[4000:]
         except CantParseEntities as e:
             if (
-                str(e) == 'Can\'t parse entities: can\'t find end '
+                str(e) == "Can't parse entities: can't find end "
                 'tag corresponding to start tag code'
             ):
                 await bot.bot.send_message(

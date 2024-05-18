@@ -12,16 +12,16 @@ from app.schemas import gen as gen_schemas
 
 
 TYPE_TO_FUZZY = {
-    'UUID': 'Faker(\'uuid4\')',
-    'TIMESTAMP': 'Faker(\'date_time\')',
+    'UUID': "Faker('uuid4')",
+    'TIMESTAMP': "Faker('date_time')",
     'INTEGER': 'fuzzy.FuzzyInteger(1, 10000)',
-    'DATETIME': 'Faker(\'date_time\')',
+    'DATETIME': "Faker('date_time')",
     'VARCHAR': 'fuzzy.FuzzyText()',
     'FLOAT': 'fuzzy.FuzzyFloat(0, 1)',
     'BOOLEAN': 'fuzzy.FuzzyChoice([True, False])',
     'TEXT': 'fuzzy.FuzzyText(length=64)',
     'ARRAY': '[]  # type: ignore',
-    'JSON': '\'{}\'',
+    'JSON': "'{}'",
 }
 
 

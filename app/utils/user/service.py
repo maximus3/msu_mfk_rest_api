@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 from typing import Any
 
+import loguru
 from fastapi import Depends, HTTPException, status
 from jose import JWTError, jwt
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -77,11 +78,15 @@ async def get_current_user(
         async with SessionManager().create_async_session() as session:
             user = await get_user(session, username=token_data.username)
     except Exception as exc:  # pylint: disable=broad-except
-        loguru.logger.error('Got get_user exception: type "{}", message "{}"', type(exc), str(exc))
+        loguru.logger.error(
+            'Got get_user exception: type "{}", message "{}"',
+            type(exc),
+            str(exc),
+        )
         raise HTTPException(
             status_code=429,
             detail='Too many requests',
-        )
+        ) from exc
     if user is None:
         raise credentials_exception
     return user
