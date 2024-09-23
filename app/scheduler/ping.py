@@ -34,9 +34,9 @@ async def job(base_logger: 'loguru.Logger') -> None:
                         endpoint,
                         response.status_code,
                     )
-                    result[host][endpoint] = (
-                        f'Failed (status code: {response.status_code})'
-                    )
+                    result[host][
+                        endpoint
+                    ] = f'Failed (status code: {response.status_code})'
                     continue
                 base_logger.info(
                     'Health check "{}" on {} is successful', host, endpoint

@@ -159,6 +159,10 @@ format: ###@Code Formats all files
 	$(POETRY_RUN) black --line-length 79 --target-version py310 --skip-string-normalization $(CODE)
 	$(POETRY_RUN) unify --in-place --recursive $(CODE)
 
+.PHONY: ruff-check
+ruff-check: ###@Code Run ruff check
+	$(POETRY_RUN) ruff check
+
 .PHONY: flake8
 flake8: ###@Code Run flake8
 	$(POETRY_RUN) flake8 --jobs 4 --statistics --show-source $(CODE)
@@ -169,7 +173,7 @@ mypy: ###@Code Run mypy
 
 
 .PHONY: fast-lint
-fast-lint: flake8 mypy ###@Code Fast lint code (without pylint)
+fast-lint: ruff-check flake8 mypy ###@Code Fast lint code (without pylint)
 	$(POETRY_RUN) black --line-length 79 --target-version py310 --skip-string-normalization --check $(CODE)
 	$(POETRY_RUN) pytest --dead-fixtures --dup-fixtures
 	$(POETRY_RUN) safety check --full-report || echo "Safety check finished full-report"
