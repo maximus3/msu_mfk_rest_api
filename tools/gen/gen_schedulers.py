@@ -18,7 +18,6 @@ def make_data(
 
     settings = get_settings()
     init_template = jinja2_env.get_template('__init__.py.jinja2')
-    main_template = jinja2_env.get_template('__main__.py.jinja2')
     job_template = jinja2_env.get_template('job.py.jinja2')
 
     dir_for_create = pathlib.Path(settings.BASE_DIR) / 'app' / 'scheduler'
@@ -36,9 +35,6 @@ def make_data(
             template=init_template,
             recreate=True,
             gen_kwargs={'jobs': schedulers_config},
-        ),
-        '__main__': gen_schemas.DataForGen(
-            template=main_template, recreate=True, gen_kwargs={}
         ),
     }
     for job_name in schedulers_config:

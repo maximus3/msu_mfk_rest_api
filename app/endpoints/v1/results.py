@@ -109,10 +109,10 @@ async def get_results_by_course(
     task = worker.get_results_by_course_task.delay(
         course_short_name=course_short_name,
         student_login=request.headers['log-contest-login'],
-        request_id=request.scope['request_id'],
+        parent_id=request.scope['request_id'],
     )
     logger = logger.bind(
-        task_id=task.id,
+        celery_task={'id': task.id, 'name': 'get_results_by_course_task'},
     )
     logger.info('Task {} sent to celery', task.id)
     return JSONResponse({'task_id': task.id})
@@ -139,6 +139,9 @@ async def fill_results(
             status_code=status.HTTP_404_NOT_FOUND,
             detail='Course not found',
         )
+    logger = logger.bind(
+        course={'short_name': course.short_name, 'id': course.id},
+    )
     tmp_filename = f'{request["request_id"]}.pdf'
     with open(tmp_filename, 'wb') as f:
         f.write(await file.read())
@@ -184,6 +187,9 @@ async def fill_results_archive(  # pylint: disable=too-many-statements
             status_code=status.HTTP_404_NOT_FOUND,
             detail='Course not found',
         )
+    logger = logger.bind(
+        course={'short_name': course.short_name, 'id': course.id},
+    )
 
     tmp_dir_name = request['request_id']
     tmp_path = Path(tmp_dir_name)

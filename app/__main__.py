@@ -75,7 +75,7 @@ if __name__ == '__main__':  # pragma: no cover
         host=get_hostname(settings_for_application.APP_HOST),
         port=settings_for_application.APP_PORT,
         reload=True,
-        reload_dirs=['app', 'tests'],
+        reload_dirs=['app'],
         log_level='debug' if settings_for_application.DEBUG else 'info',
         log_config='log.ini',
         access_log=False,

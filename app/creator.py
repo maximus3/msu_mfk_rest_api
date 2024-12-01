@@ -1,8 +1,8 @@
 import logging
-import sys
 import typing as tp
 import uuid
 
+import fastapi
 import loguru
 import slowapi
 import slowapi.errors as slowapi_errors
@@ -14,16 +14,18 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import Response
 from uvicorn.protocols import utils
 
-from app import constants
+from app import logger_config
 from app.config import DefaultSettings, get_settings
 from app.database.admin.creator import get_sqladmin
 from app.endpoints import list_of_routes
 from app.limiter import limiter
 
 
-def _get_log_data_from_headers(headers: requests.Headers) -> dict[str, str]:
+def _get_log_data_from_headers(
+    headers: requests.Headers,
+) -> dict[str, str | dict[str, str]]:
     return {
-        'contest_login': headers.get('log-contest-login'),
+        'student': {'contest_login': headers.get('log-contest-login')},
         'bm_id': headers.get('log-bm-id'),
         'tg_id': headers.get('log-tg-id'),
         'tg_username': headers.get('log-tg-username'),
@@ -37,6 +39,17 @@ def bind_routes(application: FastAPI, setting: DefaultSettings) -> None:
     """
     for route in list_of_routes:
         application.include_router(route, prefix=setting.PATH_PREFIX)
+
+
+async def log_request_body(request: fastapi.Request) -> None:
+    try:
+        data = await request.json()
+    except Exception:  # pylint: disable=broad-except
+        try:
+            data = (await request.body()).decode()
+        except Exception:  # pylint: disable=broad-except
+            data = '*error_get_body*'
+    loguru.logger.info('Request', body=data, log_type='request')
 
 
 class UniqueIDMiddleware(BaseHTTPMiddleware):
@@ -76,7 +89,7 @@ class UniqueIDMiddleware(BaseHTTPMiddleware):
             request_info_dict['response'] = {
                 'status_code': response.status_code,
             }
-            response.headers['log-id'] = request['request_id']
+            response.headers['X-Request-Id'] = request['request_id']
             contest_login = request.headers.get(
                 'log-contest-login'
             ) or response.headers.get('log-contest-login')
@@ -94,11 +107,12 @@ class UniqueIDMiddleware(BaseHTTPMiddleware):
                     'HTTP/{request[http_version]}" {response[status_code]}',
                     request=request_info_dict['request'],
                     response=request_info_dict['response'],
+                    log_type='response',
                 )
         return response
 
 
-class InterceptHandler(logging.Handler):
+class InterceptHandler(logging.Handler):  # pragma: no cover
     def emit(self, record: logging.LogRecord) -> None:
         # Get corresponding Loguru level if it exists
         try:
@@ -117,18 +131,6 @@ class InterceptHandler(logging.Handler):
             record.getMessage().replace('{', r'{{').replace('}', r'}}'),
             extra={},
         )
-
-
-def configure_logger(settings: DefaultSettings) -> None:
-    loguru.logger.remove()
-    loguru.logger.add(
-        sink=sys.stderr, serialize=not settings.DEBUG, enqueue=True
-    )
-    loguru.logger.add(
-        settings.LOGGING_APP_FILE,
-        **constants.LOGGER_PARAMS,  # type: ignore
-    )
-    logging.getLogger('sqlalchemy.engine').setLevel('INFO')
 
 
 def get_app(set_up_logger: bool = True) -> FastAPI:
@@ -156,6 +158,7 @@ def get_app(set_up_logger: bool = True) -> FastAPI:
         version='0.1.0',
         openapi_tags=tags_metadata,
         middleware=middleware,
+        dependencies=[fastapi.Depends(log_request_body)],
     )
 
     bind_routes(application, settings)
@@ -163,7 +166,9 @@ def get_app(set_up_logger: bool = True) -> FastAPI:
     application.state.settings = settings
 
     if set_up_logger:
-        configure_logger(settings)
+        logger_config.configure_logger(
+            settings, log_file=settings.LOGGING_APP_FILE, application='app'
+        )
 
     _ = get_sqladmin(application)
 

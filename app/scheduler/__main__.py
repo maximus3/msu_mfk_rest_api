@@ -1,7 +1,6 @@
 import asyncio
 import functools
 import pathlib
-import sys
 import traceback
 import uuid
 from datetime import datetime
@@ -9,6 +8,7 @@ from datetime import datetime
 import loguru
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
+from app import logger_config
 from app.bot_helper import send
 from app.config import get_settings
 from app.scheduler import list_of_jobs
@@ -29,7 +29,9 @@ def _job_info_wrapper(  # pylint: disable=too-many-statements
                 settings.LOGGING_FILE_DIR
                 / f'scheduler/job-{job_info.name}-{log_id}.log'
             )
-            base_logger = loguru.logger.bind(uuid=log_id)
+            base_logger = loguru.logger.bind(
+                uuid=log_id, job_name=job_info.name
+            )
             if config.send_logs:
                 handler_id = base_logger.add(
                     log_file_name,
@@ -81,8 +83,8 @@ def _job_info_wrapper(  # pylint: disable=too-many-statements
 
             try:
                 await send.send_file(
-                    log_file_name,
-                    f'job-{job_info.name}-{log_id}',
+                    filename=log_file_name,
+                    caption=f'job-{job_info.name}-{log_id}',
                     chat_id=settings.TG_LOG_SEND_CHAT_ID,
                 )
             except Exception as send_exc:  # pylint: disable=broad-except
@@ -120,13 +122,6 @@ def get_scheduler() -> AsyncIOScheduler:
     """
     _scheduler = AsyncIOScheduler()
     for job_info in list_of_jobs:
-        print(
-            {
-                k: v
-                for k, v in _job_info_wrapper(job_info).dict().items()
-                if v is not None
-            }
-        )
         _scheduler.add_job(
             **{
                 k: v
@@ -139,13 +134,10 @@ def get_scheduler() -> AsyncIOScheduler:
 
 if __name__ == '__main__':
     settings = get_settings()
-    loguru.logger.remove()
-    loguru.logger.add(sink=sys.stderr, serialize=True, enqueue=True)
-    loguru.logger.add(
-        settings.LOGGING_SCHEDULER_FILE,
-        rotation='500 MB',
-        serialize=True,
-        enqueue=True,
+    logger_config.configure_logger(
+        settings,
+        log_file=settings.LOGGING_SCHEDULER_FILE,
+        application='scheduler',
     )
     scheduler = get_scheduler()
     for job in scheduler.get_jobs():

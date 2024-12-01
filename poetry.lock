@@ -1279,6 +1279,17 @@ win32-setctime = {version = ">=1.0.0", markers = "sys_platform == \"win32\""}
 dev = ["Sphinx (>=4.1.1)", "black (>=19.10b0)", "colorama (>=0.3.4)", "docutils (==0.16)", "flake8 (>=3.7.7)", "isort (>=5.1.1)", "pytest (>=4.6.2)", "pytest-cov (>=2.7.1)", "sphinx-autobuild (>=0.7.1)", "sphinx-rtd-theme (>=0.4.3)", "tox (>=3.9.0)"]
 
 [[package]]
+name = "loki-logger-handler"
+version = "1.0.2"
+description = "Handler designed for transmitting logs to Grafana Loki in JSON format."
+optional = false
+python-versions = ">=2.7"
+files = [
+    {file = "loki_logger_handler-1.0.2-py3-none-any.whl", hash = "sha256:aa1a9c933282c134a1e4271aba3cbaa2a3660eab6ea415bad7a072444ab98aa8"},
+    {file = "loki_logger_handler-1.0.2.tar.gz", hash = "sha256:f6114727a9e5e6f3f2058b9b5324d1cab6d1a04e802079f7b57a8aeb7bd0a112"},
+]
+
+[[package]]
 name = "Mako"
 version = "1.2.3"
 description = "A super-fast templating language that borrows the best ideas from the existing templating languages."
@@ -3000,4 +3011,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "e9cede9a66c263684f9889de556060804e735d1105eb5dea0cf1e46a8574a5c5"
+content-hash = "2fd2673f39cf656bc2954c4afcfd5eb5ea56503a2e787581d539604cf3c3627e"

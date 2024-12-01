@@ -55,6 +55,14 @@ jobs:
           POSTGRES_PASSWORD: pgpswd
           POSTGRES_HOST: localhost
           POSTGRES_PORT: 5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+          --name postgres
+        ports:
+          - 5432:5432
 
     steps:
     #----------------------------------------------
@@ -86,7 +94,7 @@ jobs:
 
     - name: Run tests
       run: |
-        POSTGRES_HOST=postgres make test
+        POSTGRES_HOST=localhost make test-mp
 
   deploy:
 

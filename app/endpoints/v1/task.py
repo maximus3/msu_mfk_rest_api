@@ -24,7 +24,7 @@ async def get_task_result(
 ) -> responses.JSONResponse:
     SUCCESS_STATUS = 'SUCCESS'
     logger = loguru.logger.bind(
-        task_id=task_id,
+        celery_task={'id': task_id},
     )
     result = celery_result.AsyncResult(task_id)
     logger.info('Current task status: {}', result.status)

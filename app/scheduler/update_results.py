@@ -301,7 +301,10 @@ async def process_submission(  # noqa: C901 # pylint: disable=too-many-arguments
     if student is None or student_course is None or student_contest is None:
         logger = base_logger.bind(
             task={'id': task.id, 'yandex_task_id': task.yandex_task_id},
-            submission={'id': submission.id, 'author_id': submission.authorId},
+            submission={
+                'author_id': submission.authorId,
+                'run_id': submission.id,
+            },
         )
         logger.warning(
             'No student with such author id {} (login {}): student {}, '
@@ -328,8 +331,6 @@ async def process_submission(  # noqa: C901 # pylint: disable=too-many-arguments
         return
     logger = base_logger.bind(
         student={'id': student.id, 'contest_login': student.contest_login},
-        task={'id': task.id, 'yandex_task_id': task.yandex_task_id},
-        submission={'id': submission.id, 'author_id': submission.authorId},
     )
     student_task = await check_student_task_relation(
         student,
@@ -375,6 +376,13 @@ async def process_submission(  # noqa: C901 # pylint: disable=too-many-arguments
             submission,
         )
     await session.flush()
+    logger = base_logger.bind(
+        submission={
+            'id': submission_model.id,
+            'author_id': submission.authorId,
+            'run_id': submission.id,
+        },
+    )
     if (  # pylint: disable=too-many-nested-blocks  # TODO
         submission_model.final_score > student_task.final_score
         or submission_model.score_before_finish
@@ -643,6 +651,7 @@ async def check_and_update_no_verdict_submissions(
                 submission={
                     'id': submission.id,
                     'author_id': submission.author_id,
+                    'run_id': submission.run_id,
                 },
                 course={'id': submission.course_id},
                 contest={'id': submission.contest_id},
