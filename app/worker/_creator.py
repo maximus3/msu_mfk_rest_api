@@ -52,7 +52,7 @@ def task_wrapper(func):  # type: ignore
         settings = config.get_settings()
         base_logger.add(
             sink=custom_loki_logger_handler.CustomLokiLoggerHandler(
-                url='http://loki:3100/loki/api/v1/push',
+                url=settings.LOKI_PUSH_URL,
                 labels={
                     'application': 'worker',
                     'environment': settings.ENV,
