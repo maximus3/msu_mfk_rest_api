@@ -36,7 +36,7 @@ async def create(  # pylint: disable=too-many-statements
 ) -> ContestInfoResponse:
     logger = loguru.logger.bind(
         course={'short_name': contest_request.course_short_name},
-        department={'yandex_contest_id': contest_request.yandex_contest_id},
+        contest={'yandex_contest_id': contest_request.yandex_contest_id},
     )
     course = await get_course_by_short_name(
         session, contest_request.course_short_name
@@ -46,6 +46,9 @@ async def create(  # pylint: disable=too-many-statements
             status_code=status.HTTP_404_NOT_FOUND,
             detail='Course not found',
         )
+    logger = logger.bind(
+        course={'id': course.id, 'short_name': course.short_name},
+    )
     contest = await get_contest_by_yandex_contest_id(
         session, contest_request.yandex_contest_id
     )

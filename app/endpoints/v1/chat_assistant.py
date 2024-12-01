@@ -74,9 +74,12 @@ async def chat_assistant(
             f'номер {task_number}',
         )
     logger = loguru.logger.bind(
-        course={'name': course.name, 'short_name': course.short_name},
-        contest={'yandex_contest_id': contest.yandex_contest_id},
-        task={'yandex_task_id': task.yandex_task_id},
+        course={'short_name': course.short_name, 'id': course.id},
+        contest={
+            'yandex_contest_id': contest.yandex_contest_id,
+            'id': contest.id,
+        },
+        task={'yandex_task_id': task.yandex_task_id, 'id': task.id},
     )
 
     celery_task = worker.get_assistant_answer_task.delay(
@@ -85,10 +88,13 @@ async def chat_assistant(
             task_number=task.alias,
             user_query=chat_assistant_request.user_query,
         ).dict(),
-        request_id=request.scope['request_id'],
+        parent_id=request.scope['request_id'],
     )
     logger = logger.bind(
-        task_id=celery_task.id,
+        celery_task={
+            'id': celery_task.id,
+            'name': 'get_assistant_answer_task',
+        },
     )
     logger.info('Task {} sent to celery', celery_task.id)
     return JSONResponse({'task_id': celery_task.id})

@@ -68,7 +68,10 @@ class DefaultSettings(BaseSettings):
     )
     YANDEX_API_KEY: str = Field('', env='YANDEX_API_KEY')
 
-    TG_HELPER_BOT_TOKEN: str = Field('', env='TG_HELPER_BOT_TOKEN')
+    TG_HELPER_BOT_TOKEN: str = Field(
+        '1234567890:ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234',
+        env='TG_HELPER_BOT_TOKEN',
+    )
     TG_HELPER_APP_API_ID: int = Field(0, env='TG_HELPER_APP_API_ID')
     TG_HELPER_APP_API_HASH: str = Field('', env='TG_HELPER_APP_API_HASH')
     TG_HELPER_APP_SESSION_STRING: str = Field(
@@ -78,7 +81,10 @@ class DefaultSettings(BaseSettings):
     TG_DB_DUMP_CHAT_ID: str = Field('', env='TG_DB_DUMP_CHAT_ID')
     TG_LOG_SEND_CHAT_ID: str = Field('', env='TG_LOG_SEND_CHAT_ID')
 
-    TG_STUDENTS_BOT_TOKEN: str = Field('', env='TG_STUDENTS_BOT_TOKEN')
+    TG_STUDENTS_BOT_TOKEN: str = Field(
+        '1234567890:ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234',
+        env='TG_STUDENTS_BOT_TOKEN',
+    )
 
     CELERY_BROKER_URL: str = Field(
         'redis://localhost:6379', env='CELERY_BROKER_URL'
