@@ -72,7 +72,7 @@ async def make_request_to_yandex_contest_api(  # pylint: disable=too-many-argume
         response_data = str(response_data)[:1024] + '... (truncated)'
     try:
         response.raise_for_status()
-    except httpx.HTTPStatusError:
+    except Exception:  # pylint: disable=broad-except
         logger.error(
             'Yandex API request [{}]: {} {}.',
             response.status_code,

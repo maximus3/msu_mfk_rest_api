@@ -95,11 +95,22 @@ async def get_author_id(
     yandex_contest_id: int,
     logger: 'loguru.Logger',
 ) -> int:
-    response = await make_request_to_yandex_contest_api(
-        f'contests/{yandex_contest_id}/participants?login={login}',
-        logger=logger,
-        method='GET',
-    )
+    try:
+        response = await make_request_to_yandex_contest_api(
+            f'contests/{yandex_contest_id}/participants?login={login}',
+            logger=logger,
+            method='GET',
+        )
+    except httpx.HTTPStatusError as exc:
+        logger.warning(
+            'Got error in request participants by login: {}, fallback to participants list',
+            exc,
+        )
+        response = await make_request_to_yandex_contest_api(
+            f'contests/{yandex_contest_id}/participants',
+            logger=logger,
+            method='GET',
+        )
     data = response.json()
     if not data:
         logger.warning(
@@ -114,7 +125,12 @@ async def get_author_id(
             method='POST',
         )
         data = [{'id': response.text}]
-    return int(data[0]['id'])
+    for item in data:
+        if item['login'] == login:
+            return int(item['id'])
+    raise ValueError(
+        f'No author id for login {login} in contest {yandex_contest_id}'
+    )
 
 
 async def get_contest_info(
