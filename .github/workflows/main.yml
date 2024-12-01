@@ -104,11 +104,11 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - name: Notify start
-      run: sh ./ci/notify.sh "Starting deploy in PROD"
+#    - name: Notify start
+#      run: sh ./ci/notify.sh "Starting deploy in PROD"
 
     - name: Deploy
       run: sh ./ci/deploy-github.sh
 
-    - name: Notify ok
-      run: sh ./ci/notify.sh "Deploy in PROD success ✅"
+#    - name: Notify ok
+#      run: sh ./ci/notify.sh "Deploy in PROD success ✅"
