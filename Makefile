@@ -259,10 +259,11 @@ pull: ##@Git Pull from origin
 git: check commit ##@Git Check and commit
 
 .PHONY: update
-update: pull db dump-local docker-build ##@Application Update docker app
+update: pull db wait-db-ready dump-local docker-build ##@Application Update docker app
 	@make docker-stop
 	@make delete-container-data
 	@make docker
+	@make wait-db-ready
 	@make docker-migrate head
 	@make docker-prune-cache
 
@@ -514,6 +515,22 @@ open-pg-env: ##@Database open psql in docker database
 .PHONY: get-pg-use-port
 get-pg-use-port: ##@Application Get apps using postgres port
 	sudo ss -lptn 'sport = :5432'
+
+.PHONY: wait-postgres-ready
+wait-db-ready: ##@Application Wait for postgres to be ready
+	@echo "Waiting for Postgres to be ready..."
+	attempts=0; \
+	max_attempts=30; \
+	while ! $(DOCKER_COMPOSE) exec postgres pg_isready -U $(POSTGRES_USER) -d $(POSTGRES_DB) > /dev/null 2>&1; do \
+		if [ $$attempts -ge $$max_attempts ]; then \
+			@echo "Postgres is not ready after $$max_attempts attempts. Exiting."; \
+			exit 1; \
+		fi; \
+		echo "Postgres is not ready yet. Waiting... ($$attempts/$$max_attempts)"; \
+		sleep 2; \
+		attempts=`expr $$attempts + 1`; \
+	done
+	@echo "Postgres is ready."
 
 %::
 	echo $(MESSAGE)
