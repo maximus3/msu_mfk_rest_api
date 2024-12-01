@@ -126,7 +126,7 @@ async def get_author_id(
         )
         data = [{'id': response.text}]
     for item in data:
-        if item['login'] == login:
+        if item.get('login') == login:
             return int(item['id'])
     raise ValueError(
         f'No author id for login {login} in contest {yandex_contest_id}'
