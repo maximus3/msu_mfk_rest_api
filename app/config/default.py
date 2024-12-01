@@ -98,6 +98,10 @@ class DefaultSettings(BaseSettings):
         env='CHAT_ASSISTANT_API_URL',
     )
 
+    LOKI_PUSH_URL: str = Field(
+        'http://loki:3100/loki/api/v1/push',
+    )
+
     @property
     def database_settings(self) -> dict[str, str | int]:
         """

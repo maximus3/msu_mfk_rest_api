@@ -11,13 +11,11 @@ from . import custom_loki_logger_handler
 
 LABEL_KEYS = {
     'function',
-    'module',
     'name',
     'level',
     'uuid',
     'parent_id',
     'log_type',
-    'request_method',
     'request_path',
     'response_status_code',
     'course_id',
@@ -28,16 +26,11 @@ LABEL_KEYS = {
     'task_yandex_task_id',
     'student_id',
     'student_contest_login',
-    'bm_id',
-    'tg_id',
-    'tg_username',
-    'yandex_id',
     'group_id',
     'group_name',
     'group_yandex_group_id',
     'submission_id',
     'submission_run_id',
-    'submission_author_id',
     'celery_task_id',
     'celery_task_name',
     'job_name',
@@ -59,7 +52,7 @@ def configure_logger(
     )
     loguru.logger.add(
         sink=custom_loki_logger_handler.CustomLokiLoggerHandler(
-            url='http://loki:3100/loki/api/v1/push',
+            url=settings.LOKI_PUSH_URL,
             labels={
                 'application': application,
                 'environment': settings.ENV,

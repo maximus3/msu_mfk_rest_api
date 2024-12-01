@@ -1,4 +1,4 @@
-# pylint: disable=duplicate-code
+# pylint: disable=duplicate-code,too-many-statements
 
 import typing
 
@@ -60,10 +60,22 @@ async def make_request_to_yandex_contest_api(  # pylint: disable=too-many-argume
             break
     if retry_count == 0:
         raise httpx.ReadTimeout('Request to Yandex Contest API timed out')
+    response_data = '*failed to parse response data*'
+    try:
+        response_data = response.json()
+    except Exception:  # pylint: disable=broad-except
+        try:
+            response_data = response.text
+        except Exception:  # pylint: disable=broad-except
+            pass
+    if len(str(response_data)) > 128:
+        response_data = str(response_data)[:128] + '... (truncated)'
     logger.info(
         'Yandex API request [{}]: {} {}.',
         response.status_code,
         method,
         f'{settings.YANDEX_CONTEST_API_URL}{endpoint}',
+        body=response_data,
     )
+    response.raise_for_status()
     return response
