@@ -108,6 +108,7 @@ class TestJob:
                     'json': [
                         {
                             'id': '12345',
+                            'login': created_student.contest_login,
                         }
                     ]
                 },
@@ -698,25 +699,46 @@ class TestJob:
                             {
                                 'id': str(
                                     task_base_student_1_submission.author_id
-                                )
+                                ),
+                                'login': student_1.contest_login,
                             }
                         ],
                     },
                     rf'^contests\/{contest_base.yandex_contest_id}\/'
                     rf'participants\?login={student_2.contest_login}$': {
-                        'json': [{'id': '12345'}],
+                        'json': [
+                            {
+                                'id': '12345',
+                                'login': student_2.contest_login,
+                            }
+                        ],
                     },
                     rf'^contests\/{contest_early_final.yandex_contest_id}\/'
                     rf'participants\?login={student_1.contest_login}$': {
-                        'json': [{'id': '64876'}],
+                        'json': [
+                            {
+                                'id': '64876',
+                                'login': student_1.contest_login,
+                            }
+                        ],
                     },
                     rf'^contests\/{contest_usual_final.yandex_contest_id}\/'
                     rf'participants\?login={student_1.contest_login}$': {
-                        'json': [{'id': '32332323'}],
+                        'json': [
+                            {
+                                'id': '32332323',
+                                'login': student_1.contest_login,
+                            }
+                        ],
                     },
                     rf'^contests\/{contest_usual_final.yandex_contest_id}\/'
                     rf'participants\?login={student_2.contest_login}$': {
-                        'json': [{'id': '1234567'}],
+                        'json': [
+                            {
+                                'id': '1234567',
+                                'login': student_2.contest_login,
+                            }
+                        ],
                     },
                 }
             )
