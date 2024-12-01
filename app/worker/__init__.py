@@ -8,13 +8,13 @@ from .get_results_by_course import task as get_results_by_course
 celery_broker = get_celery()
 
 
-get_assistant_answer_task = celery_broker.task(name='get_assistant_answer')(
-    async_to_sync(task_wrapper(get_assistant_answer))
-)
+get_assistant_answer_task = celery_broker.task(
+    name='get_assistant_answer', bind=True
+)(async_to_sync(task_wrapper(get_assistant_answer)))
 
-get_results_by_course_task = celery_broker.task(name='get_results_by_course')(
-    async_to_sync(task_wrapper(get_results_by_course))
-)
+get_results_by_course_task = celery_broker.task(
+    name='get_results_by_course', bind=True
+)(async_to_sync(task_wrapper(get_results_by_course)))
 
 
 __all__ = [

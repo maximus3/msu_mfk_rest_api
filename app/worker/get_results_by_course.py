@@ -1,3 +1,4 @@
+import celery
 import loguru
 
 from app.database.connection import SessionManager
@@ -9,6 +10,7 @@ from app.utils import student as student_utils
 
 
 async def task(
+    self: celery.Task,  # pylint: disable=unused-argument
     course_short_name: str,
     student_login: str,
     base_logger: 'loguru.Logger',

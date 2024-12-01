@@ -1,3 +1,4 @@
+import celery
 import loguru
 
 from app.bot_helper import send
@@ -6,6 +7,7 @@ from app.utils import chat_assistant as chat_assistant_utils
 
 
 async def task(
+    self: celery.Task,  # pylint: disable=unused-argument
     data_raw: dict[str, str | int],
     base_logger: 'loguru.Logger',
 ) -> list[str]:

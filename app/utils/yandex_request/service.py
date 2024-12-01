@@ -9,7 +9,7 @@ from httpx import AsyncClient, Response
 from app.config import get_settings
 
 
-async def make_request_to_yandex_contest_api(  # pylint: disable=too-many-arguments
+async def make_request_to_yandex_contest_api(  # pylint: disable=too-many-arguments  # noqa: C901
     endpoint: str,
     logger: 'loguru.Logger',
     method: str = 'GET',
@@ -68,8 +68,19 @@ async def make_request_to_yandex_contest_api(  # pylint: disable=too-many-argume
             response_data = response.text
         except Exception:  # pylint: disable=broad-except
             pass
-    if len(str(response_data)) > 128:
-        response_data = str(response_data)[:128] + '... (truncated)'
+    if len(str(response_data)) > 1024:
+        response_data = str(response_data)[:1024] + '... (truncated)'
+    try:
+        response.raise_for_status()
+    except httpx.HTTPStatusError:
+        logger.error(
+            'Yandex API request [{}]: {} {}.',
+            response.status_code,
+            method,
+            f'{settings.YANDEX_CONTEST_API_URL}{endpoint}',
+            body=response_data,
+        )
+        raise
     logger.info(
         'Yandex API request [{}]: {} {}.',
         response.status_code,
@@ -77,5 +88,5 @@ async def make_request_to_yandex_contest_api(  # pylint: disable=too-many-argume
         f'{settings.YANDEX_CONTEST_API_URL}{endpoint}',
         body=response_data,
     )
-    response.raise_for_status()
+
     return response
