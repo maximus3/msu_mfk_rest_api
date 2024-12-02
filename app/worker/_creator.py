@@ -68,20 +68,25 @@ def task_wrapper(func):  # type: ignore
             'Task started (args={}, kwargs={})',
             args,
             kwargs,
+            log_type='celery_task_start',
         )
 
         kwargs.update(base_logger=base_logger)
         try:
             result = await func(self=task, *args, **kwargs)
         except Exception as exc:  # pylint: disable=broad-except
-            base_logger.exception('Error in task: {}', exc)
+            base_logger.exception(
+                'Task finished. Error in task: {}',
+                exc,
+                log_type='celery_task_start',
+            )
             await send.send_traceback_message_safe(
                 logger=base_logger,
                 message=f'Error in task, parent_id={parent_id}',
                 code=traceback.format_exc(),
             )
             raise
-        base_logger.info('Task finished')
+        base_logger.info('Task finished', log_type='celery_task_finish')
 
         return result
 
