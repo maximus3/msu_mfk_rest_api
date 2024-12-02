@@ -112,25 +112,28 @@ async def get_author_id(
             method='GET',
         )
     data = response.json()
-    if not data:
-        logger.warning(
-            'No author id for login {} in contest {}, '
-            'trying to get by POST register request',
-            login,
-            yandex_contest_id,
-        )
-        response = await make_request_to_yandex_contest_api(
-            f'contests/{yandex_contest_id}/participants?login={login}',
-            logger=logger,
-            method='POST',
-        )
-        data = [{'id': response.text}]
     for item in data:
         if item.get('login') == login:
             return int(item['id'])
-    raise ValueError(
-        f'No author id for login {login} in contest {yandex_contest_id}'
+    logger.warning(
+        'No author id for login {} in contest {}, '
+        'trying to get by POST register request',
+        login,
+        yandex_contest_id,
     )
+    response = await make_request_to_yandex_contest_api(
+        f'contests/{yandex_contest_id}/participants?login={login}',
+        logger=logger,
+        method='POST',
+    )
+    try:
+        author_id = int(response.text)
+    except Exception:
+        logger.error(
+            'No author id for login {} in contest {}', login, yandex_contest_id
+        )
+        raise
+    return author_id
 
 
 async def get_contest_info(
