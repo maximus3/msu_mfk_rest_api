@@ -53,13 +53,17 @@ def _job_info_wrapper(  # pylint: disable=too-many-statements
                 job_info.name,
                 args,
                 kwargs,
+                log_type='scheduler_start',
             )
             kwargs.update(base_logger=base_logger)
             try:
                 result = await func(*args, **kwargs)
             except Exception as exc:  # pylint: disable=broad-except
                 base_logger.exception(
-                    'Error in job {}: {}', job_info.name, exc
+                    'Job {} finished. Error in job: {}',
+                    job_info.name,
+                    exc,
+                    log_type='scheduler_finish',
                 )
                 await send.send_traceback_message_safe(
                     logger=base_logger,
@@ -67,7 +71,9 @@ def _job_info_wrapper(  # pylint: disable=too-many-statements
                     code=traceback.format_exc(),
                 )
                 raise
-            base_logger.info('Job {} finished', job_info.name)
+            base_logger.info(
+                'Job {} finished', job_info.name, log_type='scheduler_finish'
+            )
 
             if not config.send_logs:
                 return result
