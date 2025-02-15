@@ -33,20 +33,20 @@ schema_config:
         prefix: index_
         period: 24h
 
+compactor:
+  retention_enabled: true
+
 limits_config:
   max_query_length: 0
   ingestion_rate_mb: 60
   ingestion_burst_size_mb: 85
   split_queries_by_interval: 15m
   max_query_parallelism: 32
+  retention_period: 168h
 
 ruler:
   alertmanager_url: http://localhost:9093
 
-# Отличие от стандарного конфигурационного файла loki, который идет из коробки
-# заключается в строках ниже. Здесь мы указываем для менеджера по умолчанию,
-# что он может удалять старые логи, а также, что в нашем понимании "старые логи"
-# (те которые старше 168 часов).
 table_manager:
   retention_deletes_enabled: true
   retention_period: 168h
