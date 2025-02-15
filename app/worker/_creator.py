@@ -78,7 +78,7 @@ def task_wrapper(func):  # type: ignore
             base_logger.exception(
                 'Task finished. Error in task: {}',
                 exc,
-                log_type='celery_task_start',
+                log_type='celery_task_finish',
             )
             await send.send_traceback_message_safe(
                 logger=base_logger,
